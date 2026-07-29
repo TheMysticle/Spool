@@ -2781,7 +2781,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   }
 
   .main-content {
-    padding: 0 16px 16px 16px;
+    padding: 0 16px calc(76px + env(safe-area-inset-bottom, 12px)) 16px;
     width: 100%;
     flex: 1 1 auto;
   }
