@@ -4390,7 +4390,6 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border);
   padding: 0;
 }
 
