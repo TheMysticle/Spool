@@ -1,4 +1,4 @@
-﻿/* ===== Mysticle Archives â€” Modern Flat Theme ===============================
+/* ===== Mysticle Archives â€” Modern Flat Theme ===============================
    Inspired by modern video platforms. Accent: #8b5cf6 (violet)
    ========================================================================== */
 
@@ -610,14 +610,6 @@ h3 { font-size: 1rem; }
 }
 
 @media (max-width: 768px) {
-
-  .channel-page-banner-upload .edit-banner-text {
-    display: none;
-  }
-  .channel-page-banner-upload {
-    padding: 10px;
-    border-radius: 50%;
-  }
   .video-grid {
     grid-template-columns: 1fr;
   }
@@ -1330,14 +1322,6 @@ select.bulk-select-mini[multiple] {
 }
 
 @media (max-width: 768px) {
-
-  .channel-page-banner-upload .edit-banner-text {
-    display: none;
-  }
-  .channel-page-banner-upload {
-    padding: 10px;
-    border-radius: 50%;
-  }
   .bulk-action-bar {
     bottom: 16px;
     width: calc(100% - 32px);
@@ -1494,14 +1478,6 @@ select.bulk-select-mini[multiple] {
 }
 
 @media (max-width: 768px) {
-
-  .channel-page-banner-upload .edit-banner-text {
-    display: none;
-  }
-  .channel-page-banner-upload {
-    padding: 10px;
-    border-radius: 50%;
-  }
   .notif-dropdown {
     right: 0;
     width: min(320px, calc(100vw - 16px));
@@ -2690,14 +2666,6 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-
-  .channel-page-banner-upload .edit-banner-text {
-    display: none;
-  }
-  .channel-page-banner-upload {
-    padding: 10px;
-    border-radius: 50%;
-  }
   .header { padding: 0 8px; }
   .header-search { display: none; }
   .header-left { min-width: 0; gap: 4px; }
@@ -4429,13 +4397,19 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 
 /* Mobile responsive layout */
 @media (max-width: 768px) {
-
   .channel-page-banner-upload .edit-banner-text {
     display: none;
   }
   .channel-page-banner-upload {
-    padding: 10px;
+    padding: 8px;
     border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 12px;
+    right: 12px;
   }
   .channel-page-banner {
     border-radius: 16px;
@@ -4516,14 +4490,6 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 
 
 @media (max-width: 768px) {
-
-  .channel-page-banner-upload .edit-banner-text {
-    display: none;
-  }
-  .channel-page-banner-upload {
-    padding: 10px;
-    border-radius: 50%;
-  }
   .channel-page-title {
     font-size: 1.1rem !important;
     word-break: break-word;
