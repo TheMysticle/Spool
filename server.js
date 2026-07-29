@@ -33,6 +33,8 @@ const ENABLE_CSP = process.env.ENABLE_CSP !== 'false'; // CSP on by default
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(
   helmet({
+    crossOriginOpenerPolicy: false,
+    originAgentCluster: false,
     contentSecurityPolicy: ENABLE_CSP
       ? {
           directives: {
@@ -53,11 +55,12 @@ app.use(
               'unpkg.com',
             ],
             fontSrc: ["'self'", 'fonts.gstatic.com'],
-            imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+            imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'http:'],
             mediaSrc: ["'self'"],
             connectSrc: ["'self'"],
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
+            upgradeInsecureRequests: null,
           },
         }
       : false,
