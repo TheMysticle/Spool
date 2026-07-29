@@ -1665,7 +1665,7 @@
             </div>
           </div>
         </div>
-        <div id="channel-page-content">
+        <div id="channel-page-content" style="margin-top: -16px;">
           <div class="state-loading"><div class="spinner"></div></div>
         </div>
       `;
