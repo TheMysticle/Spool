@@ -1,4 +1,4 @@
-/* main.js — home / browse page */
+﻿/* main.js â€” home / browse page */
 'use strict';
 
 (function () {
@@ -7,7 +7,7 @@
   const STORAGE_KEY = 'ma_browse_state';
   const HOME_SELECT_LONG_PRESS_MS = 450;
 
-  // ── State ──────────────────────────────────────────────────────────────────
+  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let state = {
     category: 'all',
     search: '',
@@ -144,10 +144,10 @@
     searchClearBtnEl.classList.toggle('show', Boolean(searchInputEl.value.trim()));
   }
 
-  // ── Bootstrap UI ──────────────────────────────────────────────────────────
+  // â”€â”€ Bootstrap UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Avatar / dropdown / admin link populated by shared.js DOMContentLoaded block
 
-  // ── Category tabs ──────────────────────────────────────────────────────────
+  // â”€â”€ Category tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.category = btn.dataset.category;
@@ -279,7 +279,7 @@
     updateHomeSelectionUi();
   });
 
-  // ── Search ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.getElementById('search-input')?.addEventListener('input', (e) => {
     updateSearchClearButton();
     clearTimeout(searchTimeout);
@@ -331,7 +331,7 @@
   });
 
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function updateSectionLabel() {
     const labels = { all: 'All Videos', video: 'Videos', livestream: 'Live Streams', history: 'Recently Watched', favorites: 'Favorites', people: 'People', series: 'Series' };
     const el = document.getElementById('section-label');
@@ -989,9 +989,9 @@
             <h3 class="card-title" title="${escHtml(video.title)}">${escHtml(video.title)}</h3>
             <div class="card-meta">
               <span>${escHtml(authorName)}</span>
-              <span class="meta-dot">•</span>
+              <span class="meta-dot">â€¢</span>
               <span>${Number(video.view_count || 0).toLocaleString()} view${Number(video.view_count || 0) === 1 ? '' : 's'}</span>
-              <span class="meta-dot">•</span>
+              <span class="meta-dot">â€¢</span>
               <span>${escHtml(created || 'Recently')}</span>
             </div>
           </div>
@@ -1073,22 +1073,22 @@
     if (state.pages <= 1) { container.innerHTML = ''; return; }
 
     let html = '';
-    html += `<button class="page-btn" onclick="changePage(${state.page - 1})" ${state.page <= 1 ? 'disabled' : ''}>‹</button>`;
+    html += `<button class="page-btn" onclick="changePage(${state.page - 1})" ${state.page <= 1 ? 'disabled' : ''}>â€¹</button>`;
 
     const start = Math.max(1, state.page - 2);
     const end = Math.min(state.pages, state.page + 2);
 
-    if (start > 1) html += `<button class="page-btn" onclick="changePage(1)">1</button>${start > 2 ? '<span style="color:var(--text-muted);padding:0 0.25rem">…</span>' : ''}`;
+    if (start > 1) html += `<button class="page-btn" onclick="changePage(1)">1</button>${start > 2 ? '<span style="color:var(--text-muted);padding:0 0.25rem">â€¦</span>' : ''}`;
 
     for (let i = start; i <= end; i++) {
       html += `<button class="page-btn ${i === state.page ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
     }
 
     if (end < state.pages) {
-      html += `${end < state.pages - 1 ? '<span style="color:var(--text-muted);padding:0 0.25rem">…</span>' : ''}<button class="page-btn" onclick="changePage(${state.pages})">${state.pages}</button>`;
+      html += `${end < state.pages - 1 ? '<span style="color:var(--text-muted);padding:0 0.25rem">â€¦</span>' : ''}<button class="page-btn" onclick="changePage(${state.pages})">${state.pages}</button>`;
     }
 
-    html += `<button class="page-btn" onclick="changePage(${state.page + 1})" ${state.page >= state.pages ? 'disabled' : ''}>›</button>`;
+    html += `<button class="page-btn" onclick="changePage(${state.page + 1})" ${state.page >= state.pages ? 'disabled' : ''}>â€º</button>`;
     container.innerHTML = html;
   }
 
@@ -1157,8 +1157,8 @@
     const countEl = document.getElementById('people-count');
     if (!grid) return;
 
-    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading people…</span></div>';
-    if (countEl) countEl.textContent = '—';
+    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading peopleâ€¦</span></div>';
+    if (countEl) countEl.textContent = 'â€”';
 
     try {
       const people = await api('/api/people');
@@ -1190,7 +1190,7 @@
       ? `<div class="series-thumb-stack" aria-hidden="true">${previewIds
           .map((videoId, idx) => `<img class="series-thumb-item" data-layer="${idx}" src="/api/videos/${videoId}/thumbnail?token=${encodeURIComponent(token || '')}" loading="lazy" alt="" />`)
           .join('')}</div>`
-      : `<span style="font-size:1.2rem">▶</span>`;
+      : `<span style="font-size:1.2rem">â–¶</span>`;
     const adminGear = getUser()?.role === 'admin'
       ? `<button class="series-admin-btn" type="button" title="Reorder playlist"
           onpointerdown="event.stopPropagation()"
@@ -1218,7 +1218,7 @@
 
   function renderSeriesPlaylistItem(video, index) {
     const thumb = thumbUrl(video);
-    const dur = formatDuration(video.duration) || '—';
+    const dur = formatDuration(video.duration) || 'â€”';
     const created = formatDate(video.content_date || video.file_created_at || video.scanned_at);
     const progress = Math.min(Math.max(Number(userProgress[video.id] || 0), 0), 100);
 
@@ -1233,13 +1233,13 @@
         <div class="series-playlist-thumb-wrap">
           ${thumb
             ? `<img class="series-playlist-thumb" src="${thumb}" alt="${escHtml(video.title)}" loading="lazy" />`
-            : `<div class="series-playlist-thumb series-playlist-thumb-placeholder">▶</div>`}
+            : `<div class="series-playlist-thumb series-playlist-thumb-placeholder">â–¶</div>`}
           <span class="series-playlist-duration">${escHtml(dur)}</span>
           ${progress > 1 ? `<span class="series-playlist-progress" style="width:${progress}%"></span>` : ''}
         </div>
         <div class="series-playlist-copy">
           <h4>${escHtml(video.title)}</h4>
-          <p>${video.view_count} view${video.view_count !== 1 ? 's' : ''} · ${escHtml(created)}</p>
+          <p>${video.view_count} view${video.view_count !== 1 ? 's' : ''} Â· ${escHtml(created)}</p>
         </div>
       </article>`;
   }
@@ -1291,7 +1291,7 @@
           <div class="series-feature-media">
             ${firstThumb
               ? `<img src="${firstThumb}" alt="${escHtml(first.title)}" loading="lazy" />`
-              : '<div class="series-feature-placeholder">▶</div>'}
+              : '<div class="series-feature-placeholder">â–¶</div>'}
           </div>
           <div class="series-feature-copy">
             <h4>${escHtml(first.title)}</h4>
@@ -1374,12 +1374,12 @@
           ondragend="endSeriesOrderDrag(event)">
           <span class="series-order-item-index">${idx + 1}</span>
           <div class="series-order-item-thumb">
-            ${thumb ? `<img src="${thumb}" alt="${escHtml(video.title)}" loading="lazy" />` : '<div class="thumb-placeholder" style="font-size:1rem">▶</div>'}
+            ${thumb ? `<img src="${thumb}" alt="${escHtml(video.title)}" loading="lazy" />` : '<div class="thumb-placeholder" style="font-size:1rem">â–¶</div>'}
           </div>
           <p class="series-order-item-title">${escHtml(video.title)}</p>
           <div class="series-order-item-actions">
-            <button class="btn btn-ghost btn-sm" type="button" title="Move up" ${idx === 0 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, -1)">↑</button>
-            <button class="btn btn-ghost btn-sm" type="button" title="Move down" ${idx === seriesOrderState.videos.length - 1 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, 1)">↓</button>
+            <button class="btn btn-ghost btn-sm" type="button" title="Move up" ${idx === 0 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, -1)">â†‘</button>
+            <button class="btn btn-ghost btn-sm" type="button" title="Move down" ${idx === seriesOrderState.videos.length - 1 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, 1)">â†“</button>
           </div>
         </article>`;
     }).join('');
@@ -1523,8 +1523,8 @@
     const countEl = document.getElementById('series-count');
     if (!grid) return;
 
-    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading series…</span></div>';
-    if (countEl) countEl.textContent = '—';
+    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading seriesâ€¦</span></div>';
+    if (countEl) countEl.textContent = 'â€”';
 
     try {
       const rows = await api('/api/series');
@@ -1541,7 +1541,7 @@
     }
   }
 
-  // ── Load videos ────────────────────────────────────────────────────────────
+  // â”€â”€ Load videos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadChannelsDirectory() {
     saveCurrentState();
     const grid = document.getElementById('video-grid');
@@ -1549,7 +1549,7 @@
     document.getElementById('top-chip-bar').style.display = 'flex';
     document.querySelector('.toolbar').style.display = 'flex';
     grid.style.display = 'grid';
-    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loading Channels…</span></div>';
+    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loading Channelsâ€¦</span></div>';
     document.getElementById('pagination').innerHTML = '';
     updateSectionLabel();
     const countEl = document.getElementById('video-count');
@@ -1625,13 +1625,14 @@
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
               <div class="channel-page-meta">
-                  <span style="font-weight: 500; color: var(--text-primary);">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</span>
-                  <span>�</span>
-                  <span>${ch.subscriber_count || 0} subscribers</span>
-                  <span>�</span>
-                  <span>${ch.video_count || 0} videos</span>
+                  <div class="channel-page-handle">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</div>
+                  <div class="channel-page-stats">
+                    <span>${ch.subscriber_count || 0} subscribers</span>
+                    <span>&bull;</span>
+                    <span>${ch.video_count || 0} videos</span>
+                  </div>
                 </div>
-            </div>
+              </div>
             <div class="channel-page-actions">
               <button class="btn ${subButtonClass}" onclick="toggleChannelSubscription('${id}', this)">${subButtonText}</button>
               ${canEdit ? `<button class="vhs-settings-btn" onclick="setupVhsPassword('${id}')" title="VHS Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>` : ''}
@@ -2186,7 +2187,7 @@
     document.getElementById('top-chip-bar').style.display = 'flex';
     document.querySelector('.toolbar').style.display = 'flex';
     grid.style.display = 'grid';
-    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loading…</span></div>';
+    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loadingâ€¦</span></div>';
 
     if (state.mode === 'series' && !state.seriesId) {
       updateSectionLabel();
@@ -2311,7 +2312,7 @@
 
       if (data.channel) globalChannelProfile = data.channel;
 
-      // Build progress lookup: video_id → % watched
+      // Build progress lookup: video_id â†’ % watched
       userProgress = {};
       progressList.forEach((p) => {
         if (p.duration > 0) userProgress[p.video_id] = (p.last_position / p.duration) * 100;
@@ -2348,7 +2349,7 @@
     }
   }
 
-  // ── Init ───────────────────────────────────────────────────────────────────
+  // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const incomingParams = new URLSearchParams(window.location.search);
   const incomingPersonRaw = incomingParams.get('personId') || incomingParams.get('person');
   const incomingPersonName = (incomingParams.get('person_name') || incomingParams.get('personName') || '').trim();
@@ -2388,7 +2389,7 @@
     loadVideos();
   }
 
-  // ── Hover preview ─────────────────────────────────────────────────────────
+  // â”€â”€ Hover preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function setupHoverPreview() {
     const FORCE_DIRECT_PLAY_KEY = 'forceDirectPlay';
     const grid = document.querySelector('main.main-content') || document.getElementById('video-grid');
@@ -2466,7 +2467,7 @@
       hoverCard = null;
     });
 
-    // ── Mobile portrait: play when card is closest to screen center ─────────
+    // â”€â”€ Mobile portrait: play when card is closest to screen center â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function setupMobilePreview() {
       function isMobilePortrait() {
         return window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches;
@@ -2560,7 +2561,7 @@
     setupMobilePreview();
   }
 
-  // ── Dialogs / announcements ────────────────────────────────────────────────
+  // â”€â”€ Dialogs / announcements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   (async function checkDialogs() {
     try {
       const dialogs = await api('/api/dialogs/pending');
@@ -2660,6 +2661,6 @@
       });
 
       showDialog(0);
-    } catch { /* non-fatal — don't block the app */ }
+    } catch { /* non-fatal â€” don't block the app */ }
   })();
 })();

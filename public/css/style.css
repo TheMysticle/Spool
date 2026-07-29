@@ -1,4 +1,4 @@
-/* ===== Mysticle Archives — Modern Flat Theme ===============================
+﻿/* ===== Mysticle Archives â€” Modern Flat Theme ===============================
    Inspired by modern video platforms. Accent: #8b5cf6 (violet)
    ========================================================================== */
 
@@ -31,7 +31,7 @@
   pointer-events: auto;
 }
 
-/* ── Reset & Utility ────────────────────────────────────────────────────── */
+/* â”€â”€ Reset & Utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }
 body {
@@ -52,19 +52,19 @@ input, textarea, select { font-family: inherit; outline: none; }
 
 .is-hidden { display: none !important; }
 
-/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+/* â”€â”€ Scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #71717a; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
-/* ── Typography ─────────────────────────────────────────────────────────── */
+/* â”€â”€ Typography â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 h1, h2, h3, h4 { font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; color: var(--text-primary); }
 h1 { font-size: 1.5rem; }
 h2 { font-size: 1.25rem; }
 h3 { font-size: 1rem; }
 
-/* ── Layout: App Shell ──────────────────────────────────────────────────── */
+/* â”€â”€ Layout: App Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .app-shell {
   display: flex;
   flex-direction: column;
@@ -73,7 +73,7 @@ h3 { font-size: 1rem; }
   padding-top: 64px; /* Space for fixed header */
 }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
+/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dp-full { display: inline; }
 .dp-short { display: none; }
 
@@ -179,7 +179,7 @@ h3 { font-size: 1rem; }
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ── Sidebar ────────────────────────────────────────────────────────────── */
+/* â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .main-layout {
   display: grid;
   grid-template-columns: var(--sidebar-width-expanded) 1fr;
@@ -218,7 +218,7 @@ h3 { font-size: 1rem; }
 /* FIX: Sidebar dividers visible */
 .sidebar-divider { display: block; height: 1px; background: var(--border); width: 100%; margin: 12px 0; flex-shrink: 0; }
 
-/* ── Notifications & Dropdowns ───────────────────────────────────────── */
+/* â”€â”€ Notifications & Dropdowns â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .notif-container { position: relative; }
 
 .notif-dropdown {
@@ -363,7 +363,7 @@ h3 { font-size: 1rem; }
   border: 2px solid var(--bg-base);
 }
 
-/* ── User Dropdown ──────────────────────────────────────────────────── */
+/* â”€â”€ User Dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .user-menu-container { position: relative; margin-left: 8px; }
 .user-dropdown {
   position: absolute;
@@ -449,7 +449,7 @@ h3 { font-size: 1rem; }
   background: rgba(255, 78, 69, 0.1);
 }
 
-/* ── Main Content ───────────────────────────────────────────────────────── */
+/* â”€â”€ Main Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .main-content {
   padding: 0 24px 40px 24px;
   background: var(--bg-base);
@@ -555,7 +555,7 @@ h3 { font-size: 1rem; }
 }
 .section-count { display: none; }
 
-/* ── Video Grid & Flat Video Card ───────────────────────────────────────── */
+/* â”€â”€ Video Grid & Flat Video Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .view-shell { display: block; }
 .people-view, .series-view { display: none; }
 .people-view:not(.is-hidden), .series-view:not(.is-hidden) { display: block; }
@@ -734,7 +734,7 @@ h3 { font-size: 1rem; }
 .card-progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.2); }
 .card-progress-bar { height: 100%; background: var(--danger); }
 
-/* ── People / Series Views (Flat Modern UI) ─────────────────────────────── */
+/* â”€â”€ People / Series Views (Flat Modern UI) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .people-hero {
   display: flex; align-items: center; justify-content: space-between;
   padding: 32px 40px; background: var(--bg-surface); border: 1px solid var(--border-subtle);
@@ -890,7 +890,7 @@ h3 { font-size: 1rem; }
 .series-chip-name { font-size: 1rem; font-weight: 600; color: var(--text-primary); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .series-chip-count { font-size: 0.85rem; color: var(--text-secondary); }
 
-/* ── Selected Series (Playlist Layout) ──────────────────────────────────── */
+/* â”€â”€ Selected Series (Playlist Layout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .series-selected-layout {
   display: grid;
   grid-template-columns: 1fr 380px;
@@ -945,7 +945,7 @@ h3 { font-size: 1rem; }
 .series-playlist-copy h4 { font-size: 0.9rem; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
 .series-playlist-copy p { font-size: 0.8rem; color: var(--text-secondary); margin: 0; }
 
-/* ── Generic App Components ─────────────────────────────────────────────── */
+/* â”€â”€ Generic App Components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 8px 16px; border-radius: 20px; border: none; font-size: 0.875rem;
@@ -1010,7 +1010,7 @@ select.form-input[multiple] option:checked {
   font-weight: 500;
 }
 
-/* ── Glass Custom Drop-up ── */
+/* â”€â”€ Glass Custom Drop-up â”€â”€ */
 .glass-select {
   position: relative;
   display: inline-block;
@@ -1106,7 +1106,7 @@ select.form-input[multiple] option:checked {
   color: var(--accent);
 }
 
-/* ── People Picker Flyout (2026 UX) ── */
+/* â”€â”€ People Picker Flyout (2026 UX) â”€â”€ */
 .people-picker-wrap { position: relative; }
 
 .people-flyout {
@@ -1208,7 +1208,7 @@ select.form-input[multiple] option:checked {
   background: var(--accent-dim);
 }
 
-/* ── Contextual Floating Action Bar (2026 UX) ── */
+/* â”€â”€ Contextual Floating Action Bar (2026 UX) â”€â”€ */
 .bulk-action-bar {
   position: fixed;
   bottom: 32px;
@@ -1945,7 +1945,7 @@ select.bulk-select-mini[multiple] {
   min-width: 0;
 }
 
-/* ── GIF Picker (2026 Modern) ── */
+/* â”€â”€ GIF Picker (2026 Modern) â”€â”€ */
 .gif-picker-modal {
   max-width: 480px;
   padding: 0 !important;
@@ -2068,7 +2068,7 @@ select.bulk-select-mini[multiple] {
 .mini-title { font-size: 0.9rem; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text-primary); margin-bottom: 4px; }
 .mini-meta { font-size: 0.8rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 2px; }
 
-/* ── Admin People Grid ──────────────────────────────────────────────── */
+/* â”€â”€ Admin People Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .people-management-grid,
 .people-admin-grid {
   display: grid;
@@ -2178,7 +2178,7 @@ select.bulk-select-mini[multiple] {
   font-size: 0.8rem;
 }
 
-/* ── Admin Tables & Layout ──────────────────────────────────────────────── */
+/* â”€â”€ Admin Tables & Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .admin-container {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -2441,7 +2441,7 @@ td { padding: 14px 24px; border-bottom: 1px solid var(--border-subtle); color: v
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(255,255,255,0.02); }
 
-/* ── Modals & Toasts ────────────────────────────────────────────────────── */
+/* â”€â”€ Modals & Toasts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 .modal-overlay.open { opacity: 1; pointer-events: auto; }
 .modal {
@@ -2581,7 +2581,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   color: var(--text-muted);
 }
 
-/* ── Video Admin Popup (Manage Menu) ────────────────────────────────────── */
+/* â”€â”€ Video Admin Popup (Manage Menu) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .vap-modal { max-width: 540px; }
 .vap-body { display: flex; flex-direction: column; gap: 24px; max-height: 60vh; overflow-y: auto; margin-bottom: 24px; padding-right: 8px; }
 .vap-section { display: flex; flex-direction: column; gap: 12px; }
@@ -2618,7 +2618,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .toast.success { border-left-color: var(--success); }
 .toast.error { border-left-color: var(--danger); }
 
-/* ── Series Order Editor (Playlist Reordering) ───────────────────────────── */
+/* â”€â”€ Series Order Editor (Playlist Reordering) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .series-order-modal { max-width: 600px; }
 .series-order-list { display: flex; flex-direction: column; gap: 8px; }
 .series-order-item {
@@ -2653,7 +2653,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 }
 .series-order-item-actions .btn { border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; }
 
-/* ── Missing states for JS ──────────────────────────────────────────────── */
+/* â”€â”€ Missing states for JS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .history-date-section { grid-column: 1 / -1; margin-bottom: 16px; }
 .history-date-header { border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px; }
 .history-date-header h3 { color: var(--text-secondary); font-size: 1rem; }
@@ -2816,7 +2816,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     grid-template-columns: 1fr;
   }
 
-  /* Reset collapsed nav styles — sidebar is always full-width drawer on mobile */
+  /* Reset collapsed nav styles â€” sidebar is always full-width drawer on mobile */
   .main-layout.collapsed .nav-item {
     flex-direction: row; justify-content: flex-start; gap: 20px;
     padding: 10px 12px; font-size: 0.9rem; text-align: left;
@@ -3040,7 +3040,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
 .video-js .vjs-volume-level { background: #fff !important; }
 
-/* ── Resolution Badge (Direct Play & Transcode) ── */
+/* â”€â”€ Resolution Badge (Direct Play & Transcode) â”€â”€ */
 .vjs-quality-btn {
   display: flex !important;
   align-items: center;
@@ -3592,7 +3592,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .autoplay-overlay .btn-ghost { border: 1px solid rgba(255,255,255,0.3); color: #fff; }
 .autoplay-overlay .btn-ghost:hover { background: rgba(255,255,255,0.1); }
 
-/* ── Login Experience ───────────────────────────────────────────────────── */
+/* â”€â”€ Login Experience â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .login-body {
   background-color: #050505;
   display: flex;
@@ -3964,7 +3964,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   }
 }
 
-/* ── PWA Standalone mode ─────────────────────────────────────────────────── */
+/* â”€â”€ PWA Standalone mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media all and (display-mode: standalone) {
   #pwa-install-btn { display: none !important; }
   .header {
@@ -4109,7 +4109,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   margin-top: 16px;
 }
 
-/* ── Channels Grid ───────────────────────────────────────────────────────────── */
+/* â”€â”€ Channels Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .channels-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -4147,7 +4147,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   text-align: center;
   word-break: break-word;
 }
-/* ── Channel Page Styles ── */
+/* â”€â”€ Channel Page Styles â”€â”€ */
 .channel-page-header {
   position: relative;
   margin-bottom: 24px;
