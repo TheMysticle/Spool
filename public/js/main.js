@@ -1980,7 +1980,7 @@
         const canEdit = user && (user.role === 'admin' || String(user.id) === String(id));
         if (canEdit) {
            html += `
-             <div style="background: transparent; padding: 16px 16px 24px 16px; margin-bottom: 0;">
+             <div style="background: transparent; padding: 0 0 24px 0; margin-bottom: 0;">
                <textarea id="community-post-text" rows="1" placeholder="Write a post..." style="width: 100%; height: auto; min-height: 56px; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--text-primary); margin-bottom: 12px; resize: none; overflow: hidden; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s; box-sizing: border-box; line-height: 1.5;" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                <div id="community-post-image-preview" style="display:none; margin-bottom: 12px; position: relative; max-width: 300px;">
                  <img src="" style="width: 100%; border-radius: 8px; border: 1px solid var(--border);">
