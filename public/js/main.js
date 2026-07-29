@@ -2364,9 +2364,8 @@
     // Keep query-driven filtering one-time so refresh returns to normal browse.
     window.history.replaceState({}, document.title, '/');
   } else if (incomingChannelId) {
-    // We will render the channel page after the normal UI loads
-    // so it properly hides the grids.
-    setTimeout(() => renderChannelPage(incomingChannelId), 50);
+    state.mode = 'channel_profile';
+    state.channelId = incomingChannelId;
     window.history.replaceState({}, document.title, '/');
   } else if (incomingMode && ['browse', 'history', 'favorites', 'people', 'series', 'channels'].includes(incomingMode)) {
     state.mode = incomingMode;
@@ -2379,7 +2378,11 @@
   if (state.mode === 'people') loadPeopleDirectory();
   else if (state.mode === 'series' && !state.seriesId) loadSeriesDirectory();
   else if (state.mode === 'channels') loadChannelsDirectory();
-  else loadVideos();
+  else if (state.mode === 'channel_profile') {
+    renderChannelPage(state.channelId);
+  } else {
+    loadVideos();
+  }
 
   // ── Hover preview ─────────────────────────────────────────────────────────
   function setupHoverPreview() {

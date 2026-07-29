@@ -1214,9 +1214,12 @@ const getWatchHistory = (userId, limit = 40) =>
     .prepare(
       `SELECT v.id, v.title, v.filename, v.category, v.duration, v.file_size,
               v.thumbnail_path, v.view_count, v.content_date, v.file_created_at, v.scanned_at,
-              vp.position AS last_position, vp.updated_at AS watched_at
+              vp.position AS last_position, vp.updated_at AS watched_at,
+              CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_name') ELSE c.name END AS channel_name, 
+              CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_avatar') ELSE c.avatar_path END AS channel_avatar_path
        FROM video_progress vp
        JOIN videos v ON v.id = vp.video_id
+       LEFT JOIN channels c ON c.id = v.channel_id
        WHERE vp.user_id = ?
        ORDER BY vp.updated_at DESC
        LIMIT ?`
@@ -1648,9 +1651,12 @@ const getFavoriteVideos = (userId, limit = 100) =>
     .prepare(
       `SELECT v.id, v.filename, v.title, v.original_title, v.description, v.category,
               v.content_date, v.file_created_at, v.duration, v.file_size, v.thumbnail_path,
-              v.video_width, v.video_height, v.view_count, v.scanned_at, f.created_at AS favorited_at
+              v.video_width, v.video_height, v.view_count, v.scanned_at, f.created_at AS favorited_at,
+              CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_name') ELSE c.name END AS channel_name, 
+              CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_avatar') ELSE c.avatar_path END AS channel_avatar_path
        FROM user_favorites f
        JOIN videos v ON v.id = f.video_id
+       LEFT JOIN channels c ON c.id = v.channel_id
        WHERE f.user_id = ?
        ORDER BY f.created_at DESC
        LIMIT ?`
