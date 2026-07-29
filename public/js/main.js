@@ -2017,7 +2017,19 @@
         }
         content.innerHTML = html;
       } else if (tab === 'vhs') {
-        const vhsToken = sessionStorage.getItem('vhs_token_' + id);
+        let vhsToken = null;
+        try {
+          const cached = JSON.parse(sessionStorage.getItem('vhs_token_' + id));
+          if (cached && cached.token && cached.expires > Date.now()) {
+            vhsToken = cached.token;
+          } else {
+            sessionStorage.removeItem('vhs_token_' + id);
+          }
+        } catch(e) {
+          // Fallback if old raw token string exists, clear it
+          sessionStorage.removeItem('vhs_token_' + id);
+        }
+
         if (vhsToken) {
            const data = await api(`/api/videos?${qs}&include_vhs=true`, {
              headers: { 'X-VHS-Token': vhsToken }
@@ -2231,7 +2243,8 @@
     if (!pw) return;
     try {
       const res = await api('/api/channels/' + id + '/vhs_verify', { method: 'POST', body: JSON.stringify({ password: pw }) });
-      sessionStorage.setItem('vhs_token_' + id, res.token);
+      const expires = Date.now() + 30 * 60 * 1000;
+      sessionStorage.setItem('vhs_token_' + id, JSON.stringify({ token: res.token, expires }));
       switchChannelTab(id, 'vhs');
     } catch (e) {
       toast(e.message, 'error');
