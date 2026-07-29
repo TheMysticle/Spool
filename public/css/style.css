@@ -2767,17 +2767,17 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .nav-item {
     flex-direction: column;
     gap: 4px;
-    padding: 8px 16px;
+    padding: 6px 16px;
     border-radius: 0;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     height: 100%;
-    flex-shrink: 0;
   }
 
   .nav-item svg {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
   }
 
   .sidebar-divider, .sidebar-title, #sidebar-toggle {
