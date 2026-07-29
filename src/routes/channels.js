@@ -319,7 +319,7 @@ router.post('/:id/community', authenticate, async (req, res) => {
         const processed = await sharp(rawBuffer)
           .rotate() // auto-orient based on EXIF before stripping
           .resize({ width: 1920, withoutEnlargement: true })
-          .jpeg({ quality: 85 })
+          .jpeg({ quality: 92 })
           .toBuffer();
         const filename = `community_${channelId === 'main' ? 'main' : numericId}_${Date.now()}.jpg`;
         const absPath = path.join(AVATAR_DIR, filename);
@@ -373,7 +373,7 @@ router.put('/:id/community/:postId', authenticate, async (req, res) => {
         const processed = await sharp(rawBuffer)
           .rotate() // auto-orient based on EXIF before stripping
           .resize({ width: 1920, withoutEnlargement: true })
-          .jpeg({ quality: 85 })
+          .jpeg({ quality: 92 })
           .toBuffer();
         const filename = `community_${channelId === 'main' ? 'main' : numericId}_${Date.now()}.jpg`;
         const absPath = path.join(AVATAR_DIR, filename);

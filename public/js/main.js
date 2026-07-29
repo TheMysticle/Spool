@@ -1829,8 +1829,10 @@
         
         let cw = wrapper.clientWidth;
         let ch = wrapper.clientHeight;
-        canvas.width = cw;
-        canvas.height = ch;
+        const pixelRatio = 3;
+        canvas.width = cw * pixelRatio;
+        canvas.height = ch * pixelRatio;
+        ctx.scale(pixelRatio, pixelRatio);
 
         // Overlay cutout is top 50px, bottom 50px. Height is ch - 100. Width is cw.
         const targetW = cw;
@@ -1851,6 +1853,8 @@
 
         function draw() {
           ctx.clearRect(0, 0, cw, ch);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, panX, panY, img.width * scale, img.height * scale);
         }
 
@@ -1894,14 +1898,14 @@
         document.getElementById('cropper-save').addEventListener('click', async () => {
           // Crop the image!
           const outCanvas = document.createElement('canvas');
-          outCanvas.width = targetW;
-          outCanvas.height = targetH;
+          outCanvas.width = targetW * pixelRatio;
+          outCanvas.height = targetH * pixelRatio;
           const outCtx = outCanvas.getContext('2d');
           
           outCtx.drawImage(
             canvas,
-            0, 50, targetW, targetH, // Source (x,y,w,h) from the visible canvas
-            0, 0, targetW, targetH   // Dest
+            0, 50 * pixelRatio, targetW * pixelRatio, targetH * pixelRatio, // Source (x,y,w,h) from the visible canvas
+            0, 0, targetW * pixelRatio, targetH * pixelRatio   // Dest
           );
           
           const imageBase64 = outCanvas.toDataURL('image/jpeg', 0.9);
@@ -2189,7 +2193,7 @@
         let ch = cw * 0.75;
         wrapper.style.height = ch + 'px';
         
-        const pixelRatio = 2; // Doubles internal resolution for a nice balance of quality vs file size
+        const pixelRatio = 3; // Triple internal resolution for maximum crispness
         canvas.width = cw * pixelRatio;
         canvas.height = ch * pixelRatio;
         ctx.scale(pixelRatio, pixelRatio);
@@ -2208,6 +2212,8 @@
 
         function draw() {
           ctx.clearRect(0, 0, cw, ch);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, panX, panY, img.width * scale, img.height * scale);
         }
 
