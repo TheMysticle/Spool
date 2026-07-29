@@ -1944,7 +1944,7 @@
         const canEdit = user && (user.role === 'admin' || String(user.id) === String(id));
         if (canEdit) {
            html += `
-             <div style="background: transparent; padding: 16px 16px 24px 16px; border-bottom: 1px solid var(--border); margin-bottom: 0;">
+             <div style="background: transparent; padding: 16px 16px 24px 16px; margin-bottom: 0;">
                <textarea id="community-post-text" placeholder="Write a post..." style="width: 100%; height: 60px; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--text-primary); margin-bottom: 12px; resize: vertical; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                <div id="community-post-image-preview" style="display:none; margin-bottom: 12px; position: relative; max-width: 300px;">
                  <img src="" style="width: 100%; border-radius: 8px; border: 1px solid var(--border);">
@@ -1978,22 +1978,27 @@
                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                  </button>
                </div>
-             ` : '';
-             return `
-               <div class="channel-community-post" id="community-post-${p.id}">
-                 <img class="community-post-avatar" src="${avatarUrl}">
-                 <div class="community-post-content" style="width: 100%;">
-                   <div class="community-post-header">
-                     <span class="community-post-author">${escHtml(p.channel_name)}</span>
-                     <span class="community-post-time">${formatDate(p.created_at)}</span>
-                     ${isEditedHtml}
-                     ${actionsHtml}
-                   </div>
-                   <div class="community-post-text" id="community-post-text-${p.id}" data-raw="${escHtml(p.content)}">${escHtml(p.content)}</div>
-                   ${imageUrl ? `<img src="${imageUrl}" class="community-post-image" alt="Post attachment">` : ''}
-                 </div>
-               </div>
-             `;
+             ` : '';               return `
+                <div class="channel-community-post" id="community-post-${p.id}">
+                  <div class="community-post-header">
+                    <img class="community-post-avatar" src="${avatarUrl}">
+                    <div class="community-post-header-info">
+                      <span class="community-post-author">${escHtml(p.channel_name)}</span>
+                      <div class="community-post-time">${formatDate(p.created_at)} ${isEditedHtml}</div>
+                    </div>
+                    ${actionsHtml}
+                  </div>
+                  <div class="community-post-body">
+                    <div class="community-post-text" id="community-post-text-${p.id}" data-raw="${escHtml(p.content)}">${escHtml(p.content)}</div>
+                    ${imageUrl ? `<img src="${imageUrl}" class="community-post-image" alt="Post attachment">` : '}
+                  </div>
+                  <div class="community-post-actions-row">
+                    <button class="post-action-btn icon-btn" title="Like"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>
+                    <button class="post-action-btn icon-btn" title="Dislike"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg></button>
+                    <button class="post-action-btn icon-btn" title="Comment"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></button>
+                  </div>
+                </div>
+               `;
           }).join('');
         } else {
           html += '<div class="state-empty"><p>No posts yet.</p></div>';
