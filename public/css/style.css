@@ -2761,6 +2761,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .sidebar-section {
     flex-direction: row;
     gap: 0;
+    height: 100%;
   }
 
   .nav-item {
