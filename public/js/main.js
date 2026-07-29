@@ -1186,34 +1186,35 @@
     const previewIds = String(series.preview_video_ids || '')
       .split(',')
       .map((part) => Number(part))
-      .filter((id) => Number.isInteger(id) && id > 0)
-      .slice(0, 3);
-    const thumbStack = previewIds.length
-      ? `<div class="series-thumb-stack" aria-hidden="true">${previewIds
-          .map((videoId, idx) => `<img class="series-thumb-item" data-layer="${idx}" src="/api/videos/${videoId}/thumbnail?token=${encodeURIComponent(token || '')}" loading="lazy" alt="" />`)
-          .join('')}</div>`
-      : `<span style="font-size:1.2rem">▶</span>`;
+      .filter((id) => Number.isInteger(id) && id > 0);
+    const topVideoId = previewIds[0];
+    
+    const thumbHtml = topVideoId
+      ? `<img class="scm-thumb" src="/api/videos/${topVideoId}/thumbnail?token=${encodeURIComponent(token || '')}" loading="lazy" alt="" />`
+      : `<div class="scm-thumb-fallback"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg></div>`;
+    
     const adminGear = getUser()?.role === 'admin'
-      ? `<button class="series-admin-btn" type="button" title="Reorder playlist"
+      ? `<button class="scm-admin-btn" type="button" title="Reorder playlist"
           onpointerdown="event.stopPropagation()"
           onclick="event.preventDefault();event.stopPropagation();openSeriesOrderModal(${series.id})">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
         </button>`
       : '';
+
     return `
-      <article class="series-chip" role="button" tabindex="0" data-series-name="${escHtml(series.name)}"
+      <article class="series-card-modern" role="button" tabindex="0" data-series-name="${escHtml(series.name)}"
         onclick="handleSeriesCardClickFromCard(event, ${series.id}, this)"
         onkeydown="if(event.key==='Enter')handleSeriesCardClickFromCard(event, ${series.id}, this)">
-        <div class="series-chip-media">
+        <div class="scm-media">
+          ${thumbHtml}
           ${adminGear}
-          ${thumbStack}
         </div>
-        <div class="series-chip-copy">
-          <h3 class="series-chip-name">${escHtml(series.name)}</h3>
-          <span class="series-chip-count">${visibleCount} of ${totalCount} videos</span>
+        <div class="scm-body">
+          <h3 class="scm-name">${escHtml(series.name)}</h3>
+          <span class="scm-count">${visibleCount} video${visibleCount === 1 ? '' : 's'}</span>
         </div>
       </article>`;
   }
@@ -1259,26 +1260,28 @@
     if (!first) {
       return `
         <section class="series-selected-layout">
-          <header class="series-selected-hero">
-            <div class="series-selected-eyebrow">Series</div>
-            <h3>${escHtml(title)}</h3>
-            <p>This series has no videos you can watch yet.</p>
-            <button class="btn btn-ghost btn-sm" type="button" onclick="backToSeriesDirectory()">Back to series</button>
+          <header class="directory-hero" style="grid-area: hero; margin-bottom: 0;">
+            <div class="series-selected-eyebrow" style="margin-bottom: 8px;">Series</div>
+            <h1 class="directory-hero-title">${escHtml(title)}</h1>
+            <p class="directory-hero-subtitle">This series has no videos you can watch yet.</p>
+            <div class="series-hero-actions" style="margin-top: 24px;">
+              <button class="btn btn-ghost btn-sm" type="button" onclick="backToSeriesDirectory()">Back to series</button>
+            </div>
           </header>
         </section>`;
     }
 
     return `
       <section class="series-selected-layout">
-        <header class="series-selected-hero">
-          <div class="series-selected-eyebrow">Series playlist</div>
-          <h3>${escHtml(title)}</h3>
-          ${description ? `<p>${escHtml(description)}</p>` : '<p>Watch from the top or jump to any item in the playlist.</p>'}
-          <div class="series-hero-meta">
+        <header class="directory-hero" style="grid-area: hero; margin-bottom: 0;">
+          <div class="series-selected-eyebrow" style="margin-bottom: 8px;">Series playlist</div>
+          <h1 class="directory-hero-title">${escHtml(title)}</h1>
+          <p class="directory-hero-subtitle">${description ? escHtml(description) : 'Watch from the top or jump to any item in the playlist.'}</p>
+          <div class="series-hero-meta" style="margin-top: 16px; color: var(--text-secondary); font-size: 0.9rem; display: flex; gap: 16px;">
             <span>${totalLabel}</span>
             <span>Starts with: ${escHtml(first.title)}</span>
           </div>
-          <div class="series-hero-actions">
+          <div class="series-hero-actions" style="margin-top: 24px; display: flex; gap: 8px; align-items: center;">
             <button class="btn btn-primary btn-sm" type="button" onclick="handleHomeVideoCardClick(event, ${first.id})">Play from start</button>
             ${adminActions}
             <button class="btn btn-ghost btn-sm" type="button" onclick="backToSeriesDirectory()">Back to series</button>
