@@ -97,7 +97,7 @@ router.post('/login', async (req, res) => {
     const channel = require('../database').getChannelByUserId(user.id);
     const authRes = issueAuthResponse(user);
     authRes.user.can_upload = user.can_upload;
-    authRes.user.channel_id = channel ? channel.id : null;
+    authRes.user.channel_id = (user.role === 'admin') ? 'main' : (channel ? channel.id : null);
     return res.json(authRes);
   }
 
@@ -192,7 +192,7 @@ router.post('/2fa/verify', (req, res) => {
   const channel = require('../database').getChannelByUserId(currentUser.id);
   const authRes = issueAuthResponse(currentUser);
   authRes.user.can_upload = currentUser.can_upload;
-  authRes.user.channel_id = channel ? channel.id : null;
+  authRes.user.channel_id = (currentUser.role === 'admin') ? 'main' : (channel ? channel.id : null);
 
   res.json(authRes);
 });
@@ -201,7 +201,7 @@ router.post('/2fa/verify', (req, res) => {
 router.get('/me', authenticate, (req, res) => {
   const { id, username, display_name, avatar_path, role, can_upload } = req.user;
   const channel = require('../database').getChannelByUserId(id);
-  res.json({ id, username, display_name, avatar_path, role, can_upload, channel_id: channel ? channel.id : null });
+  res.json({ id, username, display_name, avatar_path, role, can_upload, channel_id: (role === 'admin') ? 'main' : (channel ? channel.id : null) });
 });
 
 // ── POST /api/auth/change-password ────────────────────────────────────────────
