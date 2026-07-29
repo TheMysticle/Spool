@@ -54,7 +54,7 @@ app.use(
               'vjs.zencdn.net',
               'unpkg.com',
             ],
-            fontSrc: ["'self'", 'fonts.gstatic.com'],
+            fontSrc: ["'self'", 'fonts.gstatic.com', 'data:'],
             imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'http:'],
             mediaSrc: ["'self'"],
             connectSrc: ["'self'"],

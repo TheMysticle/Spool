@@ -976,7 +976,7 @@ const upsertVideo = (data) => {
   return result;
 };
 
-const updateVideoMeta = (id, { title, description, category }) => {
+const updateVideoMeta = (id, { title, description, category, is_vhs }) => {
   const current = getVideoById(id);
   if (!current) return null;
 
@@ -1005,6 +1005,11 @@ const updateVideoMeta = (id, { title, description, category }) => {
   if (category !== undefined && category !== null && ['video', 'livestream'].includes(category)) {
     sets.push('category = ?');
     vals.push(category);
+  }
+
+  if (is_vhs !== undefined && is_vhs !== null) {
+    sets.push('is_vhs = ?');
+    vals.push(is_vhs ? 1 : 0);
   }
 
   if (sets.length > 0) {
