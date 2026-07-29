@@ -1625,8 +1625,12 @@
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
               <div class="channel-page-meta">
-                <span>${ch.subscriber_count || 0} subscribers</span>
-              </div>
+                  <span style="font-weight: 500; color: var(--text-primary);">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</span>
+                  <span>•</span>
+                  <span>${ch.subscriber_count || 0} subscribers</span>
+                  <span>•</span>
+                  <span>${ch.video_count || 0} videos</span>
+                </div>
             </div>
             <div class="channel-page-actions">
               <button class="btn ${subButtonClass}" onclick="toggleChannelSubscription('${id}', this)">${subButtonText}</button>
