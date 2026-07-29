@@ -1571,8 +1571,8 @@
       }
       
       let html = `
-        <div class="directory-hero">
-          <h1 class="directory-hero-title">Channels</h1>
+        <div class="directory-hero" style="margin-top: 16px;">
+          <h1 class="directory-hero-title">Channels <span style="font-size: 1.2rem; color: var(--text-secondary); margin-left: 12px; font-weight: 500;">${data.channels.length}</span></h1>
           <p class="directory-hero-subtitle">Discover and explore the archives available for you to watch.</p>
         </div>
         <div class="channels-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; padding: 16px 0 48px 0;">
