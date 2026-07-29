@@ -1,9 +1,10 @@
-﻿'use strict';
+'use strict';
 
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const sharp = require('sharp');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { authenticate } = require('../middleware/auth');
@@ -277,7 +278,7 @@ router.get('/:id/community', authenticate, (req, res) => {
 });
 
 // ── POST /api/channels/:id/community ──────────────────────────────────────────
-router.post('/:id/community', authenticate, (req, res) => {
+router.post('/:id/community', authenticate, async (req, res) => {
   const channelId = req.params.id;
   const { content, imageBase64 } = req.body || {};
 
@@ -302,21 +303,24 @@ router.post('/:id/community', authenticate, (req, res) => {
   if (imageBase64) {
     const match = imageBase64.match(/^data:(image\/(jpeg|png|webp|gif));base64,([A-Za-z0-9+/=\s]+)$/i);
     if (match) {
-      const mimeType = match[1].toLowerCase();
-      const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : mimeType === 'image/gif' ? 'gif' : 'jpg';
       const base64Payload = match[3].replace(/\s/g, '');
-      
       try {
-        const buffer = Buffer.from(base64Payload, 'base64');
-        if (buffer.length > 2 * 1024 * 1024) {
-          return res.status(400).json({ error: 'Image too large (max 2MB).' });
+        const rawBuffer = Buffer.from(base64Payload, 'base64');
+        if (rawBuffer.length > 5 * 1024 * 1024) {
+          return res.status(400).json({ error: 'Image too large (max 5MB).' });
         }
-        const filename = `community_${channelId === 'main' ? 'main' : numericId}_${Date.now()}.${ext}`;
+        // Compress to JPEG, strip metadata, cap width at 1920px
+        const processed = await sharp(rawBuffer)
+          .rotate() // auto-orient based on EXIF before stripping
+          .resize({ width: 1920, withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+        const filename = `community_${channelId === 'main' ? 'main' : numericId}_${Date.now()}.jpg`;
         const absPath = path.join(AVATAR_DIR, filename);
-        fs.writeFileSync(absPath, buffer);
+        fs.writeFileSync(absPath, processed);
         relPath = `/avatars/${filename}`;
       } catch (err) {
-        console.error('Failed to save community post image:', err);
+        console.error('Failed to process community post image:', err);
       }
     }
   }
@@ -326,7 +330,7 @@ router.post('/:id/community', authenticate, (req, res) => {
 });
 
 // ── PUT /api/channels/:id/community/:postId ───────────────────────────────────
-router.put('/:id/community/:postId', authenticate, (req, res) => {
+router.put('/:id/community/:postId', authenticate, async (req, res) => {
   const channelId = req.params.id;
   const postId = parseInt(req.params.postId, 10);
   const { content, imageBase64 } = req.body || {};
@@ -350,26 +354,27 @@ router.put('/:id/community/:postId', authenticate, (req, res) => {
   }
 
   let relPath = null;
-  // Let null fall through if not updating image, or empty string to delete?
-  // Let's assume imageBase64 will be provided if we want a new image.
-  // If we want to keep the old one, client omits it.
   if (imageBase64) {
     const match = imageBase64.match(/^data:(image\/(jpeg|png|webp|gif));base64,([A-Za-z0-9+/=\s]+)$/i);
     if (match) {
-      const mimeType = match[1].toLowerCase();
-      const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : mimeType === 'image/gif' ? 'gif' : 'jpg';
       const base64Payload = match[3].replace(/\s/g, '');
       try {
-        const buffer = Buffer.from(base64Payload, 'base64');
-        if (buffer.length > 2 * 1024 * 1024) {
-          return res.status(400).json({ error: 'Image too large (max 2MB).' });
+        const rawBuffer = Buffer.from(base64Payload, 'base64');
+        if (rawBuffer.length > 5 * 1024 * 1024) {
+          return res.status(400).json({ error: 'Image too large (max 5MB).' });
         }
-        const filename = `community_${channelId === 'main' ? 'main' : numericId}_${Date.now()}.${ext}`;
+        // Compress to JPEG, strip metadata, cap width at 1920px
+        const processed = await sharp(rawBuffer)
+          .rotate() // auto-orient based on EXIF before stripping
+          .resize({ width: 1920, withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+        const filename = `community_${channelId === 'main' ? 'main' : numericId}_${Date.now()}.jpg`;
         const absPath = path.join(AVATAR_DIR, filename);
-        fs.writeFileSync(absPath, buffer);
+        fs.writeFileSync(absPath, processed);
         relPath = `/avatars/${filename}`;
       } catch (err) {
-        console.error('Failed to save community post image:', err);
+        console.error('Failed to process community post image:', err);
       }
     }
   }
