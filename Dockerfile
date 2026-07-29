@@ -26,11 +26,6 @@ COPY . .
 # Create runtime directories
 RUN mkdir -p /app/data/thumbnails
 
-# Set ownership before switching user
-RUN chown -R node:node /app
-
-# Run as non-root user
-USER node
 EXPOSE 443
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
