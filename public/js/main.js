@@ -1911,7 +1911,7 @@
     const content = document.getElementById('channel-page-content');
     const toolbar = document.getElementById('channel-page-toolbar');
     
-    content.style.marginTop = '-32px';
+    content.style.marginTop = '-25px';
     
     // Only show search/sort toolbar for video tabs
     if (['videos', 'livestreams', 'vhs'].includes(tab)) {
