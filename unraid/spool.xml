@@ -13,7 +13,7 @@
   <Category>MediaApp:Video MediaServer:Video</Category>
   <WebUI>http://[IP]:[PORT:443]</WebUI>
   <TemplateURL/>
-  <Icon>https://raw.githubusercontent.com/TheMysticle/spool/main/public/favicon.svg</Icon>
+  <Icon>https://raw.githubusercontent.com/TheMysticle/spool/main/public/unraid-logo.png</Icon>
   <ExtraParams/>
   <PostArgs/>
   <CPUset/>
