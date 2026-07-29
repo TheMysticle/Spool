@@ -4212,12 +4212,23 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 }
 
 .channel-page-meta {
-  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.channel-page-handle {
+  font-weight: 500;
+  color: var(--text-primary);
   font-size: 0.95rem;
-  margin-bottom: 0;
+  word-break: break-word;
+}
+.channel-page-stats {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+  flex-wrap: wrap;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
 .channel-page-actions {
@@ -4469,5 +4480,19 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     width: 100%;
     flex-wrap: wrap;
     justify-content: center;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .channel-page-title {
+    font-size: 1.1rem !important;
+    word-break: break-word;
+  }
+  .channel-page-handle {
+    font-size: 0.75rem !important;
+  }
+  .channel-page-stats {
+    font-size: 0.75rem !important;
   }
 }
