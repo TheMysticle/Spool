@@ -1151,8 +1151,10 @@
     saveCurrentState();
     const grid = document.getElementById('people-grid');
     document.getElementById('channel-page-container').style.display = 'none';
-    document.getElementById('top-chip-bar').style.display = 'flex';
-    document.querySelector('.toolbar').style.display = 'flex';
+    document.getElementById('top-chip-bar').style.display = 'none';
+    document.querySelector('.toolbar').style.display = 'none';
+    const sectionLabel = document.getElementById('section-label');
+    if (sectionLabel) sectionLabel.parentElement.style.display = 'none';
     if (grid) grid.style.display = 'grid';
     const countEl = document.getElementById('people-count');
     if (!grid) return;
@@ -1517,8 +1519,10 @@
     saveCurrentState();
     const grid = document.getElementById('series-grid');
     document.getElementById('channel-page-container').style.display = 'none';
-    document.getElementById('top-chip-bar').style.display = 'flex';
-    document.querySelector('.toolbar').style.display = 'flex';
+    document.getElementById('top-chip-bar').style.display = 'none';
+    document.querySelector('.toolbar').style.display = 'none';
+    const sectionLabel = document.getElementById('section-label');
+    if (sectionLabel) sectionLabel.parentElement.style.display = 'none';
     if (grid) grid.style.display = 'grid';
     const countEl = document.getElementById('series-count');
     if (!grid) return;
