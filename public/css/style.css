@@ -4280,19 +4280,18 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .channel-card-modern {
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  border: none;
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
 }
 
 .channel-card-modern:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-  border-color: var(--accent);
 }
 
 .ccm-banner {
@@ -4316,8 +4315,8 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  background: var(--bg-card);
-  border: 4px solid var(--bg-card);
+  background: var(--bg-surface);
+  border: 4px solid var(--bg-surface);
   margin-top: -36px;
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
