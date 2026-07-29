@@ -79,7 +79,7 @@ h3 { font-size: 1rem; }
 
 .header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
-  background: var(--bg-base); padding: 0; height: 64px;
+  background: var(--bg-base); padding: 0 16px; height: 64px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .header-left { display: flex; align-items: center; gap: 16px; min-width: 200px; }
