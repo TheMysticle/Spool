@@ -1,4 +1,4 @@
-/* ===== Mysticle Archives â€” Modern Flat Theme ===============================
+﻿/* ===== Mysticle Archives â€” Modern Flat Theme ===============================
    Inspired by modern video platforms. Accent: #8b5cf6 (violet)
    ========================================================================== */
 
@@ -4275,15 +4275,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   border-bottom-color: var(--accent);
 }
 
-.channel-community-post {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-  display: flex;
-  gap: 16px;
-}
+
 
 .community-post-avatar {
   width: 48px;
@@ -4374,16 +4366,17 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .cropper-header h3 { margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text-primary); } 
 .channel-tab-toolbar { background: transparent; border-radius: 0; margin-bottom: 0; box-shadow: none; padding: 16px 0; }
 
-.channel-community-post { background: transparent; border: 1px solid var(--border); border-radius: 12px; padding: 24px 0; margin-bottom: 24px; display: flex; gap: 16px; transition: background 0.2s; } 
-.channel-community-post:hover { background: var(--bg-hover); } 
-.community-post-author { font-weight: 600; font-size: 1.1rem; color: var(--text-primary); } 
-.community-post-time { font-size: 0.9rem; color: var(--text-secondary); margin-left: 8px; } 
-.community-post-text { margin-top: 12px; font-size: 1rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap; }
-
-.community-post-image { width: 100%; border-radius: 8px; margin-top: 12px; } 
-.community-post-actions { margin-left: auto; display: flex; gap: 8px; } 
-.community-post-actions button { background: transparent; color: var(--text-secondary); transition: color 0.2s; } 
-.community-post-actions button:hover { color: var(--text-primary); }
+.channel-community-post { background: transparent; padding: 16px 0; margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px; } 
+.community-post-header { display: flex; align-items: center; gap: 12px; } 
+.community-post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; } 
+.community-post-header-info { flex: 1; display: flex; flex-direction: column; min-width: 0; } 
+.community-post-author { font-weight: 500; font-size: 0.95rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } 
+.community-post-time { font-size: 0.8rem; color: var(--text-secondary); } 
+.community-post-body { display: flex; flex-direction: column; gap: 12px; }
+.community-post-text { font-size: 0.95rem; line-height: 1.5; color: var(--text-primary); white-space: pre-wrap; }
+.community-post-image { width: 100%; max-height: 500px; object-fit: cover; border-radius: 12px; }
+.community-post-actions-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.post-action-btn { width: 36px; height: 36px; color: var(--text-primary); }
 
 /* Channel Page Desktop / Global Styles added to override the inline styles we removed */
 .channel-page-nav {

@@ -1642,7 +1642,7 @@
             <div class="channel-page-tabs">
               <button class="channel-page-tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'livestreams')">Livestreams</button>
-              <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'community')">Community</button>
+              <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'community')">Posts</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>
             </div>
             <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; flex-wrap: wrap; gap: 12px; align-items: center;">
@@ -1996,7 +1996,7 @@
              `;
           }).join('');
         } else {
-          html += '<div class="state-empty"><p>No community posts yet.</p></div>';
+          html += '<div class="state-empty"><p>No posts yet.</p></div>';
         }
         content.innerHTML = html;
       } else if (tab === 'vhs') {
