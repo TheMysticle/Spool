@@ -2189,8 +2189,10 @@
         let ch = cw * 0.75;
         wrapper.style.height = ch + 'px';
         
-        canvas.width = cw;
-        canvas.height = ch;
+        const pixelRatio = 2; // Doubles internal resolution for a nice balance of quality vs file size
+        canvas.width = cw * pixelRatio;
+        canvas.height = ch * pixelRatio;
+        ctx.scale(pixelRatio, pixelRatio);
 
         let scale = cw / img.width;
         if (img.height * scale < ch) {
