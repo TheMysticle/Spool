@@ -1278,10 +1278,9 @@
       <section class="series-selected-layout">
         <header class="directory-hero" style="grid-area: hero; margin-bottom: 0;">
           <div class="series-selected-eyebrow" style="margin-bottom: 8px;">Series playlist</div>
-          <h1 class="directory-hero-title">${escHtml(title)}</h1>
+          <h1 class="directory-hero-title">${escHtml(title)} <span style="font-size: 1.2rem; color: var(--text-secondary); margin-left: 12px; font-weight: 500;">${videos.length}</span></h1>
           <p class="directory-hero-subtitle">${description ? escHtml(description) : 'Watch from the top or jump to any item in the playlist.'}</p>
           <div class="series-hero-meta" style="margin-top: 16px; color: var(--text-secondary); font-size: 0.9rem; display: flex; gap: 16px;">
-            <span>${totalLabel}</span>
             <span>Starts with: ${escHtml(first.title)}</span>
           </div>
           <div class="series-hero-actions" style="margin-top: 24px; display: flex; gap: 8px; align-items: center;">
