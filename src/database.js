@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
@@ -1742,6 +1742,9 @@ const getSubscriptionStatus = (userId, channelId) =>
 const getSubscriberCount = (channelId) =>
   db.prepare('SELECT COUNT(*) as count FROM channel_subscriptions WHERE IFNULL(channel_id, 0) = IFNULL(?, 0)').get(channelId).count;
 
+const getVideoCount = (channelId) =>
+  db.prepare('SELECT COUNT(*) as count FROM videos WHERE IFNULL(channel_id, 0) = IFNULL(?, 0)').get(channelId).count;
+
 const getSubscribers = (channelId) =>
   db.prepare('SELECT user_id FROM channel_subscriptions WHERE IFNULL(channel_id, 0) = IFNULL(?, 0)').all(channelId).map(r => r.user_id);
 
@@ -1872,6 +1875,7 @@ module.exports = {
   toggleSubscription,
   getSubscriptionStatus,
   getSubscriberCount,
+  getVideoCount,
   addChannelNotification,
   markChannelNotificationRead,
   // shutdown

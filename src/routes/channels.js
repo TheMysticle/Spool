@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const express = require('express');
 const fs = require('fs');
@@ -17,6 +17,7 @@ const {
   updateChannel,
   getSubscriptionStatus,
   getSubscriberCount,
+  getVideoCount,
   toggleSubscription,
   createCommunityPost,
   updateCommunityPost,
@@ -76,6 +77,7 @@ router.get('/:id', authenticate, (req, res) => {
   channelData.has_vhs_password = hasVhsPassword;
   channelData.is_subscribed = getSubscriptionStatus(req.user.id, numericId);
   channelData.subscriber_count = getSubscriberCount(numericId);
+  channelData.video_count = getVideoCount(numericId);
   
   res.json({ channel: channelData });
 });
