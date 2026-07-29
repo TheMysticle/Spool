@@ -1645,7 +1645,7 @@
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'community')">Posts</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>
             </div>
-            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; flex-wrap: wrap; gap: 12px; align-items: center;">
+            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: -16px;">
               <div style="position:relative; flex: 1; min-width: 140px;">
                 <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -1665,7 +1665,7 @@
             </div>
           </div>
         </div>
-        <div id="channel-page-content" style="margin-top: -32px;">
+        <div id="channel-page-content">
           <div class="state-loading"><div class="spinner"></div></div>
         </div>
       `;
@@ -1944,8 +1944,8 @@
         const canEdit = user && (user.role === 'admin' || String(user.id) === String(id));
         if (canEdit) {
            html += `
-             <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border);">
-               <textarea id="community-post-text" placeholder="What's on your mind?" style="width: 100%; height: 80px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); margin-bottom: 12px; resize: vertical;"></textarea>
+             <div style="background: transparent; padding: 16px 16px 24px 16px; border-bottom: 1px solid var(--border); margin-bottom: 0;">
+               <textarea id="community-post-text" placeholder="Write a post..." style="width: 100%; height: 60px; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--text-primary); margin-bottom: 12px; resize: vertical; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
                <div id="community-post-image-preview" style="display:none; margin-bottom: 12px; position: relative; max-width: 300px;">
                  <img src="" style="width: 100%; border-radius: 8px; border: 1px solid var(--border);">
                  <button class="icon-btn" onclick="this.parentElement.style.display='none'; this.previousElementSibling.src=''; delete this.parentElement.dataset.base64;" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.5);">
