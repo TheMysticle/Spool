@@ -4401,24 +4401,24 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   }
   
   .channel-page-info-bar {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    text-align: center;
+    text-align: left;
     padding: 16px;
     gap: 16px;
   }
   
   .channel-page-avatar {
-    width: 100px;
-    height: 100px;
+    width: 72px;
+    height: 72px;
   }
   
   .channel-page-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .channel-page-meta {
-    justify-content: center;
+    justify-content: flex-start;
   }
   
   .channel-page-actions {
