@@ -4334,7 +4334,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 
 .channel-community-post { background: transparent; padding: 16px 0; margin-bottom: 0; display: flex; flex-direction: column; gap: 12px; }
 .channel-community-post + .channel-community-post { border-top: 1px solid var(--border); }
-.channel-community-post:last-child { padding-bottom: 16px; }
+#channel-page-content { padding-bottom: 16px; }
 .community-post-header { display: flex; align-items: center; gap: 12px; }
 .community-post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .community-post-header-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
