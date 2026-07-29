@@ -1668,7 +1668,8 @@ window.navigateToVideo = navigateToVideo;
     if (!container) return;
     try {
       const people = await api(`/api/videos/${vid}/people`);
-      if (!people.length) { container.innerHTML = ''; return; }
+      if (!people.length) { container.style.display = 'none'; return; }
+      container.style.display = 'block';
       const token = getToken();
 
       container.innerHTML = `

@@ -1588,7 +1588,6 @@ select.bulk-select-mini[multiple] {
 .video-people-tags {
   margin-top: 0;
   padding-top: 12px;
-  border-top: 1px solid var(--border-subtle);
 }
 
 .people-tags-label {
