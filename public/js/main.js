@@ -1,4 +1,4 @@
-/* main.js — home / browse page */
+﻿/* main.js — home / browse page */
 'use strict';
 
 (function () {
@@ -1624,11 +1624,16 @@
             <img class="channel-page-avatar" src="${avatarUrl}" alt="${escHtml(ch.name)}">
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
-              <div class="channel-page-meta">
-                <span>${ch.subscriber_count || 0} subscribers</span>
+                <div class="channel-page-meta">
+                  <div class="channel-page-handle">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</div>
+                  <div class="channel-page-stats">
+                    <span>${ch.subscriber_count || 0} subscribers</span>
+                    <span>&bull;</span>
+                    <span>${ch.video_count || 0} videos</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="channel-page-actions">
+              <div class="channel-page-actions">
               <button class="btn ${subButtonClass}" onclick="toggleChannelSubscription('${id}', this)">${subButtonText}</button>
               ${canEdit ? `<button class="vhs-settings-btn" onclick="setupVhsPassword('${id}')" title="VHS Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>` : ''}
             </div>
