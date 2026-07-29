@@ -23,7 +23,10 @@ const channelRoutes = require('./src/routes/channels');
 
 const app = express();
 
-app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : (process.env.TRUST_PROXY || false));
+const tp = process.env.TRUST_PROXY;
+if (tp === 'true') app.set('trust proxy', 1);
+else if (tp === 'false' || !tp) app.set('trust proxy', false);
+else app.set('trust proxy', tp);
 const PORT = process.env.PORT || 443;
 const ENABLE_CSP = process.env.ENABLE_CSP !== 'false'; // CSP on by default
 
