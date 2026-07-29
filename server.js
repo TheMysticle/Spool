@@ -60,7 +60,7 @@ app.use(
             connectSrc: ["'self'"],
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
-            upgradeInsecureRequests: null,
+            upgradeInsecureRequests: [],
           },
         }
       : false,

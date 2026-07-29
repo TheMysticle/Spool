@@ -12,8 +12,8 @@ RUN npm install multer
 # ── Stage 2: Runtime image ──────────────────────────────────────────────────
 FROM node:20-alpine
 
-# FFmpeg for thumbnail generation and video probing
-RUN apk add --no-cache ffmpeg
+# FFmpeg for thumbnail generation and video probing, openssl for cert generation
+RUN apk add --no-cache ffmpeg openssl
 
 WORKDIR /app
 
@@ -29,6 +29,7 @@ RUN mkdir -p /app/data/thumbnails
 EXPOSE 443
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD wget --no-check-certificate -qO- https://localhost:443/health || wget -qO- http://localhost:443/health || exit 1
+  CMD wget --no-check-certificate -qO- https://localhost:443/health || exit 1
 
-CMD ["node", "server.js"]
+RUN chmod +x entrypoint.sh
+CMD ["./entrypoint.sh"]
