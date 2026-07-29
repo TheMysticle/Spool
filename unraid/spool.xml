@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Spool</Name>
+  <Repository>themysticle/spool:latest</Repository>
+  <Registry>https://hub.docker.com/r/themysticle/spool</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/TheMysticle/spool/issues</Support>
+  <Project>https://github.com/TheMysticle/spool</Project>
+  <Overview>Spool is a YouTube-like self-hosted web player for your personal video library. It features channels, community posts, livestream archives, secure access (VHS passwords), and extensive library management.</Overview>
+  <Category>MediaApp:Video MediaServer:Video</Category>
+  <WebUI>http://[IP]:[PORT:443]</WebUI>
+  <TemplateURL/>
+  <Icon>https://raw.githubusercontent.com/TheMysticle/spool/main/public/favicon.svg</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled></DateInstalled>
+  <DonateText>Support the developer</DonateText>
+  <DonateLink></DonateLink>
+  <Requires/>
+  <Config Name="App Name" Target="APP_NAME" Default="Spool" Mode="" Description="The name of your application instance displayed in the UI." Type="Variable" Display="always" Required="false" Mask="false">Spool</Config>
+  <Config Name="WebUI Port" Target="443" Default="8443" Mode="tcp" Description="The port used to access the web interface." Type="Port" Display="always" Required="true" Mask="false">8443</Config>
+  <Config Name="App Data Path" Target="/app/data" Default="/mnt/user/appdata/spool/data" Mode="rw" Description="Path to store the SQLite database and generated thumbnails." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/spool/data</Config>
+  <Config Name="Media Directory" Target="/media" Default="/mnt/user/media/videos" Mode="rw" Description="Path to your existing video library." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/media/videos</Config>
+  <Config Name="Admin Password" Target="ADMIN_PASSWORD" Default="" Mode="" Description="Required on first run to setup the initial admin account. Leave blank after the first successful start." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="JWT Secret" Target="JWT_SECRET" Default="spool-secret-change-me" Mode="" Description="Secret key used for secure session tokens. Change this to a random string!" Type="Variable" Display="always" Required="true" Mask="true">spool-secret-change-me</Config>
+  <Config Name="Trust Proxy" Target="TRUST_PROXY" Default="false" Mode="" Description="Set to 'true' if you are running this container behind a reverse proxy (like Nginx Proxy Manager or SWAG)." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="Enable CSP" Target="ENABLE_CSP" Default="true" Mode="" Description="Enable Content Security Policy. Disable only if you have rendering issues." Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+</Container>
