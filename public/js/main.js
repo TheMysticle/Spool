@@ -1911,17 +1911,17 @@
     const content = document.getElementById('channel-page-content');
     const toolbar = document.getElementById('channel-page-toolbar');
     
+    content.style.marginTop = '-32px';
+    
     // Only show search/sort toolbar for video tabs
     if (['videos', 'livestreams', 'vhs'].includes(tab)) {
       toolbar.style.display = 'flex';
-      content.style.marginTop = '-32px';
       const searchInput = document.getElementById('channel-search-input');
       if (tab === 'videos') searchInput.placeholder = 'Search videos...';
       if (tab === 'livestreams') searchInput.placeholder = 'Search livestreams...';
       if (tab === 'vhs') searchInput.placeholder = 'Search VHS...';
     } else {
       toolbar.style.display = 'none';
-      content.style.marginTop = '0';
     }
     
     content.innerHTML = '<div class="state-loading"><div class="spinner"></div></div>';
