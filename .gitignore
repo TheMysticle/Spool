@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Data & Database
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# TLS / SSL certificates and keys
+*.pem
+*.pfx
+*.key
+cert.pem
+key.pem
+cert.pfx
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*

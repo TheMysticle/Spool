@@ -1,0 +1,17 @@
+node_modules/
+data/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+.DS_Store
+npm-debug.log*
+*.pem
+*.pfx
+*.key
+cert.pem
+key.pem
+cert.pfx
+.gitignore
+.git/

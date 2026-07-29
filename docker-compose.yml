@@ -1,0 +1,35 @@
+services:
+  spool:
+    build: .
+    container_name: spool
+    restart: unless-stopped
+
+    ports:
+      - "443:443"
+
+    volumes:
+      # Media directory — READ ONLY, prevents accidental deletion
+      - /mnt/user/Media/YouTubeBackup:/media:ro
+      # App data (database + thumbnails)
+      - /mnt/user/appdata/Spool/data:/app/data
+      # Source code volumes (for live development) — edit files on NAS, restart container
+      - /mnt/user/appdata/Spool/src:/app/src
+      - /mnt/user/appdata/Spool/public:/app/public
+      - /mnt/user/appdata/Spool/server.js:/app/server.js
+      - /mnt/user/appdata/Spool/package.json:/app/package.json
+      # TLS: use PEMs from appdata (same files you openssl-generate on the NAS). Without these,
+      # the container only sees certs from the image build — host-side fixes never apply.
+      - /mnt/user/appdata/Spool/cert.pem:/app/cert.pem:ro
+      - /mnt/user/appdata/Spool/key.pem:/app/key.pem:ro
+
+    environment:
+      # ── REQUIRED: Change these before first run! ──────────────────────────
+      JWT_SECRET: "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_STRING_AT_LEAST_32_CHARS"
+      ADMIN_USERNAME: "mysticle"
+      ADMIN_PASSWORD: "CHANGE_THIS_PASSWORD"
+
+      # ── App settings (defaults are fine) ─────────────────────────────────
+      PORT: "443"
+      MEDIA_PATH: "/media"
+      DATA_DIR: "/app/data"
+      NODE_ENV: "production"

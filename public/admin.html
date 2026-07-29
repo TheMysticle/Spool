@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Spool</title>
+  <script src="/config.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/img/icon-192.png" />
+  <link rel="alternate icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+</head>
+<body class="admin-body">
+  <div class="app-shell">
+
+    <header class="header">
+      <div class="header-left">
+        <a href="/" class="header-logo">
+          <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <span class="logo-text">Creator Studio</span>
+        </a>
+      </div>
+      <div class="header-right">
+        <!-- Upload Button -->
+        <button class="icon-btn" id="upload-trigger" title="Upload Video" type="button" style="display:none;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <a href="/" class="btn btn-ghost btn-sm">Back to Archive</a>
+        <div class="user-menu-container">
+          <div class="avatar" id="user-menu-trigger">A</div>
+          <div class="user-dropdown" id="user-dropdown" style="display:none;">
+            <button class="dropdown-item" id="logout-btn">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-container">
+
+      <nav class="admin-nav">
+        <div class="admin-nav-group">
+          <button class="admin-nav-item active" data-panel="panel-videos" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            <span>Videos</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-users" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Users</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-shares" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            <span>Shared Videos</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-people" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <span>People</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-series" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+            <span>Series</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-transcoder" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Transcoder Queue</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-channel" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+            <span>Channel Profile</span>
+          </button>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="admin-nav-group">
+          <button class="admin-nav-item" data-panel="panel-scan" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>Library Scan</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-dialogs" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Dialogs</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-audit" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Activity Log</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-settings" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>System Settings</span>
+          </button>
+          <button class="admin-nav-item" data-panel="panel-account" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Account</span>
+          </button>
+        </div>
+      </nav>
+
+      <main class="admin-content">
+
+        <!-- Videos Panel -->
+        <div class="admin-panel active" id="panel-videos">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>Video Library</h3>
+              <input class="form-input search-sm" id="video-search" placeholder="Search by title…" />
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>#</th><th>Title</th><th>Category</th><th>Duration</th><th>Views</th><th>Actions</th></tr></thead>
+                <tbody id="videos-tbody"></tbody>
+              </table>
+            </div>
+            <div id="videos-pagination" class="pagination" style="margin-top:16px;"></div>
+          </div>
+          <div id="video-selection-bar" style="display:none">
+            <span id="video-selection-count"></span>
+            <select id="video-bulk-access-mode"></select>
+            <select id="video-bulk-user"></select><select id="video-bulk-series"></select><input id="video-bulk-series-name"><input id="video-bulk-series-desc"><select id="video-bulk-people" multiple></select>
+            <button id="video-bulk-apply-btn">Run</button><button id="video-bulk-cancel-btn">Close</button>
+          </div>
+        </div>
+
+        <!-- Users Panel -->
+        <div class="admin-panel" id="panel-users">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>Registered Users</h3>
+              <button class="btn btn-primary btn-sm" id="add-user-btn" type="button">+ Add User</button>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Username</th><th>Display Name</th><th>Role</th><th>Last Login</th><th>Actions</th></tr></thead>
+                <tbody id="users-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel" id="panel-shares">
+          <h2>Shared Videos</h2>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead><tr><th>Video ID</th><th>Title</th><th>Share Token</th><th>Created At</th><th>Actions</th></tr></thead>
+              <tbody id="admin-shares-list"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- People Panel -->
+        <div class="admin-panel" id="panel-people">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">People &amp; Tags</h2>
+              <p class="section-desc">Manage profiles and linked user accounts for face tagging.</p>
+            </div>
+            <button class="btn btn-primary" id="add-person-btn" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Person
+            </button>
+          </div>
+
+          <div id="people-admin-grid" class="people-management-grid"></div>
+        </div>
+
+        <!-- Series Panel -->
+        <div class="admin-panel" id="panel-series">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Series Library</h2>
+              <p class="section-desc">Manage playlists and curated collections.</p>
+            </div>
+            <button class="btn btn-primary" id="create-series-btn" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Series
+            </button>
+          </div>
+
+          <div id="series-admin-grid" class="series-admin-grid"></div>
+        </div>
+
+        <!-- Channel Profile Panel -->
+        <div class="admin-panel" id="panel-channel">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Channel Profile</h2>
+              <p class="section-desc">Customize the identity that appears as the uploader of all videos.</p>
+            </div>
+          </div>
+          
+          <div class="admin-card" style="max-width: 540px;">
+            <div class="settings-section" style="margin-bottom: 24px;">
+              <h4 class="settings-title" style="margin-bottom: 12px; font-size: 0.95rem;">Channel Avatar</h4>
+              <div class="settings-avatar-row" style="display: flex; gap: 16px; align-items: center;">
+                <div class="avatar avatar-lg settings-avatar-preview" id="channel-avatar-preview" data-avatar-static="true" style="width: 72px; height: 72px; font-size: 2rem;">M</div>
+                <div class="settings-avatar-actions" style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
+                  <input type="file" id="channel-avatar-input" hidden accept="image/jpeg,image/png,image/webp" />
+                  <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-ghost btn-sm" id="channel-avatar-upload" type="button">Upload Image</button>
+                    <button class="btn btn-danger btn-sm" id="channel-avatar-remove" type="button" style="display:none">Remove</button>
+                  </div>
+                  <p class="settings-help" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Max 2MB. Jpg, Png, or Webp.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h4 class="settings-title" style="margin-bottom: 12px; font-size: 0.95rem;">Channel Details</h4>
+              <div class="form-group">
+                <label class="form-label" for="channel-name-input">Channel Name</label>
+                <input class="form-input" id="channel-name-input" type="text" placeholder="Mysticle Archive" />
+              </div>
+            </div>
+
+            <p class="form-error" id="channel-error" style="margin-top: 12px;"></p>
+            <div style="display: flex; justify-content: flex-end; margin-top: 24px;">
+              <button class="btn btn-primary" id="channel-save-btn" type="button">Save Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Library Scan Panel -->
+        <div class="admin-panel" id="panel-scan">
+          <div class="admin-card scan-card">
+            <div class="admin-card-header">
+              <h3>Library Sync</h3>
+              <button class="btn btn-ghost btn-sm" id="refresh-scan-btn" type="button">Refresh</button>
+            </div>
+            <p style="color:var(--text-secondary);margin:0 0 8px;">Scan your filesystem for new videos and regenerate missing thumbnails.</p>
+            <p id="scan-message" style="color:var(--text-secondary);font-size:0.85rem;margin:0 0 16px;min-height:1.2em;"></p>
+            <div id="scan-status-box" class="scan-status-container">
+              <div class="scan-stat">
+                <span>Status</span>
+                <strong id="scan-running">Idle</strong>
+              </div>
+              <div class="scan-stat">
+                <span>Found</span>
+                <strong id="scan-found">0</strong>
+              </div>
+              <div class="scan-stat">
+                <span>Processed</span>
+                <strong id="scan-processed">0</strong>
+              </div>
+              <div class="scan-stat danger">
+                <span>Errors</span>
+                <strong id="scan-errors">0</strong>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button class="btn btn-primary" id="scan-btn" type="button">Start Full Scan</button>
+              <button class="btn btn-ghost" id="regen-thumbs-btn" type="button">Regen Thumbs</button>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>Auto Transcoder Settings</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:4px;">
+                Automatically queue non-web-friendly files (.avi, .mov, etc) for transcoding into high-quality .mkv files. 
+                Original files will be moved to the backup folder.
+              </p>
+              <label class="switch-label">
+                <div class="switch">
+                  <input type="checkbox" id="auto-transcode-toggle">
+                  <span class="slider round"></span>
+                </div>
+                <span>Enable Auto Transcode</span>
+              </label>
+
+              <div style="border-top:1px solid var(--border-subtle);padding-top:14px;display:flex;flex-direction:column;gap:12px;">
+                <label class="switch-label">
+                  <div class="switch">
+                    <input type="checkbox" id="auto-transcode-4k-toggle">
+                    <span class="slider round"></span>
+                  </div>
+                  <span>Require manual confirmation for 4K (2160p+) videos</span>
+                </label>
+
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                  <label class="switch-label" style="margin:0;">
+                    <div class="switch">
+                      <input type="checkbox" id="auto-transcode-size-toggle">
+                      <span class="slider round"></span>
+                    </div>
+                    <span>Require confirmation for files over</span>
+                  </label>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <input type="number" id="auto-transcode-size-input" class="form-input" style="width:110px;padding:4px 8px;" min="1" placeholder="2000" />
+                    <span style="font-size:0.85rem;color:var(--text-secondary);">MB</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--border-subtle);padding-top:12px;">
+                  <span style="font-size:0.9rem;font-weight:500;">Max CPU Threads:</span>
+                  <select id="auto-transcode-threads-select" class="form-input" style="width:auto;padding:4px 12px;">
+                    <option value="0">Auto (Default)</option>
+                    <option value="1">1 Thread (Lowest CPU)</option>
+                    <option value="2">2 Threads (Low CPU)</option>
+                    <option value="4">4 Threads (Medium)</option>
+                    <option value="6">6 Threads</option>
+                    <option value="8">8 Threads</option>
+                  </select>
+                  <span style="font-size:0.8rem;color:var(--text-secondary);" id="auto-transcode-cpu-info"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transcoder Panel -->
+        <div class="admin-panel" id="panel-transcoder">
+          <div class="admin-card" style="margin-bottom: 24px;">
+            <div class="admin-card-header">
+              <h3>Currently Processing</h3>
+            </div>
+            <div id="transcode-current-job">
+              <p style="color:var(--text-secondary);">No active jobs.</p>
+            </div>
+          </div>
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>Pending Queue</h3>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead><tr><th>Video / Path</th><th>Resolution & Size</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="transcode-queue-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dialogs Panel -->
+        <div class="admin-panel" id="panel-dialogs">
+          <div class="admin-card" style="margin-bottom:24px;">
+            <div class="admin-card-header"><h3>Create Dialog</h3></div>
+            <div style="display:flex;flex-direction:column;gap:8px;max-width:480px;">
+              <input id="dialog-new-title" class="form-input" placeholder="Title (English)">
+              <textarea id="dialog-new-body" class="form-input" placeholder="Body (English)" rows="3"></textarea>
+              <input id="dialog-new-title-pl" class="form-input" placeholder="Title (Polish)">
+              <textarea id="dialog-new-body-pl" class="form-input" placeholder="Body (Polish)" rows="3"></textarea>
+              <p id="dialog-form-error" style="color:var(--danger);margin:0;"></p>
+              <div><button class="btn btn-primary" id="dialog-create-btn" type="button">Create Dialog</button></div>
+            </div>
+          </div>
+          <div class="admin-card">
+            <div class="admin-card-header"><h3>All Dialogs</h3></div>
+            <div id="dialogs-admin-list"></div>
+          </div>
+        </div>
+
+        <!-- Activity Log Panel -->
+        <div class="admin-panel" id="panel-audit">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h3>Activity Log</h3>
+              <button class="btn btn-ghost btn-sm" id="refresh-audit-btn" type="button">Refresh</button>
+            </div>
+            <div id="audit-log-list" class="audit-list"></div>
+          </div>
+        </div>
+
+        <!-- Account Panel -->
+        <div class="admin-panel" id="panel-account">
+          <div class="admin-card" style="max-width:440px;">
+            <div class="admin-card-header"><h3>Change Password</h3></div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <input type="password" class="form-input" id="cur-pass" placeholder="Current password">
+              <input type="password" class="form-input" id="new-pass" placeholder="New password">
+              <input type="password" class="form-input" id="confirm-pass" placeholder="Confirm new password">
+              <p id="pw-error" style="color:var(--danger);margin:0;"></p>
+              <div><button class="btn btn-primary" id="change-pw-btn" type="button">Update Password</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Settings Panel -->
+        <div class="admin-panel" id="panel-settings">
+          <div class="admin-card" style="max-width:480px;">
+            <div class="admin-card-header">
+              <h3>API Keys</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:0;">
+                Configure third-party API integration keys here.
+              </p>
+              <div class="form-group">
+                <label class="form-label" for="settings-klipy-key">Klipy API Key (GIFs)</label>
+                <input class="form-input" id="settings-klipy-key" type="text" placeholder="Enter Klipy API Key" />
+                <p class="settings-help" style="margin-top:6px;font-size:0.8rem;color:var(--text-muted);">Required for GIF search in comments.</p>
+              </div>
+              <p id="settings-error" style="color:var(--danger);margin:0;"></p>
+              <div>
+                <button class="btn btn-primary" id="settings-save-btn" type="button">Save Settings</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- User Management Modal -->
+  <div class="modal-overlay" id="user-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="user-modal-title">Account Details</h3>
+        <button class="btn-icon" id="user-modal-close" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <input type="hidden" id="user-modal-id">
+
+      <div class="form-group" id="user-username-group">
+        <label class="form-label" for="user-username">Username</label>
+        <input class="form-input" id="user-username" type="text" placeholder="e.g. johndoe" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="user-display-name">Display Name</label>
+        <input class="form-input" id="user-display-name" type="text" placeholder="e.g. John Doe" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="user-role">System Role</label>
+        <select class="form-input" id="user-role">
+          <option value="viewer">Viewer (Standard Access)</option>
+          <option value="admin">Administrator (Full Access)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="user-can-upload" style="width:16px; height:16px;" />
+        <label for="user-can-upload" style="margin:0; font-weight:600;">Allow Uploading (Can create channel)</label>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" id="user-pass-label" for="user-password">Password</label>
+        <input class="form-input" id="user-password" type="password" placeholder="••••••••" />
+        <p class="settings-help" id="user-pass-hint" style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);"></p>
+      </div>
+
+      <p id="user-modal-error" class="form-error"></p>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="user-modal-cancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="user-modal-save" type="button">Save User</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="video-edit-modal"><div class="modal"><div class="modal-header"><h3>Video</h3></div><input type="hidden" id="video-edit-id"><div class="form-group"><label class="form-label">Title</label><input class="form-input" id="video-edit-title"></div><div class="form-group"><label class="form-label">Category</label><select class="form-input" id="video-edit-category"></select></div><div class="form-group"><label class="form-label">Desc</label><textarea class="form-input" id="video-edit-desc"></textarea></div><p id="video-edit-error" style="color:var(--danger)"></p><div class="modal-footer"><button class="btn btn-ghost" id="video-edit-cancel">Cancel</button><button class="btn btn-primary" id="video-edit-save">Save</button></div></div></div>
+  <div class="modal-overlay" id="person-modal"><div class="modal"><div class="modal-header"><h3 id="person-modal-title">Person</h3></div><input type="hidden" id="person-modal-id"><div class="form-group"><label class="form-label">Name</label><input class="form-input" id="person-name"></div><div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="person-bio"></textarea></div><div class="form-group"><label class="form-label">Tags</label><textarea class="form-input" id="person-title-tags"></textarea></div><div id="person-img-preview" style="width:48px;height:48px;border-radius:50%;background:#333;margin-bottom:8px;"></div><input type="file" id="person-img-input" style="margin-bottom:8px;"><button class="btn btn-ghost btn-sm" id="person-img-btn">Upload</button><button class="btn btn-danger btn-sm" id="person-img-remove" style="display:none;">Remove</button><div class="form-group" style="margin-top:16px;"><label class="form-label">Link User</label><select class="form-input" id="person-user-link"></select></div><p id="person-modal-error" style="color:var(--danger)"></p><div class="modal-footer"><button class="btn btn-ghost" id="person-modal-cancel">Cancel</button><button class="btn btn-primary" id="person-modal-save">Save</button></div></div></div>
+  <div class="modal-overlay" id="series-edit-modal"><div class="modal"><div class="modal-header"><h3>Series</h3><button class="btn-icon" id="series-edit-close">X</button></div><input type="hidden" id="series-edit-id"><div class="form-group"><label class="form-label">Name</label><input class="form-input" id="series-edit-name"></div><div class="form-group"><label class="form-label">Desc</label><textarea class="form-input" id="series-edit-description"></textarea></div><p id="series-edit-error" style="color:var(--danger)"></p><div class="modal-footer"><button class="btn btn-ghost" id="series-edit-cancel">Cancel</button><button class="btn btn-primary" id="series-edit-save">Save</button></div></div></div>
+  <div class="modal-overlay" id="dialog-preview-overlay"><div class="modal dialog-modal"><div id="dialog-preview-title">Dialog Preview</div><div id="dialog-preview-body">Loading preview...</div><div class="modal-footer dialog-footer"><div class="dialog-lang-toggle" id="dialog-preview-lang-switch"><button id="dialog-preview-lang-en" class="active" type="button">EN</button><button id="dialog-preview-lang-pl" type="button">PL</button></div><button class="btn btn-ghost" id="dialog-preview-close" type="button">Close</button></div></div></div>
+  <div class="modal-overlay" id="series-access-modal"><div class="modal vap-modal"><div class="modal-header"><h3>Series Access</h3><button class="btn-icon" id="series-access-close" type="button" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="vap-body"><div class="vap-section"><div class="vap-section-header-row"><div><h4 class="vap-section-title">Public Access</h4><p class="vap-hint">Allow all registered users to view this playlist.</p></div><label class="switch"><input type="checkbox" id="series-all-users" /><span class="slider"></span></label></div><div id="series-users-section" class="vap-users-section"><p class="vap-subsection-label">Or restrict to specific viewers:</p><div id="series-users-list" class="vap-users-list"></div></div></div></div><p id="series-access-error" class="form-error" style="padding:0 1.25rem; margin-top: 0;"></p><div class="modal-footer"><button class="btn btn-ghost" id="series-access-cancel" type="button">Cancel</button><button class="btn btn-primary" id="series-access-save" type="button">Save Changes</button></div></div></div>
+
+  <div id="toast-container"></div>
+  <script src="/js/shared.js"></script>
+  <script src="/js/upload.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

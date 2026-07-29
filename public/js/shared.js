@@ -1,0 +1,1040 @@
+/* shared.js — utilities used across all pages */
+'use strict';
+
+// ── PWA: Service Worker + Install Prompt ─────────────────────────────────────
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const installBtn = document.getElementById('pwa-install-btn');
+  if (installBtn) installBtn.style.display = 'flex';
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ── PWA: Reset browse state to home on fresh launch ──────────────────────────
+(function () {
+  const isStandalone =
+    window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+
+  if (!isStandalone) return;
+
+  if (!sessionStorage.getItem('pwa_session_active')) {
+    sessionStorage.setItem('pwa_session_active', '1');
+    localStorage.setItem('ma_browse_state', JSON.stringify({
+      category: 'all',
+      search: '',
+      sort: 'name_asc',
+      page: 1,
+      mode: 'browse',
+      personId: null,
+      personName: '',
+      seriesId: null,
+      seriesName: '',
+      specialChip: '',
+    }));
+  }
+})();
+
+// ── Dynamic App Name Initialization ───────────────────────────────────────────
+if (window.APP_NAME && window.APP_NAME !== 'Spool') {
+  document.title = document.title.replace('Spool', window.APP_NAME);
+  window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.logo-text').forEach(el => {
+      if (el.textContent === 'Spool') el.textContent = window.APP_NAME;
+    });
+  });
+}
+
+// ── HTML escaping (global) ────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+function getToken() { return localStorage.getItem('ma_token'); }
+function getUser()  { try { return JSON.parse(localStorage.getItem('ma_user')); } catch { return null; } }
+function isAdmin()  { const user = getUser(); return user && user.role === 'admin'; }
+function canEditVideo(video) {
+  const user = getUser();
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  if (video && video.channel_id && user.channel_id === video.channel_id) return true;
+  return false;
+}
+function requireAuth() {
+  if (!getToken()) {
+    location.replace('/login.html');
+    return false;
+  }
+  return true;
+}
+
+function logout() {
+  localStorage.removeItem('ma_token');
+  localStorage.removeItem('ma_user');
+  location.replace('/login.html');
+}
+
+// ── API wrapper ───────────────────────────────────────────────────────────────
+async function api(path, options = {}) {
+  const token = getToken();
+  
+  // Inject share_token into API requests if it's present in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const shareToken = urlParams.get('share_token');
+  if (shareToken) {
+    const separator = path.includes('?') ? '&' : '?';
+    path += `${separator}share_token=${encodeURIComponent(shareToken)}`;
+  }
+
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
+  });
+  if (res.status === 401) {
+    if (shareToken) {
+      throw new Error('Unauthorized');
+    }
+    logout();
+    throw new Error('Unauthorized');
+  }
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Server error (HTTP ${res.status})`);
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+// ── Toast notifications ───────────────────────────────────────────────────────
+function toast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ── Formatting ────────────────────────────────────────────────────────────────
+function formatDuration(seconds) {
+  if (!seconds) return '';
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
+
+function formatFileSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+
+/**
+ * Parses a filename/title to extract an embedded date (YYYYMMDD_).
+ * Returns the cleaned title and the parsed date.
+ */
+function parseVideoData(rawTitle, fallbackDate) {
+  const safeTitle = String(rawTitle || '');
+  const normalizedTitle = safeTitle.replace(/^\uFEFF/, '').trimStart();
+  // Accept YYYYMMDD followed by underscore, hyphen, or spaces.
+  const dateMatch = normalizedTitle.match(/^(\d{4})(\d{2})(\d{2})[\s_-]+(.+)$/);
+
+  if (dateMatch) {
+    const [, yearStr, monthStr, dayStr, cleanedTitle] = dateMatch;
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    const day = Number(dayStr);
+    const extractedDate = new Date(year, month - 1, day);
+    const isValidDate =
+      extractedDate.getFullYear() === year &&
+      extractedDate.getMonth() === month - 1 &&
+      extractedDate.getDate() === day;
+
+    if (isValidDate) {
+      return {
+        title: (cleanedTitle || '').trim() || normalizedTitle,
+        displayDate: extractedDate,
+      };
+    }
+  }
+
+  const fallback = fallbackDate ? new Date(fallbackDate) : null;
+  return {
+    title: normalizedTitle || safeTitle,
+    displayDate: fallback && !Number.isNaN(fallback.getTime()) ? fallback : null,
+  };
+}
+
+function formatDate(dt) {
+  if (!dt) return '—';
+  const date = dt instanceof Date ? dt : new Date(dt);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+}
+
+const BROWSE_STATE_KEY = 'ma_browse_state';
+
+function resetBrowseStateToHome() {
+  localStorage.setItem(BROWSE_STATE_KEY, JSON.stringify({
+    category: 'all',
+    search: '',
+    sort: 'name_asc',
+    page: 1,
+    mode: 'browse',
+    personId: null,
+    personName: '',
+    seriesId: null,
+    seriesName: '',
+    specialChip: '',
+  }));
+}
+
+function bindBrandHomeNavigation() {
+  const brandLinks = document.querySelectorAll('.header-logo');
+  brandLinks.forEach((link) => {
+    if (link.dataset.homeBound === '1') return;
+    link.dataset.homeBound = '1';
+    link.addEventListener('click', () => {
+      resetBrowseStateToHome();
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', bindBrandHomeNavigation);
+
+// ── Modal helpers ─────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── Video Admin Popup (admin-only, available on all pages) ────────────────────
+(function () {
+  let _vapVideoId = null;
+  let _vapCurrentPeopleIds = [];
+  let _vapDirty = false;
+
+  function ensureVideoAdminModal() {
+    if (document.getElementById('video-admin-popup')) return;
+    const html = `
+      <div class="modal-overlay" id="video-admin-popup">
+        <div class="modal vap-modal">
+          <div class="modal-header">
+            <h3>Manage Video</h3>
+            <button class="btn-icon" id="vap-close" type="button" aria-label="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="vap-body">
+            <div class="vap-section">
+              <div class="vap-section-header-row">
+                <div>
+                  <h4 class="vap-section-title">Public Access</h4>
+                  <p class="vap-hint">Allow all registered users to view this video.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="vap-all-users" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div id="vap-users-section" class="vap-users-section">
+                <p class="vap-subsection-label">Or restrict to specific viewers:</p>
+                <div id="vap-users-list" class="vap-users-list"></div>
+              </div>
+            </div>
+            <div class="vap-divider"></div>
+            <div class="vap-section">
+              <h4 class="vap-section-title">People Tags</h4>
+              <p class="vap-hint">Tag people so this video appears on their profile.</p>
+              <select id="vap-person-select" class="form-input vap-person-select">
+                <option value="">+ Add person to video\u2026</option>
+              </select>
+              <div id="vap-people-list" class="vap-people-list"></div>
+            </div>
+          </div>
+          <p id="vap-error" class="form-error" style="padding:0 1.25rem; margin-top: 0;"></p>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" id="vap-cancel" type="button">Cancel</button>
+            <button class="btn btn-primary" id="vap-save" type="button">Save Changes</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    document.getElementById('vap-close').addEventListener('click', () => closeModal('video-admin-popup'));
+    document.getElementById('vap-cancel').addEventListener('click', () => closeModal('video-admin-popup'));
+    document.getElementById('video-admin-popup').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal('video-admin-popup');
+    });
+
+    document.getElementById('vap-all-users').addEventListener('change', () => {
+      const checked = document.getElementById('vap-all-users').checked;
+      const usersSection = document.getElementById('vap-users-section');
+      usersSection.style.opacity = checked ? '0.3' : '1';
+      usersSection.style.pointerEvents = checked ? 'none' : 'auto';
+    });
+
+    document.getElementById('vap-person-select').addEventListener('change', async (e) => {
+      const sel = e.target;
+      const pid = parseInt(sel.value, 10);
+      if (!pid) return;
+
+      if (_vapCurrentPeopleIds.includes(pid)) {
+        sel.value = '';
+        return;
+      }
+
+      sel.disabled = true;
+      try {
+        _vapCurrentPeopleIds = [..._vapCurrentPeopleIds, pid];
+        await saveVideoPeople();
+        sel.value = '';
+      } finally {
+        sel.disabled = false;
+      }
+    });
+
+    document.getElementById('vap-save').addEventListener('click', async () => {
+      const errEl = document.getElementById('vap-error');
+      errEl.textContent = '';
+      const allUsers = document.getElementById('vap-all-users').checked;
+      const userIds = [];
+      document.querySelectorAll('.vap-user-cb:checked').forEach((cb) => {
+        userIds.push(parseInt(cb.value, 10));
+      });
+      try {
+        await api(`/api/admin/videos/${_vapVideoId}/access`, {
+          method: 'PUT',
+          body: JSON.stringify({ all_users: allUsers, user_ids: userIds }),
+        });
+        toast('Access saved.');
+        closeModal('video-admin-popup');
+        // Reload current page video grid if on browse
+        if (typeof loadVideos === 'function') loadVideos();
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    });
+  }
+
+  async function saveVideoPeople() {
+    try {
+      await api(`/api/admin/videos/${_vapVideoId}/people`, {
+        method: 'PUT',
+        body: JSON.stringify({ person_ids: _vapCurrentPeopleIds }),
+      });
+      await renderVapPeople();
+      if (typeof window.refreshWatchPeopleTags === 'function') {
+        window.refreshWatchPeopleTags();
+      }
+    } catch (err) {
+      document.getElementById('vap-error').textContent = err.message;
+    }
+  }
+
+  async function renderVapPeople() {
+    const listEl = document.getElementById('vap-people-list');
+    const token = getToken();
+    try {
+      const people = await api(`/api/admin/videos/${_vapVideoId}/people`);
+      _vapCurrentPeopleIds = people.map((p) => p.id);
+      listEl.innerHTML = people.length
+        ? people.map((p) => {
+            const img = p.image_path
+              ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(token || '')}" class="vap-person-img" />`
+              : `<span class="vap-person-initial">${escHtml((p.name || '?')[0]).toUpperCase()}</span>`;
+            return `<div class="vap-person-row">
+              <div class="vap-person-avatar">${img}</div>
+              <span class="vap-person-name">${escHtml(p.name)}</span>
+              <button class="btn-icon vap-person-remove" data-id="${p.id}" type="button" title="Remove">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>`;
+          }).join('')
+        : '<p class="vap-empty">No people tagged yet.</p>';
+
+      listEl.querySelectorAll('.vap-person-remove').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const pid = parseInt(btn.dataset.id, 10);
+          _vapCurrentPeopleIds = _vapCurrentPeopleIds.filter((id) => id !== pid);
+          await saveVideoPeople();
+        });
+      });
+
+      // Refresh add dropdown
+      const allPeople = await api('/api/admin/people');
+      const sel = document.getElementById('vap-person-select');
+      sel.innerHTML = '<option value="">+ Add person to video\u2026</option>' +
+        allPeople
+          .filter((p) => !_vapCurrentPeopleIds.includes(p.id))
+          .map((p) => `<option value="${p.id}">${escHtml(p.name)}</option>`)
+          .join('');
+    } catch (err) {
+      listEl.textContent = err.message;
+    }
+  }
+
+  window.openVideoAdminPopup = async function (videoId) {
+    const video = window.currentVideo || { id: videoId }; // Best effort fallback
+    // We actually need the video object to check ownership reliably.
+    // If it's called from home screen, it might only have videoId.
+    // So we will just fetch the video if not provided?
+    // Let's rely on the server rejecting unauthorized actions.
+    if (!getUser()) return;
+    ensureVideoAdminModal();
+    _vapVideoId = videoId;
+    document.getElementById('vap-error').textContent = '';
+    document.getElementById('vap-users-list').innerHTML = 'Loading\u2026';
+    document.getElementById('vap-people-list').innerHTML = 'Loading\u2026';
+    openModal('video-admin-popup');
+
+    try {
+      const [access, allUsers] = await Promise.all([
+        api(`/api/admin/videos/${videoId}/access`),
+        api('/api/admin/users'),
+      ]);
+
+      // Render access
+      const allCb = document.getElementById('vap-all-users');
+      allCb.checked = access.all_users;
+      const usersSection = document.getElementById('vap-users-section');
+      usersSection.style.opacity = access.all_users ? '0.3' : '1';
+      usersSection.style.pointerEvents = access.all_users ? 'none' : 'auto';
+
+      const viewers = allUsers.filter((u) => u.role !== 'admin');
+      if (viewers.length) {
+        document.getElementById('vap-users-list').innerHTML = viewers.map((u) =>
+          `<label class="vap-user-row">
+            <input type="checkbox" class="vap-user-cb" value="${u.id}" ${access.user_ids.includes(u.id) ? 'checked' : ''} />
+            <div class="vap-user-row-info">
+              <span class="vap-user-row-name">${escHtml(u.display_name || u.username)}</span>
+              <span class="vap-user-row-handle">@${escHtml(u.username)}</span>
+            </div>
+          </label>`
+        ).join('');
+      } else {
+        document.getElementById('vap-users-list').innerHTML = '<p class="vap-empty">No viewer accounts yet.</p>';
+      }
+
+      await renderVapPeople();
+    } catch (err) {
+      document.getElementById('vap-error').textContent = err.message;
+    }
+  };
+})();
+
+// ── Avatar helpers ───────────────────────────────────────────────────────────
+function refreshAvatars(user) {
+  const avatarEls = document.querySelectorAll('.avatar');
+  const token = getToken();
+  const avatarUrl = user?.avatar_path && token
+    ? `/api/users/avatar/${user.id}?t=${Date.now()}&token=${encodeURIComponent(token)}`
+    : null;
+
+  avatarEls.forEach((el) => {
+    // Some avatars are page-specific and should not be replaced with the logged-in user's avatar.
+    if (el.hasAttribute('data-avatar-static')) return;
+
+    const fallback = (user?.display_name || user?.username || '?')[0].toUpperCase();
+    if (avatarUrl) {
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.alt = 'Avatar';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.addEventListener('error', () => {
+        el.replaceChildren(document.createTextNode(fallback));
+      }, { once: true });
+      el.replaceChildren(img);
+      return;
+    }
+    el.replaceChildren(document.createTextNode(fallback));
+  });
+}
+
+function syncAvatarControls(user) {
+  const removeBtn = document.getElementById('remove-avatar-btn');
+  if (!removeBtn) return;
+  removeBtn.style.display = user?.avatar_path ? '' : 'none';
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Failed to read image file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function isMobileViewport() {
+  return window.innerWidth <= 768;
+}
+
+// ── Sidebar + User Dropdown (runs on every page) ──────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const SIDEBAR_KEY = 'ma_sidebar_collapsed';
+  const SETTINGS_MODAL_ID = 'user-settings-modal';
+  let settingsImageBase64 = null;
+  let settingsImageRemoved = false;
+
+  // ── Header Scroll Behavior (CSS controls where hiding takes effect) ─────
+  const header = document.querySelector('.header');
+  if (header) {
+    let lastScrollY = window.scrollY;
+
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY;
+
+      // Ignore tiny scroll jitters (trackpad / touch inertia)
+      if (Math.abs(delta) < 5) return;
+
+      if (delta > 0 && currentScrollY > 64) {
+        if (!header.classList.contains('header--hidden')) {
+          header.classList.add('header--hidden');
+        }
+      } else if (delta < 0) {
+        if (header.classList.contains('header--hidden')) {
+          header.classList.remove('header--hidden');
+        }
+      }
+      lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
+    }, { passive: true });
+  }
+
+  // ── Sidebar toggle (hamburger) ────────────────────────────────────────────
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const mainLayout = document.querySelector('.main-layout');
+  const sidebar = document.getElementById('sidebar') || mainLayout?.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  if (sidebarToggle && mainLayout && sidebar) {
+    const closeMobileSidebar = () => {
+      sidebar.classList.remove('open');
+      overlay?.classList.remove('show');
+      document.body.style.overflow = '';
+    };
+
+    const openMobileSidebar = () => {
+      sidebar.classList.add('open');
+      overlay?.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    };
+
+    // Restore desktop collapsed state
+    if (localStorage.getItem(SIDEBAR_KEY) === '1') {
+      mainLayout.classList.add('collapsed');
+    }
+
+    sidebarToggle.addEventListener('click', () => {
+      if (isMobileViewport()) {
+        if (sidebar.classList.contains('open')) closeMobileSidebar();
+        else openMobileSidebar();
+      } else {
+        const collapsed = mainLayout.classList.toggle('collapsed');
+        localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+      }
+    });
+
+    overlay?.addEventListener('click', () => {
+      closeMobileSidebar();
+    });
+
+    // Close mobile drawer when selecting any nav item.
+    sidebar.addEventListener('click', (e) => {
+      const navTarget = e.target.closest('.nav-item, .tab-btn, a');
+      if (!navTarget) return;
+      if (isMobileViewport()) closeMobileSidebar();
+    });
+
+    // Keep state clean when resizing between desktop/mobile.
+    window.addEventListener('resize', () => {
+      if (!isMobileViewport()) closeMobileSidebar();
+    });
+  }
+
+  // ── User dropdown ─────────────────────────────────────────────────────────
+  const trigger  = document.getElementById('user-menu-trigger');
+  const dropdown = document.getElementById('user-dropdown');
+
+  const applyUserUI = (user) => {
+    if (!user) return;
+
+    refreshAvatars(user);
+    syncAvatarControls(user);
+
+    const nameEl = document.getElementById('dropdown-user-name');
+    const roleEl = document.getElementById('dropdown-user-role');
+    if (nameEl) nameEl.textContent = user.display_name || user.username || 'Unknown';
+    if (roleEl) {
+      const isUserAdmin = user.role === 'admin';
+      roleEl.textContent = isUserAdmin ? 'Administrator' : 'Viewer';
+      roleEl.classList.toggle('role-admin', isUserAdmin);
+    }
+
+    const adminLink = document.getElementById('admin-link');
+    if (adminLink) {
+      adminLink.style.display = user.role === 'admin' ? 'flex' : 'none';
+      adminLink.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.7a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.7z"></path></svg> Admin Panel`;
+    }
+    
+    const uploadTrigger = document.getElementById('upload-trigger');
+    if (uploadTrigger) {
+      const canUpload = user.role === 'admin' || user.can_upload === 1;
+      uploadTrigger.style.display = canUpload ? 'inline-flex' : 'none';
+    }
+
+    const channelsBtn = document.getElementById('channels-btn');
+    if (channelsBtn) {
+      channelsBtn.style.display = 'flex';
+    }
+
+    ensureInstallMenuItem();
+  };
+
+  function ensureInstallMenuItem() {
+    const dropdown = document.getElementById('user-dropdown');
+    if (!dropdown || document.getElementById('pwa-install-btn')) return;
+    const logoutBtn = document.getElementById('logout-btn');
+    if (!logoutBtn) return;
+
+    const installBtn = document.createElement('button');
+    installBtn.className = 'dropdown-item';
+    installBtn.id = 'pwa-install-btn';
+    installBtn.type = 'button';
+    installBtn.setAttribute('role', 'menuitem');
+    installBtn.style.display = deferredPrompt ? 'flex' : 'none';
+    installBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Install App
+    `;
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') installBtn.style.display = 'none';
+      deferredPrompt = null;
+    });
+
+    dropdown.insertBefore(installBtn, logoutBtn);
+  }
+
+  function ensureSettingsMenuItem() {
+    if (!dropdown || document.getElementById('settings-btn')) return;
+    const logoutBtn = document.getElementById('logout-btn');
+    if (!logoutBtn) return;
+
+    const settingsBtn = document.createElement('button');
+    settingsBtn.className = 'dropdown-item';
+    settingsBtn.id = 'settings-btn';
+    settingsBtn.type = 'button';
+    settingsBtn.setAttribute('role', 'menuitem');
+    settingsBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      Settings
+    `;
+    dropdown.insertBefore(settingsBtn, logoutBtn);
+  }
+
+  function ensureSettingsModal() {
+    if (document.getElementById(SETTINGS_MODAL_ID)) return;
+    const html = `
+      <div class="modal-overlay" id="${SETTINGS_MODAL_ID}">
+        <div class="modal settings-modal">
+          <div class="modal-header">
+            <h3>Settings</h3>
+            <button class="btn-icon" id="settings-close" type="button" aria-label="Close settings">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <div class="settings-section">
+            <h4 class="settings-title">Profile Picture</h4>
+            <div class="settings-avatar-row">
+              <div class="avatar avatar-lg settings-avatar-preview" id="settings-avatar-preview">?</div>
+              <div class="settings-avatar-actions">
+                <input type="file" id="settings-avatar-input" hidden accept="image/jpeg,image/png,image/webp" />
+                <button class="btn btn-ghost btn-sm" id="settings-avatar-upload" type="button">Upload Image</button>
+                <button class="btn btn-danger btn-sm" id="settings-avatar-remove" type="button" style="display:none">Remove</button>
+                <p class="settings-help">Max 2MB. Jpg, Png, or Webp.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h4 class="settings-title">Change Password</h4>
+            <div class="form-group">
+              <label class="form-label" for="settings-current-password">Current Password</label>
+              <input class="form-input" id="settings-current-password" type="password" autocomplete="current-password" maxlength="128" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="settings-new-password">New Password</label>
+              <input class="form-input" id="settings-new-password" type="password" autocomplete="new-password" maxlength="128" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="settings-confirm-password">Confirm New Password</label>
+              <input class="form-input" id="settings-confirm-password" type="password" autocomplete="new-password" maxlength="128" />
+            </div>
+          </div>
+
+          <p class="form-error" id="settings-error"></p>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" id="settings-cancel" type="button">Cancel</button>
+            <button class="btn btn-primary" id="settings-save" type="button">Save Changes</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    const overlay = document.getElementById(SETTINGS_MODAL_ID);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal(SETTINGS_MODAL_ID);
+    });
+
+    document.getElementById('settings-close')?.addEventListener('click', () => closeModal(SETTINGS_MODAL_ID));
+    document.getElementById('settings-cancel')?.addEventListener('click', () => closeModal(SETTINGS_MODAL_ID));
+    document.getElementById('settings-avatar-upload')?.addEventListener('click', () => {
+      document.getElementById('settings-avatar-input')?.click();
+    });
+  }
+
+  function renderSettingsAvatar(user) {
+    const preview = document.getElementById('settings-avatar-preview');
+    const removeBtn = document.getElementById('settings-avatar-remove');
+    if (!preview || !removeBtn) return;
+
+    const fallback = (user?.display_name || user?.username || '?')[0].toUpperCase();
+    const token = getToken();
+    const avatarUrl = settingsImageBase64 || (user?.avatar_path && token
+      ? `/api/users/avatar/${user.id}?t=${Date.now()}&token=${encodeURIComponent(token)}`
+      : null);
+
+    if (avatarUrl) {
+      preview.innerHTML = `<img src="${avatarUrl}" alt="Avatar" loading="lazy" decoding="async" />`;
+      removeBtn.style.display = '';
+      return;
+    }
+
+    preview.replaceChildren(document.createTextNode(fallback));
+    removeBtn.style.display = 'none';
+  }
+
+  function resetSettingsFields(user) {
+    settingsImageBase64 = null;
+    settingsImageRemoved = false;
+    const errEl = document.getElementById('settings-error');
+    const cur = document.getElementById('settings-current-password');
+    const next = document.getElementById('settings-new-password');
+    const confirm = document.getElementById('settings-confirm-password');
+    const fileInput = document.getElementById('settings-avatar-input');
+    if (errEl) errEl.textContent = '';
+    if (cur) cur.value = '';
+    if (next) next.value = '';
+    if (confirm) confirm.value = '';
+    if (fileInput) fileInput.value = '';
+    renderSettingsAvatar(user);
+  }
+
+  async function openSettingsModal() {
+    ensureSettingsModal();
+    dropdown?.classList.remove('show');
+    trigger?.setAttribute('aria-expanded', 'false');
+
+    const user = getUser();
+    resetSettingsFields(user);
+    openModal(SETTINGS_MODAL_ID);
+  }
+
+  async function saveSettings() {
+    const errEl = document.getElementById('settings-error');
+    const cur = document.getElementById('settings-current-password')?.value || '';
+    const next = document.getElementById('settings-new-password')?.value || '';
+    const confirm = document.getElementById('settings-confirm-password')?.value || '';
+    if (errEl) errEl.textContent = '';
+
+    const wantsPasswordChange = !!(cur || next || confirm);
+    if (wantsPasswordChange) {
+      if (!cur || !next || !confirm) {
+        if (errEl) errEl.textContent = 'Fill all password fields to change password.';
+        return;
+      }
+      if (next !== confirm) {
+        if (errEl) errEl.textContent = 'New passwords do not match.';
+        return;
+      }
+      if (next.length < 8) {
+        if (errEl) errEl.textContent = 'New password must be at least 8 characters.';
+        return;
+      }
+    }
+
+    const saveBtn = document.getElementById('settings-save');
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      let changed = false;
+
+      if (settingsImageBase64) {
+        await api('/api/user/avatar', {
+          method: 'POST',
+          body: JSON.stringify({ imageBase64: settingsImageBase64 }),
+        });
+        changed = true;
+      } else if (settingsImageRemoved) {
+        await api('/api/user/avatar', { method: 'DELETE' });
+        changed = true;
+      }
+
+      if (wantsPasswordChange) {
+        await api('/api/auth/change-password', {
+          method: 'POST',
+          body: JSON.stringify({
+            current_password: cur,
+            new_password: next,
+          }),
+        });
+        changed = true;
+      }
+
+      if (!changed) {
+        if (errEl) errEl.textContent = 'No changes to save.';
+        return;
+      }
+
+      await syncCurrentUserFromServer();
+      resetSettingsFields(getUser());
+      closeModal(SETTINGS_MODAL_ID);
+      toast('Settings updated successfully.');
+    } catch (err) {
+      if (errEl) errEl.textContent = err.message || 'Failed to save settings.';
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
+  const cachedUser = getUser();
+  applyUserUI(cachedUser);
+
+  async function syncCurrentUserFromServer() {
+    // Always refresh user profile from server so avatar/display changes sync across devices.
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const serverUser = await api('/api/auth/me');
+      localStorage.setItem('ma_user', JSON.stringify(serverUser));
+      applyUserUI(serverUser);
+    } catch (err) {
+      // api() already handles unauthorized tokens; ignore transient fetch errors here.
+      console.warn('[User Sync] Failed to refresh current user:', err.message);
+    }
+  }
+
+  await syncCurrentUserFromServer();
+
+  ensureSettingsMenuItem();
+  ensureSettingsModal();
+
+  const settingsInput = document.getElementById('settings-avatar-input');
+  settingsInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    const errEl = document.getElementById('settings-error');
+    if (!file) return;
+
+    if (!/^image\/(jpeg|png|webp)$/i.test(file.type)) {
+      if (errEl) errEl.textContent = 'Only jpg, png, and webp images are allowed.';
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      if (errEl) errEl.textContent = 'Image is too large (Max 2MB).';
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      settingsImageBase64 = await fileToDataUrl(file);
+      settingsImageRemoved = false;
+      if (errEl) errEl.textContent = '';
+      renderSettingsAvatar(getUser());
+    } catch (err) {
+      if (errEl) errEl.textContent = err.message || 'Failed to process image.';
+    }
+  });
+
+  document.getElementById('settings-avatar-remove')?.addEventListener('click', () => {
+    settingsImageBase64 = null;
+    settingsImageRemoved = true;
+    const fileInput = document.getElementById('settings-avatar-input');
+    if (fileInput) fileInput.value = '';
+    renderSettingsAvatar({ ...getUser(), avatar_path: null });
+  });
+
+  document.getElementById('settings-save')?.addEventListener('click', saveSettings);
+
+  // ── Notification Logic ─────────────────────────────────────────────────────
+  const notifTrigger = document.getElementById('notif-trigger');
+  const notifDropdown = document.getElementById('notif-dropdown');
+  const notifList = document.getElementById('notif-list');
+  const notifBadge = document.getElementById('notif-badge');
+
+  async function updateNotifications() {
+    if (!getUser()) return;
+    if (!notifList || !notifBadge) return;
+    try {
+      const notifs = await api('/api/user/notifications');
+      const unreadCount = notifs.filter((n) => !Number(n.is_read)).length;
+
+      if (unreadCount > 0) {
+        notifBadge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+        notifBadge.style.display = 'flex';
+      } else {
+        notifBadge.style.display = 'none';
+      }
+
+      if (!notifs.length) {
+        notifList.innerHTML = '<div class="notif-empty">All caught up!</div>';
+        return;
+      }
+
+      notifList.innerHTML = notifs.map((n) => {
+        const author = String(n.display_name || n.username || 'User');
+        const authorInitial = (author[0] || '?').toUpperCase();
+        const fallbackExpr = JSON.stringify(authorInitial);
+        const token = getToken();
+        const avatarUrl = n.user_id && n.avatar_path && token
+          ? `/api/users/avatar/${Number(n.user_id)}?token=${encodeURIComponent(token)}&t=${Date.now()}`
+          : null;
+        const videoTitle = String(n.video_title || 'a video');
+        const isRead = Number(n.is_read) === 1;
+        const isReplyToMe = Number(n.is_reply_to_me) === 1;
+        const typeLabel = isReplyToMe
+          ? '<span class="notif-type reply">Reply</span>'
+          : '<span class="notif-type">Comment</span>';
+        return `
+          <div class="notif-item ${isRead ? '' : 'unread'} ${isReplyToMe ? 'is-reply' : ''}" onclick="handleNotifClick(${Number(n.id)}, ${Number(n.video_id)})">
+            <div class="notif-avatar">${avatarUrl
+              ? `<img src="${avatarUrl}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.parentNode.textContent=${fallbackExpr}" />`
+              : escHtml(authorInitial)}</div>
+            <div class="notif-content">
+              <div class="notif-type-row">${typeLabel}</div>
+              <p class="notif-message"><strong>${escHtml(author)}</strong> on <em>${escHtml(videoTitle)}</em></p>
+              <span class="notif-time">${formatDate(n.created_at)}</span>
+            </div>
+            ${isRead ? '' : '<div class="unread-dot"></div>'}
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error('Notif error', e);
+    }
+  }
+
+  window.handleNotifClick = async (commentId, videoId) => {
+    const safeCommentId = Number(commentId);
+    const safeVideoId = Number(videoId);
+    const targetHash = `#comment-${safeCommentId}`;
+    const currentVideoId = Number(new URLSearchParams(location.search).get('id'));
+    const isWatchPage = /\/watch\.html$/i.test(location.pathname);
+    const isSameVideoPage = isWatchPage && currentVideoId === safeVideoId;
+
+    try {
+      await api(`/api/user/notifications/${safeCommentId}/read`, { method: 'POST' });
+      await updateNotifications();
+      notifDropdown?.classList.remove('show');
+
+      if (isSameVideoPage) {
+        if (location.hash !== targetHash) {
+          location.hash = targetHash;
+        } else {
+          document.getElementById(`comment-${safeCommentId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      location.href = `/watch.html?id=${safeVideoId}${targetHash}`;
+    } catch (e) {
+      notifDropdown?.classList.remove('show');
+      location.href = `/watch.html?id=${safeVideoId}`;
+    }
+  };
+
+  notifTrigger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notifDropdown?.classList.toggle('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (notifDropdown && notifTrigger && !notifDropdown.contains(e.target) && !notifTrigger.contains(e.target)) {
+      notifDropdown.classList.remove('show');
+    }
+  });
+
+  if (notifTrigger) {
+    updateNotifications();
+    setInterval(updateNotifications, 60000);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById(SETTINGS_MODAL_ID);
+      if (modal?.classList.contains('open')) closeModal(SETTINGS_MODAL_ID);
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      syncCurrentUserFromServer();
+    }
+  });
+
+  if (trigger && dropdown) {
+    // Toggle dropdown
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = dropdown.classList.toggle('show');
+      trigger.setAttribute('aria-expanded', String(open));
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target) && e.target !== trigger) {
+        dropdown.classList.remove('show');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
+  }
+});

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spool</title>
+  <script src="/config.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/img/icon-192.png" />
+  <link rel="alternate icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="manifest" href="/manifest.json" />
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <header class="header">
+      <div class="header-left">
+        <button class="icon-btn" id="sidebar-toggle" aria-label="Toggle Sidebar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <a href="/" class="header-logo">
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </div>
+          <span class="logo-text">Spool</span>
+        </a>
+      </div>
+
+      <div class="header-center">
+        <div class="search-bar-wrapper">
+          <input type="text" id="search-input" placeholder="Search" autocomplete="off" maxlength="100" />
+          <button class="search-clear-btn" id="search-clear-btn" type="button" aria-label="Clear search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <button class="search-btn" aria-label="Search" onclick="document.getElementById('search-input').focus()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Upload Button -->
+        <button class="icon-btn" id="upload-trigger" title="Upload Video" type="button" style="display:none;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <!-- Notification Bell -->
+        <div class="notif-container">
+          <button class="icon-btn" id="notif-trigger" title="Notifications" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="notif-badge" id="notif-badge" style="display:none"></span>
+          </button>
+          <div class="notif-dropdown" id="notif-dropdown">
+            <div class="notif-header">Notifications</div>
+            <div class="notif-list" id="notif-list">
+              <div class="notif-empty">No new activity</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-menu-container">
+          <div class="avatar" id="user-menu-trigger" role="button">?</div>
+          <div class="user-dropdown" id="user-dropdown" role="menu">
+            <div class="dropdown-user-info">
+              <p class="dropdown-name" id="dropdown-user-name">User</p>
+              <p class="dropdown-role" id="dropdown-user-role">Viewer</p>
+            </div>
+            <div class="dropdown-divider"></div>
+            <!-- Duplicated in dropdown for redundancy -->
+            <a href="/admin.html" class="dropdown-item" id="admin-link" style="display:none">Admin Panel</a>
+            <button class="dropdown-item" id="logout-btn">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Sidebar + Main ─────────────────────────────────────────────────── -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="main-layout" id="main-layout">
+
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+          <button class="nav-item tab-btn active" data-category="all">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-item tab-btn" data-category="video">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="15" height="10" rx="2"/><polygon points="17 9 22 7 22 17 17 15"/></svg>
+            <span>Videos</span>
+          </button>
+          <button class="nav-item" id="channels-btn" type="button" style="display:none;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <span data-collapsed-label="Channels">Channels</span>
+          </button>
+          <button class="nav-item tab-btn" data-category="livestream">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.5 7.5a6 6 0 0 1 0 9M7.5 7.5a6 6 0 0 0 0 9M19.4 5.6a10 10 0 0 1 0 12.8M4.6 5.6a10 10 0 0 0 0 12.8"/></svg>
+            <span data-collapsed-label="Live">Live Streams</span>
+          </button>
+          <button class="nav-item" id="people-btn" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="8" r="4"/><path d="M2 20a8 8 0 0 1 16 0"/></svg>
+            <span data-collapsed-label="People">People</span>
+          </button>
+          <button class="nav-item" id="series-btn" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+            <span data-collapsed-label="Series">Series</span>
+          </button>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-section">
+          <h3 class="sidebar-title">You</h3>
+          <button class="nav-item" id="history-btn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>History</span>
+          </button>
+          <button class="nav-item" id="favorites-btn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.14C.98 10.5 1.4 7.2 3.9 5.6c2.01-1.29 4.62-.9 6.1.9L12 8.4l2-1.9c1.48-1.8 4.09-2.19 6.1-.9 2.5 1.6 2.92 4.9 1.4 7.26C19 16.65 12 21 12 21z"/></svg>
+            <span>Favorites</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- ── Main Content ─────────────────────────────────────────────────── -->
+      <main class="main-content">
+        
+        <!-- Top Pills linked to DB categories! -->
+        <div class="chip-bar" id="top-chip-bar">
+          <button class="chip tab-btn active" data-category="all">All</button>
+          <button class="chip tab-btn" data-category="all" data-sort="newest" data-special="recently-uploaded">Recently Uploaded</button>
+          <button class="chip tab-btn" data-category="video" data-sort="name_asc">Video Archives</button>
+          <button class="chip tab-btn" data-category="livestream">Live Archives</button>
+        </div>
+
+        <div id="channel-page-container" style="display:none;"></div>
+
+        <!-- The new Toolbar (h2 title + Sort Dropdown) -->
+        <div class="toolbar">
+          <h2 id="section-label">All Videos</h2>
+          <p id="section-subtitle" style="display:none"></p> <!-- Kept hidden to prevent JS crash -->
+          
+          <div style="display:flex; gap:12px; align-items:center;">
+            <div id="sort-menu-container" class="sort-menu-container">
+              <button class="sort-btn" id="sort-trigger">
+                <span id="sort-current">Sort by: Newest</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="sort-menu" id="sort-menu">
+                <button class="sort-option active" data-sort="newest">Newest First</button>
+                <button class="sort-option" data-sort="oldest">Oldest First</button>
+                <button class="sort-option" data-sort="name_asc">Name: A to Z</button>
+                <button class="sort-option" data-sort="name_desc">Name: Z to A</button>
+                <button class="sort-option" data-sort="people_asc">People: A to Z</button>
+                <button class="sort-option" data-sort="people_desc">People: Z to A</button>
+              </div>
+            </div>
+          </div>
+          <span id="video-count" style="display:none"></span> <!-- Kept hidden for JS -->
+        </div>
+
+        <!-- Sleek Floating Action Bar -->
+        <div class="bulk-action-bar" id="home-selection-bar" style="display:none">
+          <div class="bulk-bar-left">
+            <button class="bulk-close-btn" id="home-selection-clear" title="Clear selection" type="button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <span class="bulk-count" id="home-selection-count">0 selected</span>
+          </div>
+
+          <div class="bulk-bar-center">
+            <div class="glass-select" id="bulk-action-wrapper">
+              <button class="glass-select-trigger" id="bulk-action-trigger" type="button">Choose Action</button>
+              <div class="glass-select-menu drop-up" id="bulk-action-menu">
+                <div class="glass-menu-label">Access</div>
+                <button class="glass-option" data-value="grant_everyone" type="button">Make Public</button>
+                <button class="glass-option" data-value="remove_everyone" type="button">Make Private</button>
+                <button class="glass-option" data-value="grant_user" type="button">Grant to User</button>
+                <button class="glass-option" data-value="remove_user" type="button">Revoke from User</button>
+                <div class="glass-menu-label">Series</div>
+                <button class="glass-option" data-value="add_to_series" type="button">Add to Playlist</button>
+                <button class="glass-option" data-value="create_series" type="button">Create New Playlist</button>
+                <div class="glass-menu-label">Tags</div>
+                <button class="glass-option" data-value="add_people" type="button">Tag People</button>
+              </div>
+            </div>
+
+            <div class="bulk-target-area">
+              <div class="glass-select" id="bulk-user-wrapper" style="display:none">
+                <button class="glass-select-trigger" id="bulk-user-trigger" type="button">Select User</button>
+                <div class="glass-select-menu drop-up" id="bulk-user-menu"></div>
+              </div>
+              <div class="glass-select" id="bulk-series-wrapper" style="display:none">
+                <button class="glass-select-trigger" id="bulk-series-trigger" type="button">Select Playlist</button>
+                <div class="glass-select-menu drop-up" id="bulk-series-menu"></div>
+              </div>
+              <input class="form-input bulk-input-mini" id="home-bulk-series-name" type="text" placeholder="New playlist name..." style="display:none" />
+
+              <div class="people-picker-wrap" id="bulk-people-wrapper" style="display:none">
+                <button class="glass-select-trigger" id="people-picker-trigger" type="button">0 People Selected</button>
+                <div class="people-flyout drop-up" id="people-picker-menu">
+                  <div class="flyout-header">Tag People</div>
+                  <div class="flyout-grid" id="people-picker-grid"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bulk-bar-right">
+            <button class="btn btn-primary btn-sm" id="home-selection-apply" type="button">Apply</button>
+          </div>
+        </div>
+
+        <!-- VIEWS -->
+        <section id="videos-view" class="view-shell">
+          <div id="video-grid" class="video-grid"></div>
+          <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- People View -->
+        <section id="people-view" class="people-view is-hidden">
+          <div class="people-hero">
+            <div>
+              <p class="people-hero-kicker">Browse by person</p>
+              <h3>Find everyone tagged in the archive</h3>
+              <p>Select a person to jump straight into their videos.</p>
+            </div>
+            <div class="people-hero-stat">
+              <span class="people-hero-stat-label">People</span>
+              <strong id="people-count">—</strong>
+            </div>
+          </div>
+          <div id="people-grid" class="people-grid"></div>
+        </section>
+
+        <!-- Series View -->
+        <section id="series-view" class="series-view is-hidden">
+          <div class="people-hero series-hero">
+            <div>
+              <p class="people-hero-kicker">Playlists</p>
+              <h3>Series library</h3>
+              <p>Open a series to watch the videos you can access.</p>
+            </div>
+            <div class="people-hero-stat">
+              <span class="people-hero-stat-label">Series</span>
+              <strong id="series-count">—</strong>
+            </div>
+          </div>
+          <div id="series-grid" class="series-grid"></div>
+        </section>
+      </main>
+
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Shared Modals needed by main.js -->
+  <div class="modal-overlay" id="series-order-modal">
+    <div class="modal series-order-modal">
+      <div class="modal-header">
+        <h3 id="series-order-title">Reorder Playlist</h3>
+        <button class="btn-icon" id="series-order-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;">Use arrows to move videos up or down, then save the playlist order.</p>
+      <div class="series-order-list" id="series-order-list" style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+      <p class="form-error" id="series-order-error"></p>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="series-order-sort-date">Sort by Date</button>
+        <button class="btn btn-ghost" id="series-order-cancel">Cancel</button>
+        <button class="btn btn-primary" id="series-order-save">Save Order</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="dialog-overlay">
+    <div class="modal dialog-modal">
+      <div id="dialog-title">Announcement</div>
+      <div id="dialog-body">Loading...</div>
+
+      <div class="modal-footer dialog-footer">
+        <div class="dialog-lang-toggle" id="dialog-lang-switch">
+          <button id="btn-lang-en" class="active" type="button">EN</button>
+          <button id="btn-lang-pl" type="button">PL</button>
+        </div>
+
+        <div class="dialog-footer-actions">
+          <span id="dialog-counter"></span>
+          <button class="btn btn-primary" id="dialog-ack-btn" type="button">Understood</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/shared.js"></script>
+  <script src="/js/upload.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>
