@@ -662,6 +662,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     dropdown.insertBefore(settingsBtn, logoutBtn);
   }
 
+  function ensureYourChannelMenuItem() {
+    if (!dropdown || document.getElementById('your-channel-btn')) return;
+    const user = getUser();
+    if (!user || !user.channel_id) return;
+    // Show if admin or if they have upload rights and a channel
+    if (user.role !== 'admin' && !user.can_upload) return;
+    
+    const settingsBtn = document.getElementById('settings-btn');
+    if (!settingsBtn) return; // Insert before settings
+
+    const yourChannelBtn = document.createElement('a');
+    yourChannelBtn.className = 'dropdown-item';
+    yourChannelBtn.id = 'your-channel-btn';
+    yourChannelBtn.href = `/channel.html?id=${user.channel_id}`;
+    yourChannelBtn.setAttribute('role', 'menuitem');
+    yourChannelBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      Your Channel
+    `;
+    dropdown.insertBefore(yourChannelBtn, settingsBtn);
+  }
+
   function ensureSettingsModal() {
     if (document.getElementById(SETTINGS_MODAL_ID)) return;
     const html = `
@@ -859,6 +884,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await syncCurrentUserFromServer();
 
   ensureSettingsMenuItem();
+  ensureYourChannelMenuItem();
   ensureSettingsModal();
 
   const settingsInput = document.getElementById('settings-avatar-input');
