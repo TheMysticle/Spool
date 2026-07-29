@@ -1671,20 +1671,55 @@
       `;
       
       const searchInput = document.getElementById('channel-search-input');
-      const sortSelect = document.getElementById('channel-sort-select');
+      const sortTrigger = document.getElementById('channel-sort-trigger');
+      const sortMenu = document.getElementById('channel-sort-menu');
+      const sortCurrent = document.getElementById('channel-sort-current');
+      let currentSort = 'newest';
+
+      const sortLabels = {
+        'newest': 'Newest First',
+        'oldest': 'Oldest First',
+        'title_asc': 'Name: A to Z',
+        'title_desc': 'Name: Z to A'
+      };
+
+      if (sortTrigger && sortMenu) {
+        sortTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          sortMenu.classList.toggle('show');
+          sortTrigger.setAttribute('aria-expanded', String(sortMenu.classList.contains('show')));
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!sortTrigger.contains(e.target) && !sortMenu.contains(e.target)) {
+            sortMenu.classList.remove('show');
+            sortTrigger.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        document.querySelectorAll('#channel-sort-menu .sort-option').forEach(opt => {
+          opt.addEventListener('click', () => {
+            document.querySelectorAll('#channel-sort-menu .sort-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            
+            currentSort = opt.dataset.sort;
+            sortCurrent.textContent = `Sort by: ${sortLabels[currentSort]}`;
+            sortMenu.classList.remove('show');
+            sortTrigger.setAttribute('aria-expanded', 'false');
+            
+            const activeTab = document.querySelector('.channel-page-tab.active').textContent.toLowerCase();
+            switchChannelTab(id, activeTab, searchInput.value, currentSort);
+          });
+        });
+      }
       
       let searchTimeout;
       searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
           const activeTab = document.querySelector('.channel-page-tab.active').textContent.toLowerCase();
-          switchChannelTab(id, activeTab, searchInput.value, sortSelect.value);
+          switchChannelTab(id, activeTab, searchInput.value, currentSort);
         }, 500);
-      });
-      
-      sortSelect.addEventListener('change', () => {
-        const activeTab = document.querySelector('.channel-page-tab.active').textContent.toLowerCase();
-        switchChannelTab(id, activeTab, searchInput.value, sortSelect.value);
       });
       
       switchChannelTab(id, 'videos');
