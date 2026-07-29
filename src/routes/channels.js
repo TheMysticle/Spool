@@ -152,40 +152,46 @@ router.post('/:id/banner', authenticate, (req, res) => {
 
 // ── POST /api/channels/:id/vhs_password ───────────────────────────────────────
 router.post('/:id/vhs_password', authenticate, (req, res) => {
-  const channelId = req.params.id;
-  let numericId = null;
+  try {
+    const channelId = req.params.id;
+    let numericId = null;
 
-  if (channelId === 'main') {
-    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
-  } else {
-    numericId = parseInt(channelId, 10);
-    if (isNaN(numericId)) return res.status(400).json({ error: 'Invalid channel ID' });
-    const channelData = getChannelById(numericId);
-    if (!channelData) return res.status(404).json({ error: 'Channel not found' });
-    if (channelData.user_id !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-  }
-
-  const rawPassword = password || null; // allow unsetting
-
-  if (channelId === 'main') {
-    if (rawPassword) {
-      const hashed = bcrypt.hashSync(rawPassword, 12);
-      updateChannelProfile({ channel_vhs_password: hashed });
+    if (channelId === 'main') {
+      if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
     } else {
-      updateChannelProfile({ channel_vhs_password: null });
+      numericId = parseInt(channelId, 10);
+      if (isNaN(numericId)) return res.status(400).json({ error: 'Invalid channel ID' });
+      const channelData = getChannelById(numericId);
+      if (!channelData) return res.status(404).json({ error: 'Channel not found' });
+      if (channelData.user_id !== req.user.id && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
     }
-  } else {
-    if (rawPassword) {
-      const hashed = bcrypt.hashSync(rawPassword, 12);
-      updateChannel(numericId, { vhs_password: hashed });
-    } else {
-      updateChannel(numericId, { vhs_password: null });
-    }
-  }
 
-  res.json({ message: 'VHS password updated.' });
+    const { password } = req.body || {};
+    const rawPassword = password || null; // allow unsetting
+
+    if (channelId === 'main') {
+      if (rawPassword) {
+        const hashed = bcrypt.hashSync(rawPassword, 12);
+        updateChannelProfile({ channel_vhs_password: hashed });
+      } else {
+        updateChannelProfile({ channel_vhs_password: null });
+      }
+    } else {
+      if (rawPassword) {
+        const hashed = bcrypt.hashSync(rawPassword, 12);
+        updateChannel(numericId, { vhs_password: hashed });
+      } else {
+        updateChannel(numericId, { vhs_password: null });
+      }
+    }
+
+    res.json({ message: 'VHS password updated.' });
+  } catch (err) {
+    console.error('[VHS Password Error]', err);
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
 });
 
 // ── POST /api/channels/:id/vhs_verify ─────────────────────────────────────────
