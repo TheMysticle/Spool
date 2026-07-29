@@ -4349,6 +4349,30 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   opacity: 0.5;
 }
 
+.directory-hero {
+  display: flex;
+  flex-direction: column;
+  padding: 32px 0 24px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.directory-hero-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.directory-hero-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
 .vhs-lock-screen {
   display: flex;
   flex-direction: column;

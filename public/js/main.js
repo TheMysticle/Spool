@@ -1546,12 +1546,16 @@
     saveCurrentState();
     const grid = document.getElementById('video-grid');
     document.getElementById('channel-page-container').style.display = 'none';
-    document.getElementById('top-chip-bar').style.display = 'flex';
-    document.querySelector('.toolbar').style.display = 'flex';
-    grid.style.display = 'grid';
+    document.getElementById('top-chip-bar').style.display = 'none';
+    document.querySelector('.toolbar').style.display = 'none';
+    grid.style.display = 'block';
     grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loading Channels…</span></div>';
     document.getElementById('pagination').innerHTML = '';
-    updateSectionLabel();
+    
+    // We hide the standard section label since we are using a custom hero header
+    const sectionLabel = document.getElementById('section-label');
+    if (sectionLabel) sectionLabel.parentElement.style.display = 'none';
+
     const countEl = document.getElementById('video-count');
     if (countEl) countEl.textContent = '';
 
@@ -1562,7 +1566,13 @@
         return;
       }
       
-      let html = '<div class="channels-grid" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; padding: 16px 0;">';
+      let html = `
+        <div class="directory-hero">
+          <h1 class="directory-hero-title">Channels</h1>
+          <p class="directory-hero-subtitle">Discover and explore the archives available for you to watch.</p>
+        </div>
+        <div class="channels-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; padding: 16px 0 48px 0;">
+      `;
       data.channels.forEach(ch => {
         const tokenStr = getToken() || '';
         const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(tokenStr)}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">${ch.name.charAt(0).toUpperCase()}</text></svg>';
