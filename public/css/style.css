@@ -2692,7 +2692,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .dp-short { display: inline; }
   .video-grid { grid-template-columns: 1fr; }
   .series-grid { grid-template-columns: 1fr; }
-  .main-content { padding: 0 16px 16px 16px; }
+  .main-content { padding: 0 16px 76px 16px; }
   .admin-container { grid-template-columns: 1fr; }
   .admin-nav { position: static; height: auto; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border-subtle); padding: 8px 12px; gap: 4px; }
   .admin-nav-group { flex-direction: row; gap: 2px; }
@@ -2736,16 +2736,51 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
   .sidebar {
     position: fixed;
-    top: 64px;
+    top: auto;
     left: 0;
     bottom: 0;
-    width: 280px;
+    width: 100%;
+    height: 60px;
     z-index: 1000;
     background: var(--bg-base);
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-    height: auto;
+    transform: none;
+    transition: none;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0;
+    border-top: 1px solid var(--border);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .sidebar-section {
+    flex-direction: row;
+    gap: 0;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 16px;
+    border-radius: 0;
+    justify-content: center;
+    font-size: 0.65rem;
+    height: 100%;
+  }
+
+  .nav-item svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+  }
+
+  .sidebar-divider, .sidebar-title, #sidebar-toggle {
+    display: none !important;
   }
 
   .sidebar.open {
@@ -4389,6 +4424,12 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   .channel-page-actions {
     justify-content: center;
     width: 100%;
+    gap: 8px;
+  }
+  
+  .channel-page-actions .btn {
+    flex: 1;
+    padding: 10px 16px;
   }
   
   .channel-page-nav {
