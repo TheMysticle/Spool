@@ -2735,13 +2735,14 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   }
 
   .sidebar {
-    position: fixed;
-    top: auto;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: calc(60px + env(safe-area-inset-bottom, 12px));
-    padding-bottom: env(safe-area-inset-bottom, 12px);
+      position: fixed;
+      top: auto;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: calc(60px + env(safe-area-inset-bottom, 12px));
+      padding: 0;
+      padding-bottom: env(safe-area-inset-bottom, 12px);
     z-index: 1000;
     background: var(--bg-base);
     transform: none;
