@@ -1,4 +1,4 @@
-﻿/* main.js — home / browse page */
+/* main.js — home / browse page */
 'use strict';
 
 (function () {
@@ -1990,7 +1990,7 @@
                   </div>
                   <div class="community-post-body">
                     <div class="community-post-text" id="community-post-text-${p.id}" data-raw="${escHtml(p.content)}">${escHtml(p.content)}</div>
-                    ${imageUrl ? `<img src="${imageUrl}" class="community-post-image" alt="Post attachment">` : '}
+                    ${imageUrl ? `<img src="${imageUrl}" class="community-post-image" alt="Post attachment">` : ''}
                   </div>
                   <div class="community-post-actions-row">
                     <button class="post-action-btn icon-btn" title="Like"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>
