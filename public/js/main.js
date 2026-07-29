@@ -1566,7 +1566,7 @@
       data.channels.forEach(ch => {
         const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(getToken() || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">?</text></svg>';
         html += `
-          <div class="channel-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; background: var(--bg-card); border-radius: 12px; cursor: pointer; border: 1px solid var(--border);" onclick="selectChannel('${ch.id}', '${escHtml(ch.name)}')">
+          <div class="channel-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; background: transparent; border-radius: 8px; cursor: pointer; transition: background 0.2s, transform 0.2s;" onmouseover="this.style.background='var(--bg-hover)'; this.style.transform='scale(1.02)';" onmouseout="this.style.background='transparent'; this.style.transform='none';" onclick="selectChannel('${ch.id}', '${escHtml(ch.name)}')">
             <img src="${avatarUrl}" class="channel-avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--bg-hover);" alt="${escHtml(ch.name)}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'%232c2c2c\'/><text x=\'50\' y=\'55\' font-family=\'sans-serif\' font-size=\'40\' fill=\'%238b5cf6\' text-anchor=\'middle\'>?</text></svg>';">
             <h3 class="channel-name" style="font-size: 1rem; font-weight: 600; text-align: center; word-break: break-word;">${escHtml(ch.name)}</h3>
           </div>
@@ -1633,19 +1633,19 @@
               ${canEdit ? `<button class="vhs-settings-btn" onclick="setupVhsPassword('${id}')" title="VHS Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>` : ''}
             </div>
           </div>
-          <div class="channel-page-nav" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 0 24px;">
-            <div class="channel-page-tabs" style="border-bottom: none; padding: 0;">
+          <div class="channel-page-nav" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 12px 24px;">
+            <div class="channel-page-tabs" style="display: flex; flex-wrap: wrap; gap: 8px; border-bottom: none; padding: 0;">
               <button class="channel-page-tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'livestreams')">Livestreams</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'community')">Community</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>
             </div>
-            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; gap: 12px; align-items: center;">
-              <div style="position:relative;">
-                <input type="text" id="channel-search-input" placeholder="Search..." style="width:220px; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;">
+            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; flex-wrap: wrap; gap: 12px; align-items: center;">
+              <div style="position:relative; flex: 1; min-width: 140px;">
+                <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
-              <select id="channel-sort-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; cursor: pointer;">
+              <select id="channel-sort-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; cursor: pointer; flex-shrink: 0;">
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="title_asc">Name: A to Z</option>

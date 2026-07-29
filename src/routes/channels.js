@@ -7,6 +7,8 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { authenticate } = require('../middleware/auth');
+
+const failedVhsAttempts = new Map(); // Tracks failed VHS password attempts: `${userId}_${channelId}` -> { count, lockUntil }
 const {
   getAllChannels,
   getChannelProfile,
@@ -213,6 +215,14 @@ router.post('/:id/vhs_verify', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'This channel has no VHS password set.' });
   }
 
+  const userChannelKey = `${req.user.id}_${channelId}`;
+  const attempt = failedVhsAttempts.get(userChannelKey) || { count: 0, lockUntil: 0 };
+
+  if (attempt.lockUntil > Date.now()) {
+    const mins = Math.ceil((attempt.lockUntil - Date.now()) / 60000);
+    return res.status(429).json({ error: `Too many failed attempts. Try again in ${mins} minutes.` });
+  }
+
   // Support both legacy plaintext and new bcrypt hashes
   let isValid = false;
   if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) {
@@ -225,8 +235,19 @@ router.post('/:id/vhs_verify', authenticate, async (req, res) => {
   }
 
   if (!isValid) {
-    return res.status(401).json({ error: 'Incorrect password.' });
+    attempt.count++;
+    if (attempt.count >= 3) {
+      attempt.lockUntil = Date.now() + 30 * 60000;
+      attempt.count = 0; // reset for next time they can try
+      failedVhsAttempts.set(userChannelKey, attempt);
+      return res.status(429).json({ error: 'Too many failed attempts. Try again in 30 minutes.' });
+    } else {
+      failedVhsAttempts.set(userChannelKey, attempt);
+      return res.status(403).json({ error: `Incorrect password. ${3 - attempt.count} attempts remaining.` });
+    }
   }
+
+  failedVhsAttempts.delete(userChannelKey);
 
   // Issue a proper JWT with expiry instead of a static hash
   const JWT_SECRET = process.env.JWT_SECRET;
