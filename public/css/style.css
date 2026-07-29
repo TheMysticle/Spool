@@ -4397,11 +4397,13 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 /* Mobile responsive layout */
 @media (max-width: 768px) {
   .channel-page-banner {
-    border-radius: 0;
+    border-radius: 16px;
   }
   
   .channel-page-info-bar {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
     align-items: center;
     text-align: left;
     padding: 16px;
@@ -4409,8 +4411,18 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   }
   
   .channel-page-avatar {
+    grid-column: 1;
+    grid-row: 1;
     width: 72px;
     height: 72px;
+  }
+  .channel-page-details {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
   }
   
   .channel-page-title {
@@ -4422,6 +4434,8 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   }
   
   .channel-page-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
     justify-content: center;
     width: 100%;
     gap: 8px;

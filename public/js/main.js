@@ -1564,10 +1564,10 @@
       
       let html = '<div class="channels-grid" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; padding: 16px 0;">';
       data.channels.forEach(ch => {
-        const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(getToken() || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">?</text></svg>';
+        const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(getToken() || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">${ch.name.charAt(0).toUpperCase()}</text></svg>';
         html += `
           <div class="channel-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; background: transparent; border-radius: 8px; cursor: pointer; transition: background 0.2s, transform 0.2s;" onmouseover="this.style.background='var(--bg-hover)'; this.style.transform='scale(1.02)';" onmouseout="this.style.background='transparent'; this.style.transform='none';" onclick="selectChannel('${ch.id}', '${escHtml(ch.name)}')">
-            <img src="${avatarUrl}" class="channel-avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--bg-hover);" alt="${escHtml(ch.name)}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'%232c2c2c\'/><text x=\'50\' y=\'55\' font-family=\'sans-serif\' font-size=\'40\' fill=\'%238b5cf6\' text-anchor=\'middle\'>?</text></svg>';">
+            <img src="${avatarUrl}" class="channel-avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--bg-hover);" alt="${escHtml(ch.name)}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'%232c2c2c\'/><text x=\'50\' y=\'55\' font-family=\'sans-serif\' font-size=\'40\' fill=\'%238b5cf6\' text-anchor=\\'middle\\'>${ch.name.charAt(0).toUpperCase()}</text></svg>';">
             <h3 class="channel-name" style="font-size: 1rem; font-weight: 600; text-align: center; word-break: break-word;">${escHtml(ch.name)}</h3>
           </div>
         `;
@@ -1606,7 +1606,7 @@
       const isMain = id === 'main';
       const token = getToken();
       
-      const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(token || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">?</text></svg>';
+      const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(token || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">${ch.name.charAt(0).toUpperCase()}</text></svg>';
       const bannerUrl = ch.banner_path ? `${ch.banner_path}?t=${Date.now()}&token=${encodeURIComponent(token || '')}` : '';
       
       const user = getUser();
@@ -1924,7 +1924,7 @@
         
         if (data.posts && data.posts.length > 0) {
           html += data.posts.map(p => {
-             const avatarUrl = p.channel_avatar ? `${p.channel_avatar}?t=${Date.now()}&token=${encodeURIComponent(getToken() || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">?</text></svg>';
+             const avatarUrl = p.channel_avatar ? `${p.channel_avatar}?t=${Date.now()}&token=${encodeURIComponent(getToken() || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">${ch.name.charAt(0).toUpperCase()}</text></svg>';
              const imageUrl = p.image_path ? `${p.image_path}?t=${Date.now()}&token=${encodeURIComponent(getToken() || '')}` : '';
              const isEditedHtml = p.is_edited ? '<span class="community-post-time" style="font-style: italic; margin-left: 4px;">(edited)</span>' : '';
              const actionsHtml = canEdit ? `
