@@ -1,4 +1,4 @@
-﻿/* main.js â€” home / browse page */
+/* main.js — home / browse page */
 'use strict';
 
 (function () {
@@ -7,7 +7,7 @@
   const STORAGE_KEY = 'ma_browse_state';
   const HOME_SELECT_LONG_PRESS_MS = 450;
 
-  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── State ──────────────────────────────────────────────────────────────────
   let state = {
     category: 'all',
     search: '',
@@ -144,10 +144,10 @@
     searchClearBtnEl.classList.toggle('show', Boolean(searchInputEl.value.trim()));
   }
 
-  // â”€â”€ Bootstrap UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Bootstrap UI ──────────────────────────────────────────────────────────
   // Avatar / dropdown / admin link populated by shared.js DOMContentLoaded block
 
-  // â”€â”€ Category tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Category tabs ──────────────────────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.category = btn.dataset.category;
@@ -279,7 +279,7 @@
     updateHomeSelectionUi();
   });
 
-  // â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Search ─────────────────────────────────────────────────────────────────
   document.getElementById('search-input')?.addEventListener('input', (e) => {
     updateSearchClearButton();
     clearTimeout(searchTimeout);
@@ -331,7 +331,7 @@
   });
 
 
-  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Helpers ────────────────────────────────────────────────────────────────
   function updateSectionLabel() {
     const labels = { all: 'All Videos', video: 'Videos', livestream: 'Live Streams', history: 'Recently Watched', favorites: 'Favorites', people: 'People', series: 'Series' };
     const el = document.getElementById('section-label');
@@ -989,9 +989,9 @@
             <h3 class="card-title" title="${escHtml(video.title)}">${escHtml(video.title)}</h3>
             <div class="card-meta">
               <span>${escHtml(authorName)}</span>
-              <span class="meta-dot">â€¢</span>
+              <span class="meta-dot">•</span>
               <span>${Number(video.view_count || 0).toLocaleString()} view${Number(video.view_count || 0) === 1 ? '' : 's'}</span>
-              <span class="meta-dot">â€¢</span>
+              <span class="meta-dot">•</span>
               <span>${escHtml(created || 'Recently')}</span>
             </div>
           </div>
@@ -1073,22 +1073,22 @@
     if (state.pages <= 1) { container.innerHTML = ''; return; }
 
     let html = '';
-    html += `<button class="page-btn" onclick="changePage(${state.page - 1})" ${state.page <= 1 ? 'disabled' : ''}>â€¹</button>`;
+    html += `<button class="page-btn" onclick="changePage(${state.page - 1})" ${state.page <= 1 ? 'disabled' : ''}>‹</button>`;
 
     const start = Math.max(1, state.page - 2);
     const end = Math.min(state.pages, state.page + 2);
 
-    if (start > 1) html += `<button class="page-btn" onclick="changePage(1)">1</button>${start > 2 ? '<span style="color:var(--text-muted);padding:0 0.25rem">â€¦</span>' : ''}`;
+    if (start > 1) html += `<button class="page-btn" onclick="changePage(1)">1</button>${start > 2 ? '<span style="color:var(--text-muted);padding:0 0.25rem">…</span>' : ''}`;
 
     for (let i = start; i <= end; i++) {
       html += `<button class="page-btn ${i === state.page ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
     }
 
     if (end < state.pages) {
-      html += `${end < state.pages - 1 ? '<span style="color:var(--text-muted);padding:0 0.25rem">â€¦</span>' : ''}<button class="page-btn" onclick="changePage(${state.pages})">${state.pages}</button>`;
+      html += `${end < state.pages - 1 ? '<span style="color:var(--text-muted);padding:0 0.25rem">…</span>' : ''}<button class="page-btn" onclick="changePage(${state.pages})">${state.pages}</button>`;
     }
 
-    html += `<button class="page-btn" onclick="changePage(${state.page + 1})" ${state.page >= state.pages ? 'disabled' : ''}>â€º</button>`;
+    html += `<button class="page-btn" onclick="changePage(${state.page + 1})" ${state.page >= state.pages ? 'disabled' : ''}>›</button>`;
     container.innerHTML = html;
   }
 
@@ -1157,8 +1157,8 @@
     const countEl = document.getElementById('people-count');
     if (!grid) return;
 
-    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading peopleâ€¦</span></div>';
-    if (countEl) countEl.textContent = 'â€”';
+    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading people…</span></div>';
+    if (countEl) countEl.textContent = '—';
 
     try {
       const people = await api('/api/people');
@@ -1190,7 +1190,7 @@
       ? `<div class="series-thumb-stack" aria-hidden="true">${previewIds
           .map((videoId, idx) => `<img class="series-thumb-item" data-layer="${idx}" src="/api/videos/${videoId}/thumbnail?token=${encodeURIComponent(token || '')}" loading="lazy" alt="" />`)
           .join('')}</div>`
-      : `<span style="font-size:1.2rem">â–¶</span>`;
+      : `<span style="font-size:1.2rem">▶</span>`;
     const adminGear = getUser()?.role === 'admin'
       ? `<button class="series-admin-btn" type="button" title="Reorder playlist"
           onpointerdown="event.stopPropagation()"
@@ -1218,7 +1218,7 @@
 
   function renderSeriesPlaylistItem(video, index) {
     const thumb = thumbUrl(video);
-    const dur = formatDuration(video.duration) || 'â€”';
+    const dur = formatDuration(video.duration) || '—';
     const created = formatDate(video.content_date || video.file_created_at || video.scanned_at);
     const progress = Math.min(Math.max(Number(userProgress[video.id] || 0), 0), 100);
 
@@ -1233,13 +1233,13 @@
         <div class="series-playlist-thumb-wrap">
           ${thumb
             ? `<img class="series-playlist-thumb" src="${thumb}" alt="${escHtml(video.title)}" loading="lazy" />`
-            : `<div class="series-playlist-thumb series-playlist-thumb-placeholder">â–¶</div>`}
+            : `<div class="series-playlist-thumb series-playlist-thumb-placeholder">▶</div>`}
           <span class="series-playlist-duration">${escHtml(dur)}</span>
           ${progress > 1 ? `<span class="series-playlist-progress" style="width:${progress}%"></span>` : ''}
         </div>
         <div class="series-playlist-copy">
           <h4>${escHtml(video.title)}</h4>
-          <p>${video.view_count} view${video.view_count !== 1 ? 's' : ''} Â· ${escHtml(created)}</p>
+          <p>${video.view_count} view${video.view_count !== 1 ? 's' : ''} · ${escHtml(created)}</p>
         </div>
       </article>`;
   }
@@ -1291,7 +1291,7 @@
           <div class="series-feature-media">
             ${firstThumb
               ? `<img src="${firstThumb}" alt="${escHtml(first.title)}" loading="lazy" />`
-              : '<div class="series-feature-placeholder">â–¶</div>'}
+              : '<div class="series-feature-placeholder">▶</div>'}
           </div>
           <div class="series-feature-copy">
             <h4>${escHtml(first.title)}</h4>
@@ -1374,12 +1374,12 @@
           ondragend="endSeriesOrderDrag(event)">
           <span class="series-order-item-index">${idx + 1}</span>
           <div class="series-order-item-thumb">
-            ${thumb ? `<img src="${thumb}" alt="${escHtml(video.title)}" loading="lazy" />` : '<div class="thumb-placeholder" style="font-size:1rem">â–¶</div>'}
+            ${thumb ? `<img src="${thumb}" alt="${escHtml(video.title)}" loading="lazy" />` : '<div class="thumb-placeholder" style="font-size:1rem">▶</div>'}
           </div>
           <p class="series-order-item-title">${escHtml(video.title)}</p>
           <div class="series-order-item-actions">
-            <button class="btn btn-ghost btn-sm" type="button" title="Move up" ${idx === 0 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, -1)">â†‘</button>
-            <button class="btn btn-ghost btn-sm" type="button" title="Move down" ${idx === seriesOrderState.videos.length - 1 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, 1)">â†“</button>
+            <button class="btn btn-ghost btn-sm" type="button" title="Move up" ${idx === 0 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, -1)">↑</button>
+            <button class="btn btn-ghost btn-sm" type="button" title="Move down" ${idx === seriesOrderState.videos.length - 1 ? 'disabled' : ''} onclick="moveSeriesOrderItem(${idx}, 1)">↓</button>
           </div>
         </article>`;
     }).join('');
@@ -1523,8 +1523,8 @@
     const countEl = document.getElementById('series-count');
     if (!grid) return;
 
-    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading seriesâ€¦</span></div>';
-    if (countEl) countEl.textContent = 'â€”';
+    grid.innerHTML = '<div class="state-loading people-state-loading"><div class="spinner"></div><span>Loading series…</span></div>';
+    if (countEl) countEl.textContent = '—';
 
     try {
       const rows = await api('/api/series');
@@ -1541,7 +1541,7 @@
     }
   }
 
-  // â”€â”€ Load videos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Load videos ────────────────────────────────────────────────────────────
   async function loadChannelsDirectory() {
     saveCurrentState();
     const grid = document.getElementById('video-grid');
@@ -1549,7 +1549,7 @@
     document.getElementById('top-chip-bar').style.display = 'flex';
     document.querySelector('.toolbar').style.display = 'flex';
     grid.style.display = 'grid';
-    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loading Channelsâ€¦</span></div>';
+    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loading Channels…</span></div>';
     document.getElementById('pagination').innerHTML = '';
     updateSectionLabel();
     const countEl = document.getElementById('video-count');
@@ -1567,7 +1567,7 @@
         const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(getToken() || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">${ch.name.charAt(0).toUpperCase()}</text></svg>';
         html += `
           <div class="channel-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; background: transparent; border-radius: 8px; cursor: pointer; transition: background 0.2s, transform 0.2s;" onmouseover="this.style.background='var(--bg-hover)'; this.style.transform='scale(1.02)';" onmouseout="this.style.background='transparent'; this.style.transform='none';" onclick="selectChannel('${ch.id}', '${escHtml(ch.name)}')">
-            <img src="${avatarUrl}" class="channel-avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--bg-hover);" alt="${escHtml(ch.name)}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'%232c2c2c\'/><text x=\'50\' y=\'55\' font-family=\'sans-serif\' font-size=\'40\' fill=\'%238b5cf6\' text-anchor=\\'middle\\'>${ch.name.charAt(0).toUpperCase()}</text></svg>';">
+            <img src="${avatarUrl}" class="channel-avatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: var(--bg-hover);" alt="${escHtml(ch.name)}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'%232c2c2c\'/><text x=\'50\' y=\'55\' font-family=\'sans-serif\' font-size=\'40\' fill=\'%238b5cf6\' text-anchor=\'middle\'>${ch.name.charAt(0).toUpperCase()}</text></svg>';">
             <h3 class="channel-name" style="font-size: 1rem; font-weight: 600; text-align: center; word-break: break-word;">${escHtml(ch.name)}</h3>
           </div>
         `;
@@ -1625,27 +1625,22 @@
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
               <div class="channel-page-meta">
-                  <div class="channel-page-handle">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</div>
-                  <div class="channel-page-stats">
-                    <span>${ch.subscriber_count || 0} subscribers</span>
-                    <span>&bull;</span>
-                    <span>${ch.video_count || 0} videos</span>
-                  </div>
-                </div>
+                <span>${ch.subscriber_count || 0} subscribers</span>
               </div>
+            </div>
             <div class="channel-page-actions">
               <button class="btn ${subButtonClass}" onclick="toggleChannelSubscription('${id}', this)">${subButtonText}</button>
               ${canEdit ? `<button class="vhs-settings-btn" onclick="setupVhsPassword('${id}')" title="VHS Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>` : ''}
             </div>
           </div>
-          <div class="channel-page-nav">
-            <div class="channel-page-tabs">
+          <div class="channel-page-nav" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 12px 24px;">
+            <div class="channel-page-tabs" style="display: flex; flex-wrap: wrap; gap: 8px; border-bottom: none; padding: 0;">
               <button class="channel-page-tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'livestreams')">Livestreams</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'community')">Community</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>
             </div>
-            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none;">
+            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; flex-wrap: wrap; gap: 12px; align-items: center;">
               <div style="position:relative; flex: 1; min-width: 140px;">
                 <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -2187,7 +2182,7 @@
     document.getElementById('top-chip-bar').style.display = 'flex';
     document.querySelector('.toolbar').style.display = 'flex';
     grid.style.display = 'grid';
-    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loadingâ€¦</span></div>';
+    grid.innerHTML = '<div class="state-loading"><div class="spinner"></div><span>Loading…</span></div>';
 
     if (state.mode === 'series' && !state.seriesId) {
       updateSectionLabel();
@@ -2312,7 +2307,7 @@
 
       if (data.channel) globalChannelProfile = data.channel;
 
-      // Build progress lookup: video_id â†’ % watched
+      // Build progress lookup: video_id → % watched
       userProgress = {};
       progressList.forEach((p) => {
         if (p.duration > 0) userProgress[p.video_id] = (p.last_position / p.duration) * 100;
@@ -2349,7 +2344,7 @@
     }
   }
 
-  // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Init ───────────────────────────────────────────────────────────────────
   const incomingParams = new URLSearchParams(window.location.search);
   const incomingPersonRaw = incomingParams.get('personId') || incomingParams.get('person');
   const incomingPersonName = (incomingParams.get('person_name') || incomingParams.get('personName') || '').trim();
@@ -2389,7 +2384,7 @@
     loadVideos();
   }
 
-  // â”€â”€ Hover preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Hover preview ─────────────────────────────────────────────────────────
   function setupHoverPreview() {
     const FORCE_DIRECT_PLAY_KEY = 'forceDirectPlay';
     const grid = document.querySelector('main.main-content') || document.getElementById('video-grid');
@@ -2467,7 +2462,7 @@
       hoverCard = null;
     });
 
-    // â”€â”€ Mobile portrait: play when card is closest to screen center â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Mobile portrait: play when card is closest to screen center ─────────
     function setupMobilePreview() {
       function isMobilePortrait() {
         return window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches;
@@ -2561,7 +2556,7 @@
     setupMobilePreview();
   }
 
-  // â”€â”€ Dialogs / announcements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Dialogs / announcements ────────────────────────────────────────────────
   (async function checkDialogs() {
     try {
       const dialogs = await api('/api/dialogs/pending');
@@ -2661,6 +2656,6 @@
       });
 
       showDialog(0);
-    } catch { /* non-fatal â€” don't block the app */ }
+    } catch { /* non-fatal — don't block the app */ }
   })();
 })();
