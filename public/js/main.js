@@ -1650,12 +1650,18 @@
                 <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
-              <select id="channel-sort-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; cursor: pointer; flex-shrink: 0;">
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="title_asc">Name: A to Z</option>
-                <option value="title_desc">Name: Z to A</option>
-              </select>
+              <div id="channel-sort-menu-container" class="sort-menu-container">
+                <button class="sort-btn" id="channel-sort-trigger" aria-expanded="false">
+                  <span id="channel-sort-current">Sort by: Newest</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="sort-menu" id="channel-sort-menu">
+                  <button class="sort-option active" data-sort="newest">Newest First</button>
+                  <button class="sort-option" data-sort="oldest">Oldest First</button>
+                  <button class="sort-option" data-sort="title_asc">Name: A to Z</button>
+                  <button class="sort-option" data-sort="title_desc">Name: Z to A</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
