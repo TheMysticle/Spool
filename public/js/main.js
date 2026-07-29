@@ -1,4 +1,4 @@
-/* main.js — home / browse page */
+﻿/* main.js — home / browse page */
 'use strict';
 
 (function () {
@@ -1665,7 +1665,7 @@
             </div>
           </div>
         </div>
-        <div id="channel-page-content" style="margin-top: -16px;">
+        <div id="channel-page-content" style="margin-top: -32px;">
           <div class="state-loading"><div class="spinner"></div></div>
         </div>
       `;
