@@ -675,7 +675,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const yourChannelBtn = document.createElement('a');
     yourChannelBtn.className = 'dropdown-item';
     yourChannelBtn.id = 'your-channel-btn';
-    yourChannelBtn.href = `/channel.html?id=${user.channel_id}`;
+    yourChannelBtn.href = `/?mode=channel_profile&channelId=${user.channel_id}`;
     yourChannelBtn.setAttribute('role', 'menuitem');
     yourChannelBtn.innerHTML = `
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
