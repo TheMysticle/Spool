@@ -1638,7 +1638,7 @@
               ${canEdit ? `<button class="vhs-settings-btn" onclick="setupVhsPassword('${id}')" title="VHS Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>` : ''}
             </div>
           </div>
-          <div class="channel-page-nav" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 12px 24px;">
+          <div class="channel-page-nav" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; padding: 12px 0;">
             <div class="channel-page-tabs" style="display: flex; flex-wrap: wrap; gap: 8px; border-bottom: none; padding: 0;">
               <button class="channel-page-tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'livestreams')">Livestreams</button>
