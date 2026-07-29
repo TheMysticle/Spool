@@ -4332,7 +4332,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 
 .directory-hero-title {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   font-size: 2rem;
   font-weight: 800;
   color: var(--text-primary);
