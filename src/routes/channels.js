@@ -34,13 +34,19 @@ fs.mkdirSync(AVATAR_DIR, { recursive: true });
 
 // ── GET /api/channels ────────────────────────────────────────────────────────
 router.get('/', authenticate, (req, res) => {
-  const channels = getAllChannels();
+  let channels = getAllChannels().map(ch => ({
+    ...ch,
+    video_count: getVideoCount(ch.id),
+    subscriber_count: getSubscriberCount(ch.id)
+  }));
   const globalProfile = getChannelProfile ? getChannelProfile() : {};
   const adminChannel = {
     id: 'main',
     name: globalProfile.channel_name || 'Mysticle Archive',
     avatar_path: globalProfile.channel_avatar || null,
-    banner_path: globalProfile.channel_banner || null
+    banner_path: globalProfile.channel_banner || null,
+    video_count: getVideoCount(null), // Assuming null/main is admin
+    subscriber_count: getSubscriberCount('main')
   };
   // Prepend admin channel
   channels.unshift(adminChannel);
