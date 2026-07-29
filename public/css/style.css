@@ -4372,6 +4372,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   }
   .channel-page-banner {
     border-radius: 16px;
+    aspect-ratio: 5 / 1;
   }
   
   .channel-page-info-bar {
