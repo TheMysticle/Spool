@@ -2621,6 +2621,10 @@ window.navigateToVideo = navigateToVideo;
             <label class="form-label" for="watch-edit-desc">Description</label>
             <textarea class="form-input" id="watch-edit-desc" rows="5"></textarea>
           </div>
+          <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="watch-edit-is-vhs">
+            <label class="form-label" for="watch-edit-is-vhs" style="margin:0;">Tag as VHS</label>
+          </div>
           <p id="watch-edit-error" class="form-error"></p>
           <div class="modal-footer">
             <button class="btn btn-ghost" id="watch-edit-cancel" type="button">Cancel</button>
@@ -2630,6 +2634,12 @@ window.navigateToVideo = navigateToVideo;
       </div>`;
 
     document.body.insertAdjacentHTML('beforeend', html);
+
+    // Pre-fill the checkbox
+    const isVhsCheckbox = document.getElementById('watch-edit-is-vhs');
+    if (isVhsCheckbox && currentVideo.is_vhs) {
+      isVhsCheckbox.checked = true;
+    }
 
     document.getElementById('watch-edit-close')?.addEventListener('click', () => closeModal('watch-edit-modal'));
     document.getElementById('watch-edit-cancel')?.addEventListener('click', () => closeModal('watch-edit-modal'));
@@ -2651,6 +2661,7 @@ window.navigateToVideo = navigateToVideo;
             title: document.getElementById('watch-edit-title').value.trim(),
             category: document.getElementById('watch-edit-category').value,
             description: document.getElementById('watch-edit-desc').value.trim(),
+            is_vhs: document.getElementById('watch-edit-is-vhs').checked ? 1 : 0,
           }),
         });
         currentVideo = {

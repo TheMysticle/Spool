@@ -553,7 +553,7 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
   const video = getVideoById(id);
   if (!video) return res.status(404).json({ error: 'Video not found.' });
 
-  const { title, description, category } = req.body;
+  const { title, description, category, is_vhs } = req.body;
 
   if (title !== undefined && (typeof title !== 'string' || title.trim().length === 0)) {
     return res.status(400).json({ error: 'Title must be a non-empty string.' });
@@ -564,11 +564,15 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
   if (category !== undefined && !['video', 'livestream'].includes(category)) {
     return res.status(400).json({ error: 'Category must be video or livestream.' });
   }
+  if (is_vhs !== undefined && typeof is_vhs !== 'number') {
+    return res.status(400).json({ error: 'is_vhs must be a number (0 or 1).' });
+  }
 
   updateVideoMeta(id, {
     title: title !== undefined ? title.trim().slice(0, 255) : undefined,
     description: description !== undefined ? description.slice(0, 5000) : undefined,
     category,
+    is_vhs: is_vhs !== undefined ? is_vhs : undefined,
   });
 
   res.json({ message: 'Video updated.', video: getVideoById(id) });
