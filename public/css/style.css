@@ -1,4 +1,4 @@
-﻿/* ===== Mysticle Archives â€” Modern Flat Theme ===============================
+/* ===== Mysticle Archives â€” Modern Flat Theme ===============================
    Inspired by modern video platforms. Accent: #8b5cf6 (violet)
    ========================================================================== */
 
@@ -4246,11 +4246,11 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 }
 
 .channel-page-tabs {
-  display: flex;
-  gap: 32px;
-  padding: 0;
-  border-bottom: 1px solid var(--border);
-}
+    display: flex;
+    gap: 32px;
+    padding: 0;
+    border-bottom: none;
+  }
 
 .channel-page-tab {
   padding: 16px 0;
@@ -4372,7 +4372,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .cropper-container { background: var(--bg-card); width: 90%; max-width: 800px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); } 
 .cropper-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); } 
 .cropper-header h3 { margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text-primary); } 
-.channel-tab-toolbar { background: var(--bg-card); border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.channel-tab-toolbar { background: transparent; border-radius: 0; margin-bottom: 16px; box-shadow: none; padding: 16px 0; }
 
 .channel-community-post { background: transparent; border: 1px solid var(--border); border-radius: 12px; padding: 24px 0; margin-bottom: 24px; display: flex; gap: 16px; transition: background 0.2s; } 
 .channel-community-post:hover { background: var(--bg-hover); } 
@@ -4394,18 +4394,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   padding: 0;
 }
 
-.channel-page-tabs {
-  display: flex;
-  gap: 32px;
-  padding: 0;
-}
 
-.channel-tab-toolbar {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding-right: 24px;
-}
 
 /* Mobile responsive layout */
 @media (max-width: 768px) {
@@ -4477,12 +4466,13 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     display: none;
   }
   
-  .channel-tab-toolbar {
-    padding: 12px 16px;
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
+    .channel-tab-toolbar {
+      padding: 12px 0;
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      margin-bottom: 8px;
+    }
 }
 
 

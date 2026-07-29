@@ -1659,7 +1659,7 @@
             </div>
           </div>
         </div>
-        <div id="channel-page-content" style="padding: 24px;">
+        <div id="channel-page-content" style="margin-top: -8px;">
           <div class="state-loading"><div class="spinner"></div></div>
         </div>
       `;
