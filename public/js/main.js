@@ -1254,7 +1254,10 @@
     const totalLabel = `${videos.length} video${videos.length !== 1 ? 's' : ''}`;
     const firstThumb = first ? thumbUrl(first) : null;
     const adminActions = getUser()?.role === 'admin'
-      ? `<button class="btn btn-ghost btn-sm" type="button" onclick="openSeriesOrderModal(${Number(state.seriesId || 0)})">Reorder playlist</button>`
+      ? `<button class="btn btn-ghost btn-sm" type="button" onclick="openSeriesOrderModal(${Number(state.seriesId || 0)})" title="Reorder playlist">
+           <svg class="mobile-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+           <span class="desktop-text">Reorder playlist</span>
+         </button>`
       : '';
 
     if (!first) {
