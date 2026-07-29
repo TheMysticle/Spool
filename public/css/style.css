@@ -4336,3 +4336,83 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .community-post-actions { margin-left: auto; display: flex; gap: 8px; } 
 .community-post-actions button { background: transparent; color: var(--text-secondary); transition: color 0.2s; } 
 .community-post-actions button:hover { color: var(--text-primary); }
+
+/* Channel Page Desktop / Global Styles added to override the inline styles we removed */
+.channel-page-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+
+.channel-page-tabs {
+  display: flex;
+  gap: 32px;
+  padding: 0 24px;
+}
+
+.channel-tab-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-right: 24px;
+}
+
+/* Mobile responsive layout */
+@media (max-width: 768px) {
+  .channel-page-banner {
+    border-radius: 0;
+  }
+  
+  .channel-page-info-bar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .channel-page-avatar {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .channel-page-title {
+    font-size: 1.5rem;
+  }
+
+  .channel-page-meta {
+    justify-content: center;
+  }
+  
+  .channel-page-actions {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .channel-page-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .channel-page-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 24px;
+    padding: 0 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .channel-page-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .channel-tab-toolbar {
+    padding: 12px 16px;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

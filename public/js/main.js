@@ -1637,14 +1637,14 @@
               ${canEdit ? `<button class="vhs-settings-btn" onclick="setupVhsPassword('${id}')" title="VHS Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>` : ''}
             </div>
           </div>
-          <div class="channel-page-nav" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding: 12px 24px;">
-            <div class="channel-page-tabs" style="display: flex; flex-wrap: wrap; gap: 8px; border-bottom: none; padding: 0;">
+          <div class="channel-page-nav">
+            <div class="channel-page-tabs">
               <button class="channel-page-tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'livestreams')">Livestreams</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'community')">Community</button>
               <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>
             </div>
-            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; flex-wrap: wrap; gap: 12px; align-items: center;">
+            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none;">
               <div style="position:relative; flex: 1; min-width: 140px;">
                 <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
