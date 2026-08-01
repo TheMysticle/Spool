@@ -105,6 +105,68 @@ router.post('/:id/subscribe', authenticate, (req, res) => {
   res.json({ subscribed: isSubscribed });
 });
 
+// ── POST /api/channels/:id/avatar ─────────────────────────────────────────────
+router.post('/:id/avatar', authenticate, (req, res) => {
+  const channelId = req.params.id;
+  let numericId = null;
+  let channelData = null;
+
+  if (channelId === 'main') {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+  } else {
+    numericId = parseInt(channelId, 10);
+    if (isNaN(numericId)) return res.status(400).json({ error: 'Invalid channel ID' });
+    channelData = getChannelById(numericId);
+    if (!channelData) return res.status(404).json({ error: 'Channel not found' });
+    if (channelData.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+
+  const { imageBase64 } = req.body || {};
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    return res.status(400).json({ error: 'imageBase64 is required.' });
+  }
+
+  const match = imageBase64.match(/^data:(image\/(jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (!match) return res.status(400).json({ error: 'Invalid image format.' });
+
+  const mimeType = match[1].toLowerCase();
+  const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+  const base64Payload = match[3].replace(/\s/g, '');
+  
+  let buffer;
+  try {
+    buffer = Buffer.from(base64Payload, 'base64');
+  } catch {
+    return res.status(400).json({ error: 'Invalid base64 payload.' });
+  }
+
+  const filename = `avatar_${channelId === 'main' ? 'main' : numericId}_${Date.now()}.${ext}`;
+  const absPath = path.join(AVATAR_DIR, filename);
+  const relPath = `/avatars/${filename}`;
+
+  sharp(buffer)
+    .resize(512, 512, { fit: 'cover' })
+    .jpeg({ quality: 80 })
+    .toBuffer()
+    .then((compressedBuffer) => {
+      fs.writeFileSync(absPath, compressedBuffer);
+      
+      if (channelId === 'main') {
+        updateChannelProfile({ channel_avatar: relPath });
+      } else {
+        updateChannel(numericId, { avatar_path: relPath });
+      }
+
+      res.json({ message: 'Avatar updated.', path: relPath });
+    })
+    .catch((err) => {
+      console.error('[Admin] Failed to compress avatar:', err);
+      res.status(500).json({ error: 'Failed to process avatar.' });
+    });
+});
+
 // ── POST /api/channels/:id/banner ─────────────────────────────────────────────
 router.post('/:id/banner', authenticate, (req, res) => {
   const channelId = req.params.id;

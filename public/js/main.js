@@ -1658,7 +1658,10 @@
             ${canEdit ? `<button class="channel-page-banner-upload" onclick="uploadChannelBanner('${id}')" title="Edit Banner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> <span class="edit-banner-text">Edit Banner</span></button>` : ''}
           </div>
           <div class="channel-page-info-bar">
-            <img class="channel-page-avatar" src="${avatarUrl}" alt="${escHtml(ch.name)}" onclick="window.openAvatarLightbox('${avatarUrl}')" style="cursor: zoom-in;">
+            <div style="position: relative; flex-shrink: 0; display: inline-flex;">
+              <img class="channel-page-avatar" src="${avatarUrl}" alt="${escHtml(ch.name)}" onclick="window.openAvatarLightbox('${avatarUrl}')" style="cursor: zoom-in;">
+              ${canEdit ? `<button class="btn btn-icon" onclick="uploadChannelAvatar('${id}')" title="Edit Avatar" style="position: absolute; bottom: 4px; right: 4px; background: var(--surface); color: var(--text); border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); border: 1px solid var(--border); transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : ''}
+            </div>
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
                 <div class="channel-page-meta">
@@ -1789,6 +1792,26 @@
       const file = e.target.files[0];
       if (!file) return;
       openBannerCropper(file, id);
+    };
+    input.click();
+  };
+
+  window.uploadChannelAvatar = function(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      window.openAvatarCropper(file, async (croppedBase64) => {
+        try {
+          await api('/api/channels/' + id + '/avatar', { method: 'POST', body: JSON.stringify({ imageBase64: croppedBase64 }) });
+          toast('Avatar updated successfully!');
+          renderChannelPage(id);
+        } catch (err) {
+          toast(err.message || 'Failed to update avatar.', 'error');
+        }
+      });
     };
     input.click();
   };
