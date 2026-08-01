@@ -855,11 +855,11 @@ function getResolutionLabel(height) {
       const vjsRoot = player.el();
       const skipLeft = document.getElementById('skip-left');
       const skipRight = document.getElementById('skip-right');
-      if (vjsRoot && skipLeft && skipLeft.parentElement !== vjsRoot) {
-        vjsRoot.appendChild(skipLeft);
-      }
-      if (vjsRoot && skipRight && skipRight.parentElement !== vjsRoot) {
-        vjsRoot.appendChild(skipRight);
+      const centerIcon = document.getElementById('center-action-icon');
+      if (vjsRoot) {
+        if (skipLeft && skipLeft.parentElement !== vjsRoot) vjsRoot.appendChild(skipLeft);
+        if (skipRight && skipRight.parentElement !== vjsRoot) vjsRoot.appendChild(skipRight);
+        if (centerIcon && centerIcon.parentElement !== vjsRoot) vjsRoot.appendChild(centerIcon);
       }
 
       // Inject icons + seconds label into the ripple circles (idempotent)
@@ -1280,6 +1280,10 @@ function initPlayer(videoData, { autoStart = true } = {}) {
       // Ensure overlay hides on inactivity even when paused
       player.options_.pauseAlwaysShowControls = false;
       player.on('pause', () => {
+        if (player._suppressNextWake) {
+          player._suppressNextWake = false;
+          return;
+        }
         player.userActive(true); // Show overlay for inactivityTimeout, then hide
       });
     });
@@ -2856,6 +2860,10 @@ window.navigateToVideo = navigateToVideo;
 
     if (e.code === 'Space') {
       e.preventDefault();
+      
+      const wasActive = player.userActive();
+      if (!wasActive) player._suppressNextWake = true;
+
       if (player.paused()) {
         player.play();
         showCenterIcon('play');
@@ -2863,6 +2871,9 @@ window.navigateToVideo = navigateToVideo;
         player.pause();
         showCenterIcon('pause');
       }
+      
+      if (!wasActive) player.userActive(false);
+
     } else if (e.code === 'KeyA') {
       e.preventDefault();
       seekAndAnimate('left', -10);
