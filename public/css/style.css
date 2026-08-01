@@ -3228,9 +3228,9 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   opacity: 1;
 }
 
-.video-js.vjs-user-inactive .vjs-control-bar,
-.video-js.vjs-user-inactive .vjs-big-play-button,
-.video-js.vjs-user-inactive .video-ui-overlay {
+.video-js.vjs-has-started.vjs-user-inactive .vjs-control-bar,
+.video-js.vjs-has-started.vjs-user-inactive .vjs-big-play-button,
+.video-js.vjs-has-started.vjs-user-inactive .video-ui-overlay {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none;

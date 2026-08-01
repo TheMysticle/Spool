@@ -1349,13 +1349,17 @@ function initPlayer(videoData, { autoStart = true } = {}) {
 
     const attemptAutoplay = () => {
       if (!autoStart || hasAutoplayStarted) return;
+      hasAutoplayStarted = true;
       const playPromise = player.play();
       if (playPromise && typeof playPromise.then === 'function') {
         playPromise.then(() => {
-          hasAutoplayStarted = true;
-        }).catch(() => {});
-      } else {
-        hasAutoplayStarted = true;
+          // Autoplay started successfully
+        }).catch((err) => {
+          if (err.name === 'NotAllowedError') {
+             console.warn("Autoplay blocked by browser. Leaving UI visible.");
+             player.userActive(true);
+          }
+        });
       }
     };
 
