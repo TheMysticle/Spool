@@ -1361,3 +1361,175 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     if (onSaveComplete) onSaveComplete(true);
   });
 };
+
+  window.uploadChannelBanner = function(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      openBannerCropper(file, id);
+    };
+    input.click();
+  };
+
+  window.uploadChannelAvatar = function(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      window.openAvatarCropper(file, async (croppedBase64) => {
+        try {
+          await api('/api/channels/' + id + '/avatar', { method: 'POST', body: JSON.stringify({ imageBase64: croppedBase64 }) });
+          toast('Avatar updated successfully!');
+          renderChannelPage(id);
+        } catch (err) {
+          toast(err.message || 'Failed to update avatar.', 'error');
+        }
+      });
+    };
+    input.click();
+  };
+
+  function openBannerCropper(file, channelId) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const modal = document.createElement('div');
+        modal.className = 'cropper-modal';
+        modal.innerHTML = `
+          <div class="cropper-container">
+            <div class="cropper-header">
+              <h3>Position and Size</h3>
+              <button class="icon-btn" onclick="this.closest('.cropper-modal').remove()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="cropper-canvas-wrapper" style="position:relative; width: 100%; max-width: 800px; height: 300px; background: #000; overflow: hidden; touch-action: none; cursor: grab;">
+              <canvas id="cropper-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+              <div class="cropper-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; border-top: 50px solid rgba(0,0,0,0.5); border-bottom: 50px solid rgba(0,0,0,0.5);"></div>
+              <div style="position:absolute; top:50px; left:0; right:0; bottom:50px; pointer-events:none; border: 2px solid var(--accent); box-sizing: border-box;"></div>
+            </div>
+            <div class="cropper-controls" style="padding: 16px; display:flex; align-items:center; gap: 16px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="range" id="cropper-zoom" min="0.1" max="3" step="0.01" value="1" style="flex:1;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </div>
+            <div class="cropper-footer" style="padding: 16px; border-top: 1px solid var(--border); display:flex; justify-content:flex-end; gap: 12px;">
+              <button class="btn btn-secondary" onclick="this.closest('.cropper-modal').remove()">Cancel</button>
+              <button class="btn btn-primary" id="cropper-save">Save Banner</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        const canvas = document.getElementById('cropper-canvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = canvas.parentElement;
+        
+        let cw = wrapper.clientWidth;
+        let ch = wrapper.clientHeight;
+        const pixelRatio = 3;
+        canvas.width = cw * pixelRatio;
+        canvas.height = ch * pixelRatio;
+        ctx.scale(pixelRatio, pixelRatio);
+
+        // Overlay cutout is top 50px, bottom 50px. Height is ch - 100. Width is cw.
+        const targetW = cw;
+        const targetH = ch - 100;
+        
+        // Initial scale to fit width
+        let scale = cw / img.width;
+        if (img.height * scale < targetH) {
+          scale = targetH / img.height; // scale to fit height if needed
+        }
+        
+        document.getElementById('cropper-zoom').value = scale;
+        document.getElementById('cropper-zoom').min = scale * 0.5;
+        document.getElementById('cropper-zoom').max = scale * 3;
+
+        let panX = (cw - img.width * scale) / 2;
+        let panY = (ch - img.height * scale) / 2;
+
+        function draw() {
+          ctx.clearRect(0, 0, cw, ch);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, panX, panY, img.width * scale, img.height * scale);
+        }
+
+        draw();
+
+        document.getElementById('cropper-zoom').addEventListener('input', (e) => {
+          const newScale = parseFloat(e.target.value);
+          const cx = cw / 2;
+          const cy = ch / 2;
+          panX = cx - (cx - panX) * (newScale / scale);
+          panY = cy - (cy - panY) * (newScale / scale);
+          scale = newScale;
+          draw();
+        });
+
+        let isDragging = false;
+        let startX, startY;
+
+        wrapper.addEventListener('pointerdown', (e) => {
+          isDragging = true;
+          startX = e.clientX - panX;
+          startY = e.clientY - panY;
+          wrapper.setPointerCapture(e.pointerId);
+          wrapper.style.cursor = 'grabbing';
+        });
+
+        wrapper.addEventListener('pointermove', (e) => {
+          if (!isDragging) return;
+          panX = e.clientX - startX;
+          panY = e.clientY - startY;
+          draw();
+        });
+
+        wrapper.addEventListener('pointerup', (e) => {
+          isDragging = false;
+          wrapper.releasePointerCapture(e.pointerId);
+          wrapper.style.cursor = 'grab';
+        });
+        wrapper.addEventListener('pointercancel', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
+
+        document.getElementById('cropper-save').addEventListener('click', async () => {
+          // Crop the image!
+          const outCanvas = document.createElement('canvas');
+          outCanvas.width = targetW * pixelRatio;
+          outCanvas.height = targetH * pixelRatio;
+          const outCtx = outCanvas.getContext('2d');
+          
+          outCtx.drawImage(
+            canvas,
+            0, 50 * pixelRatio, targetW * pixelRatio, targetH * pixelRatio, // Source (x,y,w,h) from the visible canvas
+            0, 0, targetW * pixelRatio, targetH * pixelRatio   // Dest
+          );
+          
+          const imageBase64 = outCanvas.toDataURL('image/jpeg', 0.9);
+          const btn = document.getElementById('cropper-save');
+          btn.disabled = true;
+          btn.textContent = 'Saving...';
+          
+          try {
+            await api('/api/channels/' + channelId + '/banner', { method: 'POST', body: JSON.stringify({ imageBase64 }) });
+            toast('Banner updated successfully', 'success');
+            modal.remove();
+            location.reload();
+          } catch (err) {
+            toast(err.message, 'error');
+            btn.disabled = false;
+            btn.textContent = 'Save Banner';
+          }
+        });
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
