@@ -1658,7 +1658,7 @@
             ${canEdit ? `<button class="channel-page-banner-upload" onclick="uploadChannelBanner('${id}')" title="Edit Banner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg> <span class="edit-banner-text">Edit Banner</span></button>` : ''}
           </div>
           <div class="channel-page-info-bar">
-            <img class="channel-page-avatar" src="${avatarUrl}" alt="${escHtml(ch.name)}">
+            <img class="channel-page-avatar" src="${avatarUrl}" alt="${escHtml(ch.name)}" onclick="window.openAvatarLightbox('${avatarUrl}')" style="cursor: zoom-in;">
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
                 <div class="channel-page-meta">

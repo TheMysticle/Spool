@@ -1572,30 +1572,14 @@
     }
     if (file.size > 2 * 1024 * 1024) { toast('Max 2MB.', 'error'); return; }
 
-    try {
-      const bitmap = await createImageBitmap(file);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const size = 400;
-      canvas.width = size; canvas.height = size;
-      const ratio = Math.max(size / bitmap.width, size / bitmap.height);
-      const x = (size - bitmap.width * ratio) / 2;
-      const y = (size - bitmap.height * ratio) / 2;
-      ctx.drawImage(bitmap, x, y, bitmap.width * ratio, bitmap.height * ratio);
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-      const base64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result);
-        r.onerror = () => rej(new Error('Read failed'));
-        r.readAsDataURL(blob);
-      });
-      _channelImgBase64 = base64;
+    window.openAvatarCropper(file, (croppedBase64) => {
+      _channelImgBase64 = croppedBase64;
       _channelImgRemoved = false;
       const preview = document.getElementById('channel-avatar-preview');
-      preview.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+      preview.innerHTML = `<img src="${croppedBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
       document.getElementById('channel-avatar-remove').style.display = '';
-    } catch (err) { toast(err.message, 'error'); }
-    e.target.value = '';
+      e.target.value = '';
+    });
   });
 
   document.getElementById('channel-avatar-remove')?.addEventListener('click', () => {

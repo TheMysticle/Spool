@@ -96,12 +96,14 @@
       if (!file.type.startsWith('image/')) {
         return toast('Please select an image, not a video.', 'error');
       }
-      try {
-        imageBase64 = await fileToDataUrl(file);
+      
+      window.openAvatarCropper(file, (croppedBase64) => {
+        imageBase64 = croppedBase64;
         document.getElementById('create-channel-avatar-preview').innerHTML = `<img src="${imageBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
-      } catch (err) {
-        toast('Failed to load image', 'error');
-      }
+      });
+      
+      // Reset input so the same file can be selected again if cancelled
+      e.target.value = '';
     });
 
     document.getElementById('create-channel-submit').addEventListener('click', async () => {

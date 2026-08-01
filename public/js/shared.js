@@ -1064,3 +1064,186 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
   }
 });
+
+// ── Avatar Utilities ────────────────────────────────────────────────────────
+window.openAvatarLightbox = function(imgSrc) {
+  if (!imgSrc || imgSrc.includes('data:image/svg+xml')) return;
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0'; overlay.style.left = '0';
+  overlay.style.width = '100vw'; overlay.style.height = '100vh';
+  overlay.style.backgroundColor = 'rgba(0,0,0,0.85)';
+  overlay.style.zIndex = '99999';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.cursor = 'zoom-out';
+  
+  const img = document.createElement('img');
+  img.src = imgSrc;
+  img.style.maxWidth = '90vw';
+  img.style.maxHeight = '90vh';
+  img.style.objectFit = 'contain';
+  img.style.borderRadius = '50%';
+  img.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+  
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+  
+  overlay.addEventListener('click', () => {
+    overlay.remove();
+  });
+};
+
+window.openAvatarCropper = function(file, onCropComplete) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const modal = document.createElement('div');
+      modal.className = 'cropper-modal';
+      modal.innerHTML = `
+        <div class="cropper-container">
+          <div class="cropper-header">
+            <h3>Crop Profile Picture</h3>
+            <button class="icon-btn" onclick="this.closest('.cropper-modal').remove()">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="cropper-canvas-wrapper" style="position:relative; width: 100%; max-width: 500px; height: 400px; background: #000; overflow: hidden; touch-action: none; cursor: grab; margin: 0 auto;">
+            <canvas id="avatar-cropper-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
+            <div class="cropper-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; background: rgba(0,0,0,0.5); mask: radial-gradient(transparent 150px, #000 151px) center/100% 100% no-repeat; -webkit-mask: radial-gradient(transparent 150px, #000 151px) center/100% 100% no-repeat;"></div>
+            <div style="position:absolute; top:50%; left:50%; width:300px; height:300px; transform: translate(-50%, -50%); pointer-events:none; border: 2px dashed var(--accent); border-radius: 50%; box-sizing: border-box;"></div>
+          </div>
+          <div class="cropper-controls" style="padding: 16px; display:flex; align-items:center; gap: 16px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="range" id="avatar-cropper-zoom" min="0.1" max="3" step="0.01" value="1" style="flex:1;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </div>
+          <div class="cropper-footer" style="padding: 16px; border-top: 1px solid var(--border); display:flex; justify-content:flex-end; gap: 12px;">
+            <button class="btn btn-secondary" onclick="this.closest('.cropper-modal').remove()">Cancel</button>
+            <button class="btn btn-primary" id="avatar-cropper-save">Crop</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const canvas = document.getElementById('avatar-cropper-canvas');
+      const ctx = canvas.getContext('2d');
+      const wrapper = canvas.parentElement;
+      
+      let cw = wrapper.clientWidth;
+      let ch = wrapper.clientHeight;
+      const pixelRatio = 3;
+      canvas.width = cw * pixelRatio;
+      canvas.height = ch * pixelRatio;
+      ctx.scale(pixelRatio, pixelRatio);
+
+      const circleRadius = 150; 
+      
+      let scale = Math.max((circleRadius * 2) / img.width, (circleRadius * 2) / img.height);
+      let posX = (cw - img.width * scale) / 2;
+      let posY = (ch - img.height * scale) / 2;
+      let isDragging = false;
+      let startX, startY;
+
+      function render() {
+        ctx.clearRect(0, 0, cw, ch);
+        ctx.drawImage(img, posX, posY, img.width * scale, img.height * scale);
+      }
+
+      function clamp() {
+        const minX = (cw / 2) + circleRadius - img.width * scale;
+        const maxX = (cw / 2) - circleRadius;
+        const minY = (ch / 2) + circleRadius - img.height * scale;
+        const maxY = (ch / 2) - circleRadius;
+        
+        if (posX > maxX) posX = maxX;
+        if (posX < minX) posX = minX;
+        if (posY > maxY) posY = maxY;
+        if (posY < minY) posY = minY;
+      }
+
+      render();
+      
+      document.getElementById('avatar-cropper-zoom').value = scale;
+      document.getElementById('avatar-cropper-zoom').min = scale * 0.5;
+      document.getElementById('avatar-cropper-zoom').max = scale * 3;
+
+      const handleStart = (e) => {
+        isDragging = true;
+        wrapper.style.cursor = 'grabbing';
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX - posX;
+        startY = clientY - posY;
+      };
+      
+      const handleMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        posX = clientX - startX;
+        posY = clientY - startY;
+        clamp();
+        render();
+      };
+      
+      const handleEnd = () => {
+        isDragging = false;
+        wrapper.style.cursor = 'grab';
+      };
+
+      wrapper.addEventListener('mousedown', handleStart);
+      window.addEventListener('mousemove', handleMove, { passive: false });
+      window.addEventListener('mouseup', handleEnd);
+      wrapper.addEventListener('touchstart', handleStart, { passive: false });
+      window.addEventListener('touchmove', handleMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
+
+      document.getElementById('avatar-cropper-zoom').addEventListener('input', (e) => {
+        const newScale = parseFloat(e.target.value);
+        const centerX = cw / 2;
+        const centerY = ch / 2;
+        
+        const relX = (centerX - posX) / scale;
+        const relY = (centerY - posY) / scale;
+        
+        scale = newScale;
+        
+        posX = centerX - relX * scale;
+        posY = centerY - relY * scale;
+        
+        clamp();
+        render();
+      });
+
+      document.getElementById('avatar-cropper-save').addEventListener('click', () => {
+        const outCanvas = document.createElement('canvas');
+        const outCtx = outCanvas.getContext('2d');
+        const size = circleRadius * 2;
+        outCanvas.width = size;
+        outCanvas.height = size;
+        
+        const cropX = ((cw / 2) - circleRadius - posX) / scale;
+        const cropY = ((ch / 2) - circleRadius - posY) / scale;
+        const cropW = size / scale;
+        const cropH = size / scale;
+        
+        outCtx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, size, size);
+        
+        const dataUrl = outCanvas.toDataURL('image/jpeg', 0.9);
+        onCropComplete(dataUrl);
+        modal.remove();
+        
+        window.removeEventListener('mousemove', handleMove);
+        window.removeEventListener('mouseup', handleEnd);
+        window.removeEventListener('touchmove', handleMove);
+        window.removeEventListener('touchend', handleEnd);
+      });
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
