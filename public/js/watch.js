@@ -1531,18 +1531,29 @@ window.navigateToVideo = navigateToVideo;
 
   // --- Orientation change handler (module scope for add/remove) ---
   function handleOrientationChange() {
-    // Use matchMedia as it's the most reliable way to detect orientation across browsers
-    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-    if (!player) return;
-    if (isLandscape) {
-      if (!player.isFullscreen()) {
-        player.requestFullscreen();
-      }
+    let isLandscape = false;
+    if (window.screen && window.screen.orientation && window.screen.orientation.type) {
+      isLandscape = window.screen.orientation.type.startsWith('landscape');
+    } else if (typeof window.orientation !== 'undefined') {
+      isLandscape = window.orientation === 90 || window.orientation === -90;
     } else {
-      if (player.isFullscreen()) {
-        player.exitFullscreen();
-      }
+      isLandscape = window.matchMedia("(orientation: landscape)").matches;
     }
+    
+    if (!player) return;
+    
+    // Slight delay to allow browser to actually resize the window before requesting fullscreen
+    setTimeout(() => {
+      if (isLandscape) {
+        if (!player.isFullscreen()) {
+          player.requestFullscreen();
+        }
+      } else {
+        if (player.isFullscreen()) {
+          player.exitFullscreen();
+        }
+      }
+    }, 50);
   }
 
   function setupAutoFullscreen() {
