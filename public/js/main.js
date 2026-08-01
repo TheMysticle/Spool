@@ -109,8 +109,11 @@
           if (isChip && chipSpecial && chipSpecial !== state.specialChip) active = false;
         }
       }
-
+      const wasActive = btn.classList.contains('active');
       btn.classList.toggle('active', active);
+      if (active && isChip && !wasActive) {
+        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
     });
     document.getElementById('history-btn')?.classList.toggle('active', isHistory);
     document.getElementById('favorites-btn')?.classList.toggle('active', isFavorites);
