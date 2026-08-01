@@ -1083,7 +1083,8 @@ window.openAvatarLightbox = function(imgSrc) {
   img.src = imgSrc;
   img.style.maxWidth = '90vw';
   img.style.maxHeight = '90vh';
-  img.style.objectFit = 'contain';
+  img.style.aspectRatio = '1 / 1';
+  img.style.objectFit = 'cover';
   img.style.borderRadius = '50%';
   img.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
   
