@@ -1250,15 +1250,15 @@ window.openAvatarCropper = function(file, onCropComplete) {
 };
 
 window.openChannelEditor = function(channelId, currentName, currentAvatar, currentBanner, onSaveComplete) {
-  const modal = document.createElement('div');
-  modal.className = 'cropper-modal';
-  modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 16px;';
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.style.zIndex = '10000';
   
-  modal.innerHTML = `
-    <div class="cropper-container" style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 600px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
-      <div class="cropper-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border);">
-        <h3 style="margin: 0; font-size: 1.25rem;">Channel Settings</h3>
-        <button class="icon-btn" onclick="this.closest('.cropper-modal').remove()" style="background: none; border: none; color: var(--text); cursor: pointer;">
+  overlay.innerHTML = `
+    <div class="modal" style="width: 100%; max-width: 600px; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+      <div class="modal-header" style="padding: 24px 24px 0 24px; margin-bottom: 0;">
+        <h3>Channel Settings</h3>
+        <button class="icon-btn" onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: var(--text); cursor: pointer;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -1297,13 +1297,13 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
 
       </div>
 
-      <div class="cropper-footer" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
-        <button class="btn btn-ghost" onclick="this.closest('.cropper-modal').remove()">Cancel</button>
+      <div class="modal-footer" style="padding: 16px 24px 24px 24px; margin-top: 0; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border);">
+        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
         <button class="btn btn-primary" id="editor-save-btn">Save Changes</button>
       </div>
     </div>
   `;
-  document.body.appendChild(modal);
+  document.body.appendChild(overlay);
 
   // Avatar Upload Logic
   document.getElementById('editor-avatar-btn').addEventListener('click', () => {
@@ -1332,7 +1332,7 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     // We cannot easily pass back the cropped banner preview here because banner cropper is in main.js. 
     // Wait, banner cropper is not in shared.js! Let's close modal and call the banner upload.
     if (window.uploadChannelBanner) {
-      modal.remove(); // Close modal so banner cropper can be seen
+      overlay.remove(); // Close modal so banner cropper can be seen
       window.uploadChannelBanner(channelId);
     } else {
       toast('Banner editing not available in this view yet.', 'error');
@@ -1357,7 +1357,7 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
       }
     }
     
-    modal.remove();
+    overlay.remove();
     if (onSaveComplete) onSaveComplete(true);
   });
 };
