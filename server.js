@@ -57,7 +57,14 @@ app.use(
             fontSrc: ["'self'", 'fonts.gstatic.com', 'data:'],
             imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'http:'],
             mediaSrc: ["'self'"],
-            connectSrc: ["'self'"],
+            connectSrc: [
+              "'self'",
+              'fonts.googleapis.com',
+              'fonts.gstatic.com',
+              'vjs.zencdn.net',
+              'cdn.jsdelivr.net',
+              'unpkg.com'
+            ],
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
