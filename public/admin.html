@@ -473,22 +473,22 @@
       </div>
       <input type="hidden" id="auth-reset-id">
       
-      <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+      <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.95rem;">
         Manage lockouts and 2FA settings for <strong id="auth-reset-username" style="color: var(--text-primary);"></strong>.
       </p>
 
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
-        <button class="btn btn-ghost" id="btn-reset-vhs" type="button" style="justify-content: flex-start; text-align: left; padding: 12px 16px;">
-          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Reset VHS Lockouts</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">Clears any active 30-minute lockouts for private channels.</div>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+        <button class="btn btn-ghost" id="btn-reset-vhs" type="button" style="justify-content: flex-start; text-align: left; padding: 8px 12px;">
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 2px;">Reset VHS Lockouts</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400; line-height: 1.2;">Clears active 30-minute lockouts for private channels.</div>
         </button>
-        <button class="btn btn-ghost" id="btn-reset-2fa-attempts" type="button" style="justify-content: flex-start; text-align: left; padding: 12px 16px;">
-          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Reset 2FA Attempts</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">Clears any rate-limited 2FA login challenges.</div>
+        <button class="btn btn-ghost" id="btn-reset-2fa-attempts" type="button" style="justify-content: flex-start; text-align: left; padding: 8px 12px;">
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 2px;">Reset 2FA Attempts</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400; line-height: 1.2;">Clears any rate-limited 2FA login challenges.</div>
         </button>
-        <button class="btn btn-ghost" id="btn-disable-2fa" type="button" style="justify-content: flex-start; text-align: left; padding: 12px 16px; color: var(--danger);">
-          <div style="font-weight: 600; margin-bottom: 4px;">Disable 2FA completely</div>
-          <div style="font-size: 0.8rem; opacity: 0.8; font-weight: 400;">Removes the 2FA requirement so the user can sign in and set it up again.</div>
+        <button class="btn btn-ghost" id="btn-disable-2fa" type="button" style="justify-content: flex-start; text-align: left; padding: 8px 12px; color: var(--danger);">
+          <div style="font-weight: 600; margin-bottom: 2px;">Disable 2FA completely</div>
+          <div style="font-size: 0.8rem; opacity: 0.8; font-weight: 400; line-height: 1.2;">Removes the 2FA requirement so the user can re-configure it.</div>
         </button>
       </div>
     </div>
