@@ -62,25 +62,31 @@
     document.getElementById('upload-modal-title').textContent = 'Create Your Channel';
     const body = document.getElementById('upload-modal-body');
     body.innerHTML = `
-      <p style="margin-top:0; color:var(--text-secondary); margin-bottom:20px;">You need to create a channel before you can upload videos.</p>
-      <div class="form-group" style="margin-bottom:20px;">
-        <label class="form-label" for="create-channel-name">Channel Name</label>
-        <input type="text" id="create-channel-name" class="form-control" placeholder="My Awesome Channel" />
-      </div>
-      <div class="settings-avatar-row" style="margin-bottom:20px;">
-        <div class="avatar avatar-lg settings-avatar-preview" id="create-channel-avatar-preview">?</div>
+      <p style="margin-top:0; color:var(--text-secondary); margin-bottom:24px; font-size: 0.95rem;">You need to create a channel before you can upload videos.</p>
+      
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+        <div class="avatar avatar-lg settings-avatar-preview" id="create-channel-avatar-preview" style="width: 64px; height: 64px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; background: var(--bg-surface); border: 1px dashed var(--border-subtle); color: var(--text-muted); cursor: pointer;">?</div>
         <div class="settings-avatar-actions">
           <input type="file" id="create-channel-avatar-input" hidden accept="image/jpeg,image/png,image/webp" />
-          <button class="btn btn-ghost btn-sm" id="create-channel-avatar-upload" type="button">Select Image</button>
+          <button class="btn btn-ghost btn-sm" id="create-channel-avatar-upload" type="button">Upload Avatar</button>
         </div>
       </div>
-      <div class="modal-footer" style="margin-top:0;">
+
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="form-label" for="create-channel-name">Channel Name</label>
+        <input type="text" id="create-channel-name" class="form-input" placeholder="My Awesome Channel" />
+      </div>
+      
+      <div class="modal-footer" style="margin-top:0; justify-content: flex-end;">
         <button class="btn btn-primary" id="create-channel-submit">Create Channel</button>
       </div>
     `;
 
     let imageBase64 = null;
     document.getElementById('create-channel-avatar-upload').addEventListener('click', () => {
+      document.getElementById('create-channel-avatar-input').click();
+    });
+    document.getElementById('create-channel-avatar-preview').addEventListener('click', () => {
       document.getElementById('create-channel-avatar-input').click();
     });
     
