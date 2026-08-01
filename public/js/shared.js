@@ -1248,3 +1248,116 @@ window.openAvatarCropper = function(file, onCropComplete) {
   };
   reader.readAsDataURL(file);
 };
+
+window.openChannelEditor = function(channelId, currentName, currentAvatar, currentBanner, onSaveComplete) {
+  const modal = document.createElement('div');
+  modal.className = 'cropper-modal';
+  modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 16px;';
+  
+  modal.innerHTML = `
+    <div class="cropper-container" style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 600px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+      <div class="cropper-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border);">
+        <h3 style="margin: 0; font-size: 1.25rem;">Channel Settings</h3>
+        <button class="icon-btn" onclick="this.closest('.cropper-modal').remove()" style="background: none; border: none; color: var(--text); cursor: pointer;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      
+      <div style="padding: 24px; overflow-y: auto;">
+        
+        <div style="margin-bottom: 32px;">
+          <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Banner</label>
+          <div style="position: relative; width: 100%; height: 120px; background: ${currentBanner ? `url('${currentBanner}') center/cover` : 'var(--bg-hover)'}; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: flex; align-items: center; justify-content: center;"
+               onmouseover="this.querySelector('.edit-overlay').style.opacity='1'"
+               onmouseout="this.querySelector('.edit-overlay').style.opacity='0'">
+            <div class="edit-overlay" id="editor-banner-btn" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; color: white;" title="Change Banner">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 32px; display: flex; gap: 24px; align-items: flex-start;">
+          <div>
+            <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Profile Picture</label>
+            <div style="position: relative; width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--border); overflow: hidden;"
+                 onmouseover="this.querySelector('.edit-overlay').style.opacity='1'"
+                 onmouseout="this.querySelector('.edit-overlay').style.opacity='0'">
+              <img id="editor-avatar-img" src="${currentAvatar}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Avatar">
+              <div class="edit-overlay" id="editor-avatar-btn" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; color: white;" title="Change Profile Picture">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex-grow: 1;">
+            <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Name</label>
+            <input type="text" id="editor-name-input" value="${escHtml(currentName)}" class="form-input" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem;" placeholder="Enter channel name...">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="cropper-footer" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn btn-ghost" onclick="this.closest('.cropper-modal').remove()">Cancel</button>
+        <button class="btn btn-primary" id="editor-save-btn">Save Changes</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Avatar Upload Logic
+  document.getElementById('editor-avatar-btn').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      window.openAvatarCropper(file, async (croppedBase64) => {
+        try {
+          await api('/api/channels/' + channelId + '/avatar', { method: 'POST', body: JSON.stringify({ imageBase64: croppedBase64 }) });
+          toast('Avatar updated!');
+          document.getElementById('editor-avatar-img').src = croppedBase64;
+          if (onSaveComplete) onSaveComplete(true);
+        } catch (err) {
+          toast(err.message || 'Failed to update avatar.', 'error');
+        }
+      });
+    };
+    input.click();
+  });
+
+  // Banner Upload Logic
+  document.getElementById('editor-banner-btn').addEventListener('click', () => {
+    // We cannot easily pass back the cropped banner preview here because banner cropper is in main.js. 
+    // Wait, banner cropper is not in shared.js! Let's close modal and call the banner upload.
+    if (window.uploadChannelBanner) {
+      modal.remove(); // Close modal so banner cropper can be seen
+      window.uploadChannelBanner(channelId);
+    } else {
+      toast('Banner editing not available in this view yet.', 'error');
+    }
+  });
+
+  // Save Name Logic
+  document.getElementById('editor-save-btn').addEventListener('click', async () => {
+    const newName = document.getElementById('editor-name-input').value.trim();
+    if (!newName) {
+      toast('Channel name cannot be empty', 'error');
+      return;
+    }
+    
+    if (newName !== currentName) {
+      try {
+        await api('/api/channels/' + channelId + '/name', { method: 'POST', body: JSON.stringify({ name: newName }) });
+        toast('Channel name updated!');
+      } catch (err) {
+        toast(err.message || 'Failed to update name.', 'error');
+        return;
+      }
+    }
+    
+    modal.remove();
+    if (onSaveComplete) onSaveComplete(true);
+  });
+};

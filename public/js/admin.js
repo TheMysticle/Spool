@@ -57,15 +57,14 @@
         card.style.cssText = 'background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;';
         
         card.innerHTML = `
-          <div style="height: 100px; background: ${ch.banner_path ? `url('${ch.banner_path}') center/cover` : 'var(--bg-hover)'}"></div>
+          <div style="height: 100px; background: ${ch.banner_path ? `url('${ch.banner_path}') center/cover` : 'var(--bg-hover)'}; position: relative;">
+            <button onclick="window.openChannelEditor('${ch.id}', '${escHtml(ch.name)}', '${ch.avatar_path}', '${ch.banner_path || ''}', () => loadChannels())" title="Channel Settings" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); border: none; cursor: pointer;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            </button>
+          </div>
           <div style="padding: 16px; display: flex; flex-direction: column; align-items: center; position: relative; margin-top: -50px;">
-            <div style="position: relative; border-radius: 50%; overflow: hidden; border: 4px solid var(--surface); width: 80px; height: 80px; flex-shrink: 0;"
-                 onmouseover="this.querySelector('.avatar-edit-overlay').style.opacity='1'"
-                 onmouseout="this.querySelector('.avatar-edit-overlay').style.opacity='0'">
+            <div style="position: relative; border-radius: 50%; overflow: hidden; border: 4px solid var(--surface); width: 80px; height: 80px; flex-shrink: 0;">
               <img src="${ch.avatar_path}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Avatar">
-              <div class="avatar-edit-overlay" onclick="adminUploadChannelAvatar('${ch.id}')" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; color: white;" title="Change Profile Picture">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-              </div>
             </div>
             <h3 style="margin: 12px 0 4px 0; font-size: 1.1rem; text-align: center;">${escHtml(ch.name)}</h3>
             <span style="color: var(--text-muted); font-size: 0.9rem;">@${escHtml(ch.username)}</span>
@@ -79,25 +78,7 @@
     }
   }
 
-  window.adminUploadChannelAvatar = function(id) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/jpeg,image/png,image/webp';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      window.openAvatarCropper(file, async (croppedBase64) => {
-        try {
-          await api('/api/channels/' + id + '/avatar', { method: 'POST', body: JSON.stringify({ imageBase64: croppedBase64 }) });
-          toast('Avatar updated successfully!');
-          loadChannels();
-        } catch (err) {
-          toast(err.message || 'Failed to update avatar.', 'error');
-        }
-      });
-    };
-    input.click();
-  };
+  // Replaced adminUploadChannelAvatar with openChannelEditor
 
   // ══════════════════════════════════════════════════════════════════════════
   // ── Videos panel ─────────────────────────────────────────────────────────

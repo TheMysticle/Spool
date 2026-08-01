@@ -105,6 +105,33 @@ router.post('/:id/subscribe', authenticate, (req, res) => {
   res.json({ subscribed: isSubscribed });
 });
 
+// ── POST /api/channels/:id/name ───────────────────────────────────────────────
+router.post('/:id/name', authenticate, (req, res) => {
+  const channelId = req.params.id;
+  const { name } = req.body || {};
+  let numericId = null;
+
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+
+  if (channelId === 'main') {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    updateChannelProfile({ channel_name: name.trim() });
+  } else {
+    numericId = parseInt(channelId, 10);
+    if (isNaN(numericId)) return res.status(400).json({ error: 'Invalid channel ID' });
+    const channelData = getChannelById(numericId);
+    if (!channelData) return res.status(404).json({ error: 'Channel not found' });
+    if (channelData.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    updateChannel(numericId, { name: name.trim() });
+  }
+
+  res.json({ message: 'Channel name updated' });
+});
+
 // ── POST /api/channels/:id/avatar ─────────────────────────────────────────────
 router.post('/:id/avatar', authenticate, (req, res) => {
   const channelId = req.params.id;
