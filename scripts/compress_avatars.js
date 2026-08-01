@@ -25,6 +25,13 @@ async function compressAvatars() {
     if (file.match(/\.(jpg|jpeg|png|webp)$/i)) {
       const absPath = path.join(AVATAR_DIR, file);
       try {
+        const stats = fs.statSync(absPath);
+        // Skip files smaller than 100KB as they are likely already compressed
+        if (stats.size < 100 * 1024) {
+          skipped++;
+          continue;
+        }
+
         const buffer = fs.readFileSync(absPath);
         
         const compressedBuffer = await sharp(buffer)
