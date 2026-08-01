@@ -41,7 +41,7 @@
   // ══════════════════════════════════════════════════════════════════════════
   // ── Channels panel ────────────────────────────────────────────────────────
   // ══════════════════════════════════════════════════════════════════════════
-  async function loadChannels() {
+  window.loadChannels = async function loadChannels() {
     try {
       const res = await api('/api/admin/channels');
       const grid = document.getElementById('channels-grid');
