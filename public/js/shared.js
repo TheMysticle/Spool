@@ -1223,18 +1223,18 @@ window.openAvatarCropper = function(file, onCropComplete) {
       document.getElementById('avatar-cropper-save').addEventListener('click', () => {
         const outCanvas = document.createElement('canvas');
         const outCtx = outCanvas.getContext('2d');
-        const size = circleRadius * 2;
-        outCanvas.width = size;
-        outCanvas.height = size;
+        const targetSize = 1024;
+        outCanvas.width = targetSize;
+        outCanvas.height = targetSize;
         
         const cropX = ((cw / 2) - circleRadius - posX) / scale;
         const cropY = ((ch / 2) - circleRadius - posY) / scale;
-        const cropW = size / scale;
-        const cropH = size / scale;
+        const cropW = (circleRadius * 2) / scale;
+        const cropH = (circleRadius * 2) / scale;
         
-        outCtx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, size, size);
+        outCtx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetSize, targetSize);
         
-        const dataUrl = outCanvas.toDataURL('image/jpeg', 0.9);
+        const dataUrl = outCanvas.toDataURL('image/jpeg', 0.95);
         onCropComplete(dataUrl);
         modal.remove();
         

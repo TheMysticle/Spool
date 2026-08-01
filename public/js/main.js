@@ -1648,6 +1648,7 @@
       
       const user = getUser();
       const canEdit = user && (user.role === 'admin' || user.id === ch.user_id);
+      const isOwner = user && user.id === ch.user_id;
       
       const subButtonText = ch.is_subscribed ? 'Subscribed' : 'Subscribe';
       const subButtonClass = ch.is_subscribed ? 'btn-secondary' : 'btn-primary';
@@ -1660,7 +1661,7 @@
           <div class="channel-page-info-bar">
             <div style="position: relative; flex-shrink: 0; display: inline-flex; border-radius: 50%; overflow: hidden;" onmouseover="if(this.querySelector('.avatar-edit-overlay')) this.querySelector('.avatar-edit-overlay').style.opacity='1'" onmouseout="if(this.querySelector('.avatar-edit-overlay')) this.querySelector('.avatar-edit-overlay').style.opacity='0'">
               <img class="channel-page-avatar" src="${avatarUrl}" alt="${escHtml(ch.name)}" onclick="window.openAvatarLightbox('${avatarUrl}')" style="cursor: zoom-in; display: block;">
-              ${canEdit ? `<div class="avatar-edit-overlay" onclick="uploadChannelAvatar('${id}')" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; color: white;" title="Change Profile Picture"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div>` : ''}
+              ${isOwner || id === 'main' ? `<div class="avatar-edit-overlay" onclick="uploadChannelAvatar('${id}')" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; color: white;" title="Change Profile Picture"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div>` : ''}
             </div>
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
