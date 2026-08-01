@@ -148,8 +148,8 @@ router.post('/:id/avatar', authenticate, (req, res) => {
 
   sharp(buffer)
     .rotate()
-    .resize(512, 512, { fit: 'cover' })
-    .jpeg({ quality: 80 })
+    .resize(1024, 1024, { fit: 'cover' })
+    .jpeg({ quality: 92 })
     .toBuffer()
     .then((compressedBuffer) => {
       fs.writeFileSync(absPath, compressedBuffer);

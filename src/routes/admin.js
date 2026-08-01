@@ -687,8 +687,8 @@ router.post('/settings/channel/avatar', (req, res) => {
   
   sharp(buffer)
     .rotate()
-    .resize(512, 512, { fit: 'cover' })
-    .jpeg({ quality: 80 })
+    .resize(1024, 1024, { fit: 'cover' })
+    .jpeg({ quality: 92 })
     .toBuffer()
     .then((compressedBuffer) => {
       fs.writeFileSync(path.join(AVATAR_DIR, 'channel.jpg'), compressedBuffer);

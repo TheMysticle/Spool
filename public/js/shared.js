@@ -1113,7 +1113,7 @@ window.openAvatarCropper = function(file, onCropComplete) {
           </div>
           <div class="cropper-canvas-wrapper" style="position:relative; width: 100%; max-width: 500px; height: 400px; background: #000; overflow: hidden; touch-action: none; cursor: grab; margin: 0 auto;">
             <canvas id="avatar-cropper-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
-            <div class="cropper-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; background: rgba(0,0,0,0.5); mask: radial-gradient(transparent 150px, #000 151px) center/100% 100% no-repeat; -webkit-mask: radial-gradient(transparent 150px, #000 151px) center/100% 100% no-repeat;"></div>
+            <div class="cropper-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; background: rgba(0,0,0,0.5); mask: radial-gradient(circle at center, transparent 150px, #000 151px); -webkit-mask: radial-gradient(circle at center, transparent 150px, #000 151px);"></div>
             <div style="position:absolute; top:50%; left:50%; width:300px; height:300px; transform: translate(-50%, -50%); pointer-events:none; border: 2px dashed var(--accent); border-radius: 50%; box-sizing: border-box;"></div>
           </div>
           <div class="cropper-controls" style="padding: 16px; display:flex; align-items:center; gap: 16px;">

@@ -122,8 +122,8 @@ router.post('/avatar', authenticate, (req, res) => {
 
   sharp(buffer)
     .rotate()
-    .resize(512, 512, { fit: 'cover' })
-    .jpeg({ quality: 80 })
+    .resize(1024, 1024, { fit: 'cover' })
+    .jpeg({ quality: 92 })
     .toBuffer()
     .then((compressedBuffer) => {
       fs.writeFileSync(absPath, compressedBuffer);
@@ -220,8 +220,8 @@ router.post('/channel', authenticate, async (req, res) => {
           
           const compressedBuffer = await sharp(buffer)
             .rotate()
-            .resize(512, 512, { fit: 'cover' })
-            .jpeg({ quality: 80 })
+            .resize(1024, 1024, { fit: 'cover' })
+            .jpeg({ quality: 92 })
             .toBuffer();
             
           fs.writeFileSync(absPath, compressedBuffer);
