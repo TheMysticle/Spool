@@ -3,6 +3,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 const { authenticate, authOrShareToken } = require('../middleware/auth');
 const {
   getAllProgressForUser,
@@ -119,10 +120,19 @@ router.post('/avatar', authenticate, (req, res) => {
   const absPath = path.join(AVATAR_DIR, filename);
   const relPath = path.join('avatars', filename).replace(/\\/g, '/');
 
-  fs.writeFileSync(absPath, buffer);
-  updateUser(req.user.id, { avatar_path: relPath });
-
-  return res.json({ message: 'Avatar updated.', path: relPath });
+  sharp(buffer)
+    .resize(512, 512, { fit: 'cover' })
+    .jpeg({ quality: 80 })
+    .toBuffer()
+    .then((compressedBuffer) => {
+      fs.writeFileSync(absPath, compressedBuffer);
+      updateUser(req.user.id, { avatar_path: relPath });
+      return res.json({ message: 'Avatar updated.', path: relPath });
+    })
+    .catch((err) => {
+      console.error('[Avatar] Failed to compress avatar:', err);
+      return res.status(500).json({ error: 'Failed to process avatar image.' });
+    });
 });
 
 // ── DELETE /api/user/avatar ────────────────────────────────────────────────
@@ -187,7 +197,7 @@ router.get('/channel', authenticate, (req, res) => {
 });
 
 // ── POST /api/user/channel ───────────────────────────────────────────────────
-router.post('/channel', authenticate, (req, res) => {
+router.post('/channel', authenticate, async (req, res) => {
   const { name, imageBase64 } = req.body || {};
   if (!name || name.trim().length === 0) {
     return res.status(400).json({ error: 'Channel name is required.' });
@@ -202,14 +212,20 @@ router.post('/channel', authenticate, (req, res) => {
         const base64Payload = match[3].replace(/\s/g, '');
         try {
           const buffer = Buffer.from(base64Payload, 'base64');
-          const ext = mimeType.split('/')[1];
+          const ext = 'jpg';
           const filename = `channel_${req.user.id}_${Date.now()}.${ext}`;
           const relPath = `/avatars/${filename}`;
           const absPath = path.join(DATA_DIR, 'avatars', filename);
-          fs.writeFileSync(absPath, buffer);
+          
+          const compressedBuffer = await sharp(buffer)
+            .resize(512, 512, { fit: 'cover' })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+            
+          fs.writeFileSync(absPath, compressedBuffer);
           avatarPath = relPath;
         } catch (err) {
-          console.error('[Channel] Failed to save avatar:', err);
+          console.error('[Channel] Failed to process avatar:', err);
         }
       }
     }
@@ -228,7 +244,7 @@ router.post('/channel', authenticate, (req, res) => {
     channel = createChannel(req.user.id, name.trim(), avatarPath);
   }
 
-  res.json({ message: 'Channel saved.', channel });
+  res.json({ message: 'Channel profile saved.', channel });
 });
 
 module.exports = router;

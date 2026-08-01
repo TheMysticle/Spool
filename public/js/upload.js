@@ -93,6 +93,9 @@
     document.getElementById('create-channel-avatar-input').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        return toast('Please select an image, not a video.', 'error');
+      }
       try {
         imageBase64 = await fileToDataUrl(file);
         document.getElementById('create-channel-avatar-preview').innerHTML = `<img src="${imageBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;

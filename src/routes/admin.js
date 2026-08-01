@@ -4,6 +4,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp');
 const transcodeQueue = require('../transcode_queue');
 const channelsRouter = require('./channels');
 const authRouter = require('./auth');
@@ -683,10 +684,20 @@ router.post('/settings/channel/avatar', (req, res) => {
   
   const AVATAR_DIR = path.join(DATA_DIR, 'avatars');
   fs.mkdirSync(AVATAR_DIR, { recursive: true });
-  fs.writeFileSync(path.join(AVATAR_DIR, 'channel.jpg'), buffer);
   
-  updateChannelProfile({ channel_avatar: '/api/videos/channel/avatar' });
-  res.json({ message: 'Avatar updated.', path: '/api/videos/channel/avatar' });
+  sharp(buffer)
+    .resize(512, 512, { fit: 'cover' })
+    .jpeg({ quality: 80 })
+    .toBuffer()
+    .then((compressedBuffer) => {
+      fs.writeFileSync(path.join(AVATAR_DIR, 'channel.jpg'), compressedBuffer);
+      updateChannelProfile({ channel_avatar: '/api/videos/channel/avatar' });
+      res.json({ message: 'Avatar updated.', path: '/api/videos/channel/avatar' });
+    })
+    .catch((err) => {
+      console.error('[Admin] Failed to compress avatar:', err);
+      res.status(500).json({ error: 'Failed to process avatar.' });
+    });
 });
 
 router.delete('/settings/channel/avatar', (req, res) => {
