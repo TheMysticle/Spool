@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const transcodeQueue = require('../transcode_queue');
 const channelsRouter = require('./channels');
+const authRouter = require('./auth');
 const {
   getAllUsers, createUser, updateUser, deleteUser, getUserByUsername,
   getVideoById,
@@ -197,6 +198,52 @@ router.post('/users/:id/reset-lockouts', (req, res) => {
   });
 
   res.json({ message: 'Lockouts reset successfully.' });
+});
+
+// ── POST /api/admin/users/:id/reset-2fa-attempts ────────────────────────────
+router.post('/users/:id/reset-2fa-attempts', (req, res) => {
+  const { id } = req.params;
+  const user = getAllUsers().find((u) => u.id === Number(id));
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  if (typeof authRouter.resetUser2FAAttempts === 'function') {
+    authRouter.resetUser2FAAttempts(user.username);
+  }
+  
+  const { createAuditLog } = require('../database');
+  createAuditLog({
+    userId: req.user.id,
+    action: 'reset_2fa_attempts',
+    details: `Reset 2FA attempts for user ID ${id}.`,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent') || null,
+  });
+
+  res.json({ message: '2FA attempts reset successfully.' });
+});
+
+// ── POST /api/admin/users/:id/disable-2fa ───────────────────────────────────
+router.post('/users/:id/disable-2fa', (req, res) => {
+  const { id } = req.params;
+  const user = getAllUsers().find((u) => u.id === Number(id));
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  updateUser(Number(id), { twofa_enabled: 0, twofa_secret: null });
+  
+  if (typeof authRouter.resetUser2FAAttempts === 'function') {
+    authRouter.resetUser2FAAttempts(user.username);
+  }
+  
+  const { createAuditLog } = require('../database');
+  createAuditLog({
+    userId: req.user.id,
+    action: 'disable_2fa',
+    details: `Disabled 2FA for user ID ${id}.`,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent') || null,
+  });
+
+  res.json({ message: '2FA disabled successfully.' });
 });
 
 // ── POST /api/admin/scan ──────────────────────────────────────────────────────

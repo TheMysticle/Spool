@@ -452,16 +452,48 @@
 
       <p id="user-modal-error" class="form-error"></p>
 
-      <div class="modal-footer" style="justify-content: space-between; display: flex;">
-        <button class="btn btn-ghost" id="user-modal-reset-lockouts" type="button" style="color: var(--danger);">Reset Lockouts</button>
-        <div>
-          <button class="btn btn-ghost" id="user-modal-cancel" type="button">Cancel</button>
-          <button class="btn btn-primary" id="user-modal-save" type="button">Save User</button>
-        </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="user-modal-cancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="user-modal-save" type="button">Save User</button>
       </div>
     </div>
   </div>
   <div class="modal-overlay" id="video-edit-modal"><div class="modal"><div class="modal-header"><h3>Video</h3></div><input type="hidden" id="video-edit-id"><div class="form-group"><label class="form-label">Title</label><input class="form-input" id="video-edit-title"></div><div class="form-group"><label class="form-label">Category</label><select class="form-input" id="video-edit-category"></select></div><div class="form-group"><label class="form-label">Desc</label><textarea class="form-input" id="video-edit-desc"></textarea></div><p id="video-edit-error" style="color:var(--danger)"></p><div class="modal-footer"><button class="btn btn-ghost" id="video-edit-cancel">Cancel</button><button class="btn btn-primary" id="video-edit-save">Save</button></div></div></div>
+  <!-- Auth Reset Modal -->
+  <div class="modal-overlay" id="auth-reset-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="auth-reset-title">Reset Authentication</h3>
+        <button class="btn-icon" id="auth-reset-close" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <input type="hidden" id="auth-reset-id">
+      
+      <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.95rem;">
+        Manage lockouts and 2FA settings for <strong id="auth-reset-username" style="color: var(--text-primary);"></strong>.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+        <button class="btn btn-ghost" id="btn-reset-vhs" type="button" style="justify-content: flex-start; text-align: left; padding: 12px 16px;">
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Reset VHS Lockouts</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">Clears any active 30-minute lockouts for private channels.</div>
+        </button>
+        <button class="btn btn-ghost" id="btn-reset-2fa-attempts" type="button" style="justify-content: flex-start; text-align: left; padding: 12px 16px;">
+          <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Reset 2FA Attempts</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">Clears any rate-limited 2FA login challenges.</div>
+        </button>
+        <button class="btn btn-ghost" id="btn-disable-2fa" type="button" style="justify-content: flex-start; text-align: left; padding: 12px 16px; color: var(--danger);">
+          <div style="font-weight: 600; margin-bottom: 4px;">Disable 2FA completely</div>
+          <div style="font-size: 0.8rem; opacity: 0.8; font-weight: 400;">Removes the 2FA requirement so the user can sign in and set it up again.</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="person-modal"><div class="modal"><div class="modal-header"><h3 id="person-modal-title">Person</h3></div><input type="hidden" id="person-modal-id"><div class="form-group"><label class="form-label">Name</label><input class="form-input" id="person-name"></div><div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="person-bio"></textarea></div><div class="form-group"><label class="form-label">Tags</label><textarea class="form-input" id="person-title-tags"></textarea></div><div id="person-img-preview" style="width:48px;height:48px;border-radius:50%;background:#333;margin-bottom:8px;"></div><input type="file" id="person-img-input" style="margin-bottom:8px;"><button class="btn btn-ghost btn-sm" id="person-img-btn">Upload</button><button class="btn btn-danger btn-sm" id="person-img-remove" style="display:none;">Remove</button><div class="form-group" style="margin-top:16px;"><label class="form-label">Link User</label><select class="form-input" id="person-user-link"></select></div><p id="person-modal-error" style="color:var(--danger)"></p><div class="modal-footer"><button class="btn btn-ghost" id="person-modal-cancel">Cancel</button><button class="btn btn-primary" id="person-modal-save">Save</button></div></div></div>
   <div class="modal-overlay" id="series-edit-modal"><div class="modal"><div class="modal-header"><h3>Series</h3><button class="btn-icon" id="series-edit-close">X</button></div><input type="hidden" id="series-edit-id"><div class="form-group"><label class="form-label">Name</label><input class="form-input" id="series-edit-name"></div><div class="form-group"><label class="form-label">Desc</label><textarea class="form-input" id="series-edit-description"></textarea></div><p id="series-edit-error" style="color:var(--danger)"></p><div class="modal-footer"><button class="btn btn-ghost" id="series-edit-cancel">Cancel</button><button class="btn btn-primary" id="series-edit-save">Save</button></div></div></div>
   <div class="modal-overlay" id="dialog-preview-overlay"><div class="modal dialog-modal"><div id="dialog-preview-title">Dialog Preview</div><div id="dialog-preview-body">Loading preview...</div><div class="modal-footer dialog-footer"><div class="dialog-lang-toggle" id="dialog-preview-lang-switch"><button id="dialog-preview-lang-en" class="active" type="button">EN</button><button id="dialog-preview-lang-pl" type="button">PL</button></div><button class="btn btn-ghost" id="dialog-preview-close" type="button">Close</button></div></div></div>

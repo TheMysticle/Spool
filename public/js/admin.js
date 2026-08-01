@@ -484,7 +484,12 @@
           <td data-label="Last Login">${formatDate(u.last_login)}</td>
           <td data-label="Actions">
             <div class="admin-row-actions">
-              <button class="btn btn-ghost btn-sm" onclick="editUser(${u.id}, '${escHtml(u.username)}', '${escHtml(u.display_name || '')}', '${u.role}', ${u.can_upload})">Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="editUser(${u.id}, '${escHtml(u.username)}', '${escHtml(u.display_name || '')}', '${u.role}', ${u.can_upload})" aria-label="Edit">Edit</button>
+              <button class="btn btn-ghost btn-sm btn-icon" onclick="openAuthResetModal(${u.id}, '${escHtml(u.username)}')" aria-label="Reset Authentication" style="padding: 4px 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                </svg>
+              </button>
               ${u.id !== user.id
                 ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id}, '${escHtml(u.username)}')">Delete</button>`
                 : '<span style="font-size:0.75rem;color:var(--text-muted);padding:0.3rem">You</span>'}
@@ -511,10 +516,6 @@
     document.getElementById('user-username-group').style.display = 'block';
     document.getElementById('user-pass-label').textContent = 'Password';
     document.getElementById('user-pass-hint').textContent = 'Minimum 8 characters.';
-    
-    // Hide reset lockouts for new user
-    const resetBtn = document.getElementById('user-modal-reset-lockouts');
-    if (resetBtn) resetBtn.style.display = 'none';
 
     openModal('user-modal');
   });
@@ -533,9 +534,6 @@
     document.getElementById('user-username-group').style.display = 'none';
     document.getElementById('user-pass-label').textContent = 'Reset Password';
     document.getElementById('user-pass-hint').textContent = 'Leave blank to keep the current password.';
-
-    const resetBtn = document.getElementById('user-modal-reset-lockouts');
-    if (resetBtn) resetBtn.style.display = 'block';
 
     openModal('user-modal');
   };
@@ -557,16 +555,44 @@
     if (e.target === e.currentTarget) closeModal('user-modal');
   });
 
-  document.getElementById('user-modal-reset-lockouts')?.addEventListener('click', async () => {
-    const id = document.getElementById('user-modal-id').value;
-    if (!id) return;
-    if (!confirm('Are you sure you want to reset all VHS lockouts for this user?')) return;
+  // Auth Reset Modal Logic
+  window.openAuthResetModal = function(id, username) {
+    document.getElementById('auth-reset-id').value = id;
+    document.getElementById('auth-reset-username').textContent = username;
+    openModal('auth-reset-modal');
+  };
+
+  document.getElementById('auth-reset-close')?.addEventListener('click', () => closeModal('auth-reset-modal'));
+  document.getElementById('auth-reset-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal('auth-reset-modal');
+  });
+
+  document.getElementById('btn-reset-vhs')?.addEventListener('click', async () => {
+    const id = document.getElementById('auth-reset-id').value;
     try {
       await api(`/api/admin/users/${id}/reset-lockouts`, { method: 'POST' });
-      toast('Lockouts reset successfully.');
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+      toast('VHS lockouts cleared.');
+      closeModal('auth-reset-modal');
+    } catch (err) { toast(err.message, 'error'); }
+  });
+
+  document.getElementById('btn-reset-2fa-attempts')?.addEventListener('click', async () => {
+    const id = document.getElementById('auth-reset-id').value;
+    try {
+      await api(`/api/admin/users/${id}/reset-2fa-attempts`, { method: 'POST' });
+      toast('2FA login challenges cleared.');
+      closeModal('auth-reset-modal');
+    } catch (err) { toast(err.message, 'error'); }
+  });
+
+  document.getElementById('btn-disable-2fa')?.addEventListener('click', async () => {
+    const id = document.getElementById('auth-reset-id').value;
+    if (!confirm('Are you sure you want to disable 2FA for this user? They will be able to log in with just their password.')) return;
+    try {
+      await api(`/api/admin/users/${id}/disable-2fa`, { method: 'POST' });
+      toast('2FA disabled for user.');
+      closeModal('auth-reset-modal');
+    } catch (err) { toast(err.message, 'error'); }
   });
 
   document.getElementById('user-modal-save')?.addEventListener('click', async () => {

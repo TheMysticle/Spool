@@ -241,4 +241,14 @@ router.post('/change-password', authenticate, async (req, res) => {
   res.json({ message: 'Password changed successfully.' });
 });
 
+// Helper for admin panel to clear user's active 2FA challenges
+router.resetUser2FAAttempts = (username) => {
+  const normalizedUser = username.trim().toLowerCase();
+  for (const [id, challenge] of loginChallenges.entries()) {
+    if (challenge.loginUsername && challenge.loginUsername.toLowerCase() === normalizedUser) {
+      loginChallenges.delete(id);
+    }
+  }
+};
+
 module.exports = router;
