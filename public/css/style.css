@@ -206,6 +206,7 @@ h3 { font-size: 1rem; }
   color: var(--text-primary); border-radius: 10px; font-size: 0.9rem; font-weight: 400;
   cursor: pointer; transition: background 0.2s; white-space: nowrap;
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 @media (hover: hover) {
   .nav-item:hover { background: var(--bg-surface); }
@@ -471,6 +472,7 @@ h3 { font-size: 1rem; }
   padding: 8px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 500;
   cursor: pointer; white-space: nowrap; transition: background 0.2s, color 0.2s;
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 @media (hover: hover) {
   .chip:hover { background-color: var(--bg-hover); }
