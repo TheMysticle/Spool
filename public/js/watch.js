@@ -2860,6 +2860,7 @@ window.navigateToVideo = navigateToVideo;
 
     if (e.code === 'Space') {
       e.preventDefault();
+      e.stopPropagation();
       
       const wasActive = player.userActive();
       if (!wasActive) player._suppressNextWake = true;
@@ -2881,7 +2882,16 @@ window.navigateToVideo = navigateToVideo;
       e.preventDefault();
       seekAndAnimate('right', 10);
     }
-  });
+  }, { capture: true });
+
+  document.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target?.isContentEditable) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, { capture: true });
 
   // ── Load video data ────────────────────────────────────────────────────────
   async function loadPage() {
