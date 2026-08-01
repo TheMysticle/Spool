@@ -2303,7 +2303,7 @@ select.bulk-select-mini[multiple] {
   background: var(--bg-surface);
   border-radius: var(--radius);
   border: 1px solid var(--border-subtle);
-  padding: 24px 0;
+  padding: 24px;
   margin-bottom: 24px;
 }
 
@@ -4021,8 +4021,12 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   }
 
   .admin-card {
-    padding: 16px 0;
+    padding: 16px;
     border-radius: 16px;
+  }
+  
+  .table-wrapper {
+    margin: 0 -16px;
   }
 
   .section-header {
