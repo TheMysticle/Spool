@@ -413,4 +413,14 @@ router.delete('/:id/community/:postId', authenticate, (req, res) => {
   res.json({ message: 'Post deleted successfully.' });
 });
 
+// Helper for admin panel to clear user lockouts
+router.resetUserVhsAttempts = (userId) => {
+  const prefix = `${userId}_`;
+  for (const key of failedVhsAttempts.keys()) {
+    if (key.startsWith(prefix)) {
+      failedVhsAttempts.delete(key);
+    }
+  }
+};
+
 module.exports = router;

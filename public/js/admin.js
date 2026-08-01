@@ -511,6 +511,10 @@
     document.getElementById('user-username-group').style.display = 'block';
     document.getElementById('user-pass-label').textContent = 'Password';
     document.getElementById('user-pass-hint').textContent = 'Minimum 8 characters.';
+    
+    // Hide reset lockouts for new user
+    const resetBtn = document.getElementById('user-modal-reset-lockouts');
+    if (resetBtn) resetBtn.style.display = 'none';
 
     openModal('user-modal');
   });
@@ -530,6 +534,9 @@
     document.getElementById('user-pass-label').textContent = 'Reset Password';
     document.getElementById('user-pass-hint').textContent = 'Leave blank to keep the current password.';
 
+    const resetBtn = document.getElementById('user-modal-reset-lockouts');
+    if (resetBtn) resetBtn.style.display = 'block';
+
     openModal('user-modal');
   };
 
@@ -548,6 +555,18 @@
   document.getElementById('user-modal-cancel')?.addEventListener('click', () => closeModal('user-modal'));
   document.getElementById('user-modal')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeModal('user-modal');
+  });
+
+  document.getElementById('user-modal-reset-lockouts')?.addEventListener('click', async () => {
+    const id = document.getElementById('user-modal-id').value;
+    if (!id) return;
+    if (!confirm('Are you sure you want to reset all VHS lockouts for this user?')) return;
+    try {
+      await api(`/api/admin/users/${id}/reset-lockouts`, { method: 'POST' });
+      toast('Lockouts reset successfully.');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
   });
 
   document.getElementById('user-modal-save')?.addEventListener('click', async () => {

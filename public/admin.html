@@ -452,9 +452,12 @@
 
       <p id="user-modal-error" class="form-error"></p>
 
-      <div class="modal-footer">
-        <button class="btn btn-ghost" id="user-modal-cancel" type="button">Cancel</button>
-        <button class="btn btn-primary" id="user-modal-save" type="button">Save User</button>
+      <div class="modal-footer" style="justify-content: space-between; display: flex;">
+        <button class="btn btn-ghost" id="user-modal-reset-lockouts" type="button" style="color: var(--danger);">Reset Lockouts</button>
+        <div>
+          <button class="btn btn-ghost" id="user-modal-cancel" type="button">Cancel</button>
+          <button class="btn btn-primary" id="user-modal-save" type="button">Save User</button>
+        </div>
       </div>
     </div>
   </div>

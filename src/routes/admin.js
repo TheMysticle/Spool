@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const transcodeQueue = require('../transcode_queue');
+const channelsRouter = require('./channels');
 const {
   getAllUsers, createUser, updateUser, deleteUser, getUserByUsername,
   getVideoById,
@@ -175,6 +176,27 @@ router.delete('/users/:id', (req, res) => {
   });
 
   res.json({ message: 'User deleted.' });
+});
+
+// ── POST /api/admin/users/:id/reset-lockouts ────────────────────────────────
+router.post('/users/:id/reset-lockouts', (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: 'Missing user ID.' });
+  
+  if (typeof channelsRouter.resetUserVhsAttempts === 'function') {
+    channelsRouter.resetUserVhsAttempts(id);
+  }
+  
+  const { createAuditLog } = require('../database');
+  createAuditLog({
+    userId: req.user.id,
+    action: 'reset_lockouts',
+    details: `Reset VHS lockouts for user ID ${id}.`,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent') || null,
+  });
+
+  res.json({ message: 'Lockouts reset successfully.' });
 });
 
 // ── POST /api/admin/scan ──────────────────────────────────────────────────────
