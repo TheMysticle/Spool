@@ -780,7 +780,8 @@ function getResolutionLabel(height) {
       event.preventDefault();
       event.stopPropagation();
       
-      if (!isMobileViewport()) {
+      const isMouse = Date.now() - (window.__lastPlayerTouchTime || 0) > 1000;
+      if (isMouse) {
         if (!player) return;
         if (player.paused()) {
           player.play();
@@ -1006,6 +1007,7 @@ function getResolutionLabel(height) {
     }
 
     function handleTouchStart(event) {
+      window.__lastPlayerTouchTime = Date.now();
       if (isControlTarget(event.target)) return;
       // Set the window flag immediately on touchstart — before VJS's own
       // touchstart handler fires and sets userActivity_=true. This ensures
