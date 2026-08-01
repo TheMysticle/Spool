@@ -470,8 +470,11 @@ h3 { font-size: 1rem; }
   background-color: var(--bg-surface); color: var(--text-primary); border: none;
   padding: 8px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 500;
   cursor: pointer; white-space: nowrap; transition: background 0.2s, color 0.2s;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
-.chip:hover { background-color: var(--bg-hover); }
+@media (hover: hover) {
+  .chip:hover { background-color: var(--bg-hover); }
+}
 .chip.active { background-color: var(--text-primary); color: var(--bg-base); }
 
 /* Toolbar / Section Header */
