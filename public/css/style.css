@@ -205,8 +205,11 @@ h3 { font-size: 1rem; }
   width: 100%; padding: 10px 12px; border: none; background: transparent;
   color: var(--text-primary); border-radius: 10px; font-size: 0.9rem; font-weight: 400;
   cursor: pointer; transition: background 0.2s; white-space: nowrap;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
 }
-.nav-item:hover { background: var(--bg-surface); }
+@media (hover: hover) {
+  .nav-item:hover { background: var(--bg-surface); }
+}
 .nav-item.active { background: var(--bg-surface); font-weight: 600; }
 
 .collapsed .nav-item { flex-direction: column; justify-content: center; gap: 4px; padding: 16px 0; font-size: 0.65rem; text-align: center; }
