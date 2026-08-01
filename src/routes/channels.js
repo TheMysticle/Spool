@@ -46,7 +46,7 @@ router.get('/', authenticate, (req, res) => {
     avatar_path: globalProfile.channel_avatar || null,
     banner_path: globalProfile.channel_banner || null,
     video_count: getVideoCount(null), // Assuming null/main is admin
-    subscriber_count: getSubscriberCount('main')
+    subscriber_count: getSubscriberCount(null)
   };
   // Prepend admin channel
   channels.unshift(adminChannel);
