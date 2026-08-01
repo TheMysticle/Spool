@@ -1542,18 +1542,15 @@ window.navigateToVideo = navigateToVideo;
     
     if (!player) return;
     
-    // Slight delay to allow browser to actually resize the window before requesting fullscreen
-    setTimeout(() => {
-      if (isLandscape) {
-        if (!player.isFullscreen()) {
-          player.requestFullscreen();
-        }
-      } else {
-        if (player.isFullscreen()) {
-          player.exitFullscreen();
-        }
+    if (isLandscape) {
+      if (!player.isFullscreen()) {
+        player.requestFullscreen();
       }
-    }, 50);
+    } else {
+      if (player.isFullscreen()) {
+        player.exitFullscreen();
+      }
+    }
   }
 
   function setupAutoFullscreen() {
