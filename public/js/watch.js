@@ -1044,6 +1044,128 @@ function getResolutionLabel(height) {
     });
   }
 
+  function setupSeekbarOptimizations() {
+    if (!player) return;
+
+    let isScrubbing = false;
+    let scrubTargetTime = 0;
+    
+    // Monkey-patch currentTime to avoid seeking the video while dragging
+    const originalCurrentTime = player.currentTime;
+    player.currentTime = function(seconds) {
+      if (seconds !== undefined) {
+        if (isScrubbing) {
+          scrubTargetTime = seconds;
+          // Trigger timeupdate so UI progresses
+          player.trigger('timeupdate');
+          return;
+        }
+        return originalCurrentTime.call(this, seconds);
+      }
+      return isScrubbing ? scrubTargetTime : originalCurrentTime.call(this);
+    };
+
+    player.ready(() => {
+      const progressControl = player.controlBar?.progressControl?.el();
+      if (!progressControl) return;
+
+      // Handle scrub state tracking
+      const startScrub = () => { isScrubbing = true; };
+      const stopScrub = () => {
+        if (isScrubbing) {
+          isScrubbing = false;
+          originalCurrentTime.call(player, scrubTargetTime); // commit seek
+        }
+      };
+
+      progressControl.addEventListener('mousedown', startScrub, { passive: true });
+      progressControl.addEventListener('touchstart', startScrub, { passive: true });
+      
+      document.addEventListener('mouseup', stopScrub);
+      document.addEventListener('touchend', stopScrub);
+
+      // Create Live Thumbnail Preview Elements
+      const previewContainer = document.createElement('div');
+      previewContainer.className = 'vjs-thumbnail-preview';
+      previewContainer.innerHTML = '<canvas class="vjs-thumbnail-canvas" width="160" height="90"></canvas>';
+      progressControl.appendChild(previewContainer);
+
+      const canvas = previewContainer.querySelector('.vjs-thumbnail-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      const previewVideo = document.createElement('video');
+      previewVideo.style.display = 'none';
+      previewVideo.muted = true;
+      previewVideo.playsInline = true;
+      previewVideo.preload = 'metadata';
+      document.body.appendChild(previewVideo);
+
+      // Sync source with main player
+      const syncSource = () => {
+        const src = player.currentSrc();
+        if (src && previewVideo.src !== src) {
+          previewVideo.src = src;
+        }
+      };
+      player.on('loadstart', syncSource);
+      syncSource();
+
+      let seekTimeout = null;
+      let isSeeking = false;
+      let lastDrawTime = -1;
+
+      previewVideo.addEventListener('seeked', () => {
+        isSeeking = false;
+        ctx.drawImage(previewVideo, 0, 0, 160, 90);
+      });
+
+      const handleHover = (e) => {
+        const rect = progressControl.getBoundingClientRect();
+        const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+        let percent = (clientX - rect.left) / rect.width;
+        percent = Math.max(0, Math.min(1, percent));
+        
+        const duration = player.duration() || 0;
+        const hoverTime = percent * duration;
+
+        // Position the container
+        const containerWidth = 160;
+        let left = (percent * rect.width) - (containerWidth / 2);
+        // Clamp to edges
+        left = Math.max(0, Math.min(rect.width - containerWidth, left));
+        previewContainer.style.left = left + 'px';
+
+        // Throttle drawing
+        if (Math.abs(hoverTime - lastDrawTime) > 0.5 && !isSeeking) {
+          if (seekTimeout) clearTimeout(seekTimeout);
+          seekTimeout = setTimeout(() => {
+            isSeeking = true;
+            lastDrawTime = hoverTime;
+            previewVideo.currentTime = hoverTime;
+          }, 100);
+        }
+      };
+
+      progressControl.addEventListener('mousemove', handleHover);
+      progressControl.addEventListener('touchmove', handleHover, { passive: true });
+      
+      const showPreview = () => { previewContainer.classList.add('show'); };
+      const hidePreview = () => { previewContainer.classList.remove('show'); };
+
+      progressControl.addEventListener('mouseenter', showPreview);
+      progressControl.addEventListener('mouseleave', hidePreview);
+      progressControl.addEventListener('touchstart', showPreview, { passive: true });
+      progressControl.addEventListener('touchend', hidePreview);
+      
+      // Cleanup
+      player.on('dispose', () => {
+        document.removeEventListener('mouseup', stopScrub);
+        document.removeEventListener('touchend', stopScrub);
+        if (previewVideo.parentNode) previewVideo.parentNode.removeChild(previewVideo);
+      });
+    });
+  }
+
 function initPlayer(videoData, { autoStart = true } = {}) {
     if (player) {
       // FIX: Rescue custom overlays before Video.js nukes them
@@ -1164,6 +1286,7 @@ function initPlayer(videoData, { autoStart = true } = {}) {
 
     setupVideoUiOverlay();
     setupDoubleTapSeek();
+    setupSeekbarOptimizations();
 
     const token = getToken();
     const q = getAuthQueryString();
@@ -2680,13 +2803,75 @@ window.navigateToVideo = navigateToVideo;
     });
   }
 
-  // ── Keyboard shortcut: close modal on Escape ───────────────────────────────
+  // ── Keyboard shortcut: Player controls & modals ──────────────────────────────
+  function showCenterIcon(type) {
+    const icon = document.getElementById('center-action-icon');
+    if (!icon) return;
+    icon.innerHTML = type === 'play' 
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+    
+    icon.classList.remove('animate');
+    void icon.offsetWidth;
+    icon.classList.add('animate');
+  }
+
+  function seekAndAnimate(side, delta) {
+    if (!player) return;
+    const current = Number(player.currentTime() || 0);
+    const duration = Number(player.duration() || 0);
+    let target = current + delta;
+    if (Number.isFinite(duration) && duration > 0) {
+      target = Math.min(Math.max(0, target), duration);
+    } else {
+      target = Math.max(0, target);
+    }
+    player.currentTime(target);
+
+    if (typeof player._wakeOverlay === 'function') player._wakeOverlay();
+
+    const ripple = document.getElementById(`ripple-${side}`);
+    if (ripple) {
+      const label = ripple.querySelector('.dt-ripple-label');
+      if (label) label.textContent = Math.abs(delta) + 's';
+      
+      ripple.classList.remove('animate');
+      void ripple.offsetWidth;
+      ripple.classList.add('animate');
+    }
+  }
+
   document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    const editModal = document.getElementById('watch-edit-modal');
-    const personModal = document.getElementById('person-details-modal');
-    if (editModal?.classList.contains('open')) closeModal('watch-edit-modal');
-    if (personModal?.classList.contains('open')) closeModal('person-details-modal');
+    if (e.key === 'Escape') {
+      const editModal = document.getElementById('watch-edit-modal');
+      const personModal = document.getElementById('person-details-modal');
+      if (editModal?.classList.contains('open')) closeModal('watch-edit-modal');
+      if (personModal?.classList.contains('open')) closeModal('person-details-modal');
+      return;
+    }
+
+    // Ignore player hotkeys if user is typing in an input
+    const tag = e.target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+
+    if (!player) return;
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (player.paused()) {
+        player.play();
+        showCenterIcon('play');
+      } else {
+        player.pause();
+        showCenterIcon('pause');
+      }
+    } else if (e.code === 'KeyA') {
+      e.preventDefault();
+      seekAndAnimate('left', -10);
+    } else if (e.code === 'KeyD') {
+      e.preventDefault();
+      seekAndAnimate('right', 10);
+    }
   });
 
   // ── Load video data ────────────────────────────────────────────────────────
