@@ -48,11 +48,12 @@ router.get('/channels', (req, res) => {
   
   // 1. Add Main Channel
   const globalProfile = getChannelProfile();
+  const mainName = globalProfile.channel_name || 'Spool Main Channel';
   allChannels.push({
     id: 'main',
-    name: globalProfile.channel_name || 'Spool Main Channel',
-    username: 'main',
-    avatar_path: globalProfile.channel_avatar || '/img/default-avatar.png',
+    name: mainName,
+    username: mainName.replace(/\s+/g, '').toLowerCase(),
+    avatar_path: globalProfile.channel_avatar || null,
     banner_path: globalProfile.channel_banner || null,
     is_main: true
   });
@@ -62,7 +63,7 @@ router.get('/channels', (req, res) => {
     id: ch.id,
     name: ch.name,
     username: ch.username || ch.name.replace(/\s+/g, '').toLowerCase(),
-    avatar_path: ch.avatar_path || '/img/default-avatar.png',
+    avatar_path: ch.avatar_path || null,
     banner_path: ch.banner_path || null,
     user_id: ch.user_id,
     is_main: false

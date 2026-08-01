@@ -52,19 +52,22 @@
       }
 
       res.forEach(ch => {
+        const avatarUrl = ch.avatar_path || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">${ch.name.charAt(0).toUpperCase()}</text></svg>`;
+        const bannerUrl = ch.banner_path || '';
+
         const card = document.createElement('div');
         card.className = 'channel-admin-card';
         card.style.cssText = 'background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;';
         
         card.innerHTML = `
-          <div style="height: 100px; background: ${ch.banner_path ? `url('${ch.banner_path}') center/cover` : 'var(--bg-hover)'}; position: relative;">
-            <button onclick="window.openChannelEditor('${ch.id}', '${escHtml(ch.name)}', '${ch.avatar_path}', '${ch.banner_path || ''}', () => loadChannels())" title="Channel Settings" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); border: none; cursor: pointer;">
+          <div style="height: 100px; background: ${bannerUrl ? `url('${bannerUrl}') center/cover` : 'var(--bg-hover)'}; position: relative;">
+            <button onclick="window.openChannelEditor('${ch.id}', '${escHtml(ch.name)}', '${avatarUrl}', '${bannerUrl}', () => loadChannels())" title="Channel Settings" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); border: none; cursor: pointer;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
             </button>
           </div>
           <div style="padding: 16px; display: flex; flex-direction: column; align-items: center; position: relative; margin-top: -50px;">
             <div style="position: relative; border-radius: 50%; overflow: hidden; border: 4px solid var(--surface); width: 80px; height: 80px; flex-shrink: 0;">
-              <img src="${ch.avatar_path}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Avatar">
+              <img src="${avatarUrl}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Avatar">
             </div>
             <h3 style="margin: 12px 0 4px 0; font-size: 1.1rem; text-align: center;">${escHtml(ch.name)}</h3>
             <span style="color: var(--text-muted); font-size: 0.9rem;">@${escHtml(ch.username)}</span>
