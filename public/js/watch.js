@@ -1019,8 +1019,8 @@ function getResolutionLabel(height) {
       if (isControlTarget(event.target)) return;
       // If a double-click is still in progress (isDoubleTapWindow still true
       // because handleDoubleClick hasn't fired yet) do nothing — dblclick will
-      // handle it. Also don't wake if a dismiss just happened.
-      if (isDoubleTapWindow || isDismissing) return;
+      // handle it. Also don't wake if a dismiss just happened or if skipping.
+      if (isDoubleTapWindow || isDismissing || suppressOverlayTimer) return;
       if (player && typeof player._wakeOverlay === 'function') {
         player._wakeOverlay();
       }
@@ -2827,8 +2827,6 @@ window.navigateToVideo = navigateToVideo;
       target = Math.max(0, target);
     }
     player.currentTime(target);
-
-    if (typeof player._wakeOverlay === 'function') player._wakeOverlay();
 
     const ripple = document.getElementById(`ripple-${side}`);
     if (ripple) {
