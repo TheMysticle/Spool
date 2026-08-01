@@ -20,7 +20,7 @@ const {
   addVideosToSeries, removeVideoFromSeries, setSeriesVideoOrder,
   getSeriesAccess, setSeriesAccess,
   getAllDialogs, createDialog, deleteDialog,
-  getChannelProfile, updateChannelProfile,
+  getChannelProfile, updateChannelProfile, getAllChannels,
   getSetting, setSetting,
   createAuditLog, getRecentAuditLogs,
   getAllVideoShares,
@@ -40,6 +40,35 @@ router.use(authenticate, requireAdmin);
 // ── GET /api/admin/users ──────────────────────────────────────────────────────
 router.get('/users', (req, res) => {
   res.json(getAllUsers());
+});
+
+// ── GET /api/admin/channels ───────────────────────────────────────────────────
+router.get('/channels', (req, res) => {
+  const allChannels = [];
+  
+  // 1. Add Main Channel
+  const globalProfile = getChannelProfile();
+  allChannels.push({
+    id: 'main',
+    name: globalProfile.channel_name || 'Spool Main Channel',
+    username: 'main',
+    avatar_path: globalProfile.channel_avatar || '/img/default-avatar.png',
+    banner_path: globalProfile.channel_banner || null,
+    is_main: true
+  });
+  
+  // 2. Add User Channels
+  const userChannels = getAllChannels().map(ch => ({
+    id: ch.id,
+    name: ch.name,
+    username: ch.username || ch.name.replace(/\s+/g, '').toLowerCase(),
+    avatar_path: ch.avatar_path || '/img/default-avatar.png',
+    banner_path: ch.banner_path || null,
+    user_id: ch.user_id,
+    is_main: false
+  }));
+  
+  res.json(allChannels.concat(userChannels));
 });
 
 // ── POST /api/admin/users ─────────────────────────────────────────────────────

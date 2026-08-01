@@ -25,6 +25,7 @@
 
       // Lazy-load panel data
       if (item.dataset.panel === 'panel-users') loadUsers();
+      if (item.dataset.panel === 'panel-channels') loadChannels();
       if (item.dataset.panel === 'panel-scan') loadScanStatus();
       if (item.dataset.panel === 'panel-videos') loadAdminVideos();
       if (item.dataset.panel === 'panel-people') loadPeople();
@@ -36,6 +37,67 @@
       if (item.dataset.panel === 'panel-transcoder') loadTranscoderStatus();
     });
   });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ── Channels panel ────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  async function loadChannels() {
+    try {
+      const res = await api('/api/admin/channels');
+      const grid = document.getElementById('channels-grid');
+      grid.innerHTML = '';
+      if (!res.length) {
+        grid.innerHTML = '<p>No channels found.</p>';
+        return;
+      }
+
+      res.forEach(ch => {
+        const card = document.createElement('div');
+        card.className = 'channel-admin-card';
+        card.style.cssText = 'background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;';
+        
+        card.innerHTML = `
+          <div style="height: 100px; background: ${ch.banner_path ? `url('${ch.banner_path}') center/cover` : 'var(--bg-hover)'}"></div>
+          <div style="padding: 16px; display: flex; flex-direction: column; align-items: center; position: relative; margin-top: -50px;">
+            <div style="position: relative; border-radius: 50%; overflow: hidden; border: 4px solid var(--surface); width: 80px; height: 80px; flex-shrink: 0;"
+                 onmouseover="this.querySelector('.avatar-edit-overlay').style.opacity='1'"
+                 onmouseout="this.querySelector('.avatar-edit-overlay').style.opacity='0'">
+              <img src="${ch.avatar_path}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Avatar">
+              <div class="avatar-edit-overlay" onclick="adminUploadChannelAvatar('${ch.id}')" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; cursor: pointer; color: white;" title="Change Profile Picture">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              </div>
+            </div>
+            <h3 style="margin: 12px 0 4px 0; font-size: 1.1rem; text-align: center;">${escHtml(ch.name)}</h3>
+            <span style="color: var(--text-muted); font-size: 0.9rem;">@${escHtml(ch.username)}</span>
+            ${ch.is_main ? '<span style="margin-top: 8px; font-size: 0.8rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px;">Main Channel</span>' : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    } catch (err) {
+      toast('Failed to load channels', 'error');
+    }
+  }
+
+  window.adminUploadChannelAvatar = function(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      window.openAvatarCropper(file, async (croppedBase64) => {
+        try {
+          await api('/api/channels/' + id + '/avatar', { method: 'POST', body: JSON.stringify({ imageBase64: croppedBase64 }) });
+          toast('Avatar updated successfully!');
+          loadChannels();
+        } catch (err) {
+          toast(err.message || 'Failed to update avatar.', 'error');
+        }
+      });
+    };
+    input.click();
+  };
 
   // ══════════════════════════════════════════════════════════════════════════
   // ── Videos panel ─────────────────────────────────────────────────────────
