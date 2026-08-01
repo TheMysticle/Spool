@@ -2868,16 +2868,17 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     flex-direction: column !important; 
     justify-content: center !important; 
     gap: 4px !important;
-    padding: 4px 4px !important; 
+    padding: 6px 16px !important; 
     font-size: 0.6rem !important; 
     text-align: center !important;
     height: 100% !important;
+    min-width: 64px !important;
   }
   .main-layout.collapsed .nav-item svg,
-  .nav-item svg { width: 24px !important; height: 24px !important; margin-bottom: 0px !important; }
+  .nav-item svg { width: 24px !important; height: 24px !important; margin-bottom: 0px !important; flex-shrink: 0 !important; }
   
   .main-layout.collapsed .nav-item span[data-collapsed-label],
-  .nav-item span[data-collapsed-label] { font-size: 0.6rem !important; display: block !important; }
+  .nav-item span[data-collapsed-label] { font-size: 0.6rem !important; display: block !important; white-space: nowrap !important; }
   
   .main-layout.collapsed .nav-item span[data-collapsed-label]::after,
   .nav-item span[data-collapsed-label]::after { content: none !important; }
