@@ -686,6 +686,7 @@ router.post('/settings/channel/avatar', (req, res) => {
   fs.mkdirSync(AVATAR_DIR, { recursive: true });
   
   sharp(buffer)
+    .rotate()
     .resize(512, 512, { fit: 'cover' })
     .jpeg({ quality: 80 })
     .toBuffer()

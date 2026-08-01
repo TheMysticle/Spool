@@ -121,6 +121,7 @@ router.post('/avatar', authenticate, (req, res) => {
   const relPath = path.join('avatars', filename).replace(/\\/g, '/');
 
   sharp(buffer)
+    .rotate()
     .resize(512, 512, { fit: 'cover' })
     .jpeg({ quality: 80 })
     .toBuffer()
@@ -218,6 +219,7 @@ router.post('/channel', authenticate, async (req, res) => {
           const absPath = path.join(DATA_DIR, 'avatars', filename);
           
           const compressedBuffer = await sharp(buffer)
+            .rotate()
             .resize(512, 512, { fit: 'cover' })
             .jpeg({ quality: 80 })
             .toBuffer();

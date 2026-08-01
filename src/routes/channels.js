@@ -147,6 +147,7 @@ router.post('/:id/avatar', authenticate, (req, res) => {
   const relPath = `/avatars/${filename}`;
 
   sharp(buffer)
+    .rotate()
     .resize(512, 512, { fit: 'cover' })
     .jpeg({ quality: 80 })
     .toBuffer()
