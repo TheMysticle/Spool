@@ -1434,7 +1434,15 @@ function setupWatchPartyHooks() {
       _wpIgnoreNextSeek = false;
       return;
     }
-    WatchParty.sendSync('seek', player.currentTime());
+    
+    // Workaround for browser/video.js race condition on fast clicks
+    // where currentTime temporarily reads 0 before jumping to the actual seek time.
+    setTimeout(() => {
+      if (WatchParty.isInParty()) {
+        const t = player.currentTime();
+        WatchParty.sendSync('seek', t);
+      }
+    }, 100);
   });
   player.on('waiting', () => {
     WatchParty.sendBuffering();
@@ -1454,15 +1462,20 @@ function setupWatchPartyHooks() {
   // ── Receive sync events ──
   window.addEventListener('party:sync', (e) => {
     const msg = e.detail;
-    if (_wpWaiting) return;
 
     const drift = Math.abs(player.currentTime() - msg.currentTime);
-    if (drift > 1.5 || msg.action === 'seek') {
+    if (drift > 1.5 || msg.action === 'seek' || msg.action === 'update') {
+      // Pause BEFORE seeking to prevent the browser from aborting an unbuffered seek
+      if (!player.paused()) {
+        _wpIgnoreNextPause = true;
+        player.pause();
+      }
       _wpIgnoreNextSeek = true;
       player.currentTime(msg.currentTime);
     }
+    
     if (msg.action === 'play') {
-      if (player.paused()) {
+      if (player.paused() && !_wpWaiting) {
         _wpIgnoreNextPlay = true;
         const p = player.play();
         if (p && p.catch) p.catch(() => { _wpIgnoreNextPlay = false; });
@@ -1483,8 +1496,18 @@ function setupWatchPartyHooks() {
     if (msg.waiting) {
       _wpWaiting = true;
       if (!player.paused()) {
-        _wpIgnoreNextPause = true;
-        player.pause();
+        if (player.seeking()) {
+          // Do not interrupt a pending seek with a pause, it aborts the seek in some browsers!
+          player.one('seeked', () => {
+            if (_wpWaiting && !player.paused()) {
+              _wpIgnoreNextPause = true;
+              player.pause();
+            }
+          });
+        } else {
+          _wpIgnoreNextPause = true;
+          player.pause();
+        }
       }
       if (textEl) {
         textEl.textContent = msg.videoSync
@@ -1512,7 +1535,13 @@ function setupWatchPartyHooks() {
     const currentVideoId = Number(new URLSearchParams(location.search).get('id'));
     if (msg.videoId && msg.videoId !== currentVideoId) {
       toast(`${msg.fromUsername} changed the video.`, 'info');
-      navigateToVideo(msg.videoId);
+      navigateToVideo(msg.videoId, false, true);
+    }
+  });
+
+  window.addEventListener('party:provide_sync', () => {
+    if (player.readyState() >= 1 && window.WatchParty) {
+      WatchParty.sendSync('update', player.currentTime());
     }
   });
 
@@ -1563,13 +1592,20 @@ function renderWatchPartyBar() {
         : null;
       const initial = (m.displayName || m.username || '?')[0].toUpperCase();
       
+      const isBrowsing = m.browsing;
+      const isBuffering = m.buffering && !isBrowsing;
+      
+      let title = escHtml(m.displayName);
+      if (isBrowsing) title += ' (Browsing videos)';
+      else if (isBuffering) title += ' (Buffering)';
+
       html += `
-        <div class="wp-bar-avatar ${m.buffering ? 'buffering' : ''}" title="${escHtml(m.displayName)}${m.buffering ? ' (Buffering)' : ''}">
+        <div class="wp-bar-avatar ${isBuffering ? 'buffering' : ''} ${isBrowsing ? 'browsing' : ''}" title="${title}">
           ${avatarUrl
             ? `<img src="${avatarUrl}" alt="" loading="lazy" />`
             : `<span>${escHtml(initial)}</span>`
           }
-          <div class="fp-status-dot online"></div>
+          <div class="fp-status-dot ${isBrowsing ? 'browsing-dot' : 'online'}"></div>
         </div>
       `;
     }
@@ -1579,7 +1615,7 @@ function renderWatchPartyBar() {
 
 // --- Navigation token for SPA race safety ---
 let currentNavToken = 0;
-async function navigateToVideo(newId, isPopState = false) {
+async function navigateToVideo(newId, isPopState = false, fromServerSync = false) {
   const myToken = ++currentNavToken;
   clearAutoplayCountdown();
   if (!newId || isNaN(newId)) return;
@@ -1622,6 +1658,44 @@ async function navigateToVideo(newId, isPopState = false) {
 
     currentVideo = data;
     availableQualities = qualityData.qualities || [];
+
+    // Notify watch party instantly before loading src to prevent overlay flashing
+    if (window.WatchParty && WatchParty.isInParty()) {
+      if (WatchParty.isHost()) {
+        if (!fromServerSync) WatchParty.changeVideo(newId, data.title, 0);
+      } else if (!fromServerSync) {
+        WatchParty.setBrowsingStatus(true);
+        
+        // Remove existing toast if any
+        let existing = document.getElementById('wp-guest-toast');
+        if (existing) existing.remove();
+        
+        const toastEl = document.createElement('div');
+        toastEl.id = 'wp-guest-toast';
+        toastEl.className = 'wp-invite-popup wp-suggest-toast';
+        toastEl.innerHTML = `
+          <div class="wp-invite-body" style="gap: 12px; margin-top: 0;">
+            <div class="wp-invite-title" style="font-size: 0.95rem;">You are browsing privately. Suggest this video to the Host?</div>
+            <div class="wp-invite-actions">
+              <button class="btn btn-primary" id="wp-guest-suggest-btn">Suggest</button>
+              <button class="btn btn-secondary" id="wp-guest-dismiss-btn">Just Browse</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(toastEl);
+        
+        document.getElementById('wp-guest-suggest-btn').onclick = () => {
+          WatchParty.suggestVideo(newId, data.title);
+          toastEl.remove();
+          toast('Suggestion sent to Host!', 'success');
+        };
+        document.getElementById('wp-guest-dismiss-btn').onclick = () => toastEl.remove();
+        setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 12000);
+      } else {
+        // We are a guest following a server sync. Rejoin the party properly.
+        WatchParty.setBrowsingStatus(false);
+      }
+    }
 
     // 3. Update Player Source
     const ext = data.filename.split('.').pop().toLowerCase();

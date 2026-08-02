@@ -136,6 +136,15 @@ function initWebSocket(server) {
         case 'party:video_change':
           handlePartyVideoChange(ws, msg);
           break;
+        case 'party:status':
+          handlePartyStatus(ws, msg);
+          break;
+        case 'party:request_sync':
+          handlePartyRequestSync(ws, msg);
+          break;
+        case 'party:suggest_video':
+          handlePartySuggestVideo(ws, msg);
+          break;
         case 'party:invite_response':
           handlePartyInviteResponse(ws, msg);
           break;
@@ -235,6 +244,7 @@ function handlePartyCreate(ws, msg) {
     displayName: ws.displayName,
     avatarPath: ws.avatarPath,
     buffering: false,
+    browsing: false,
   });
 
   watchParties.set(partyId, party);
@@ -327,6 +337,7 @@ function handlePartyRejoin(ws, msg) {
         displayName: m.displayName,
         avatarPath: m.avatarPath,
         buffering: m.buffering,
+        browsing: m.browsing,
         isHost: uid === party.hostId,
       });
     }
@@ -369,6 +380,7 @@ function handlePartyJoin(ws, msg) {
     displayName: ws.displayName,
     avatarPath: ws.avatarPath,
     buffering: false,
+    browsing: false,
   });
   userPartyMap.set(ws.userId, partyId);
 
@@ -381,6 +393,7 @@ function handlePartyJoin(ws, msg) {
       displayName: m.displayName,
       avatarPath: m.avatarPath,
       buffering: m.buffering,
+      browsing: m.browsing,
       isHost: uid === party.hostId,
     });
   }
@@ -392,6 +405,7 @@ function handlePartyJoin(ws, msg) {
     videoId: party.videoId,
     videoTitle: party.videoTitle,
     members: membersList,
+    justJoined: true,
   }));
 
   // Notify existing members
@@ -499,6 +513,12 @@ function handlePartyBuffering(ws, isBuffering) {
   const member = party.members.get(ws.userId);
   if (member) {
     member.buffering = isBuffering;
+    broadcastToParty(partyId, {
+      type: 'party:member_changed',
+      action: 'status',
+      userId: ws.userId,
+      buffering: isBuffering,
+    });
   }
 
   if (isBuffering) {
@@ -519,9 +539,10 @@ function checkBufferingState(partyId) {
   const party = watchParties.get(partyId);
   if (!party) return;
 
+  // Browsing members shouldn't block the video
   const bufferingMembers = [];
   for (const [uid, m] of party.members) {
-    if (m.buffering) {
+    if (m.buffering && !m.browsing) {
       bufferingMembers.push({ userId: uid, displayName: m.displayName });
     }
   }
@@ -542,9 +563,38 @@ function checkBufferingState(partyId) {
       waiting: true,
       userId: bufferingMembers[0].userId,
       displayName: names,
-      videoSync: bufferingMembers.length > 1,
+      videoSync: party.videoSyncMode || false,
     });
   }
+}
+
+function handlePartyStatus(ws, msg) {
+  const partyId = userPartyMap.get(ws.userId);
+  if (!partyId) return;
+
+  const party = watchParties.get(partyId);
+  if (!party) return;
+
+  const member = party.members.get(ws.userId);
+  if (!member) return;
+
+  if (typeof msg.browsing === 'boolean') {
+    member.browsing = msg.browsing;
+    if (msg.browsing) {
+      // If they are browsing, they are not buffering the party video
+      member.buffering = false;
+    }
+  }
+
+  broadcastToParty(partyId, {
+    type: 'party:member_changed',
+    action: 'status',
+    userId: ws.userId,
+    browsing: member.browsing,
+  });
+
+  // Re-check buffering state in case their browsing state affected the buffer wait
+  checkBufferingState(partyId);
 }
 
 function handlePartyKick(ws, msg) {
@@ -583,7 +633,7 @@ function handlePartyChat(ws, msg) {
   const partyId = userPartyMap.get(ws.userId);
   if (!partyId) return;
 
-  const text = String(msg.text || '').trim().slice(0, 500);
+  const text = (msg.text || '').trim().substring(0, 500);
   if (!text) return;
 
   broadcastToParty(partyId, {
@@ -596,12 +646,66 @@ function handlePartyChat(ws, msg) {
   });
 }
 
+function handlePartyRequestSync(ws, msg) {
+  const partyId = userPartyMap.get(ws.userId);
+  if (!partyId) return;
+
+  const party = watchParties.get(partyId);
+  if (!party) return;
+
+  let provider = null;
+  // If the requester is not the host, ask the host
+  if (party.hostId !== ws.userId && party.members.has(party.hostId)) {
+    const hostMember = party.members.get(party.hostId);
+    if (!hostMember.browsing) provider = hostMember.ws;
+  }
+  
+  // If host is unavailable or host is the requester, ask any non-browsing, non-buffering member
+  if (!provider) {
+    for (const [uid, m] of party.members) {
+      if (uid !== ws.userId && !m.browsing && !m.buffering) {
+        provider = m.ws;
+        break;
+      }
+    }
+  }
+
+  if (provider) {
+    safeSend(provider, JSON.stringify({ type: 'party:provide_sync', requesterId: ws.userId }));
+  }
+}
+
+function handlePartySuggestVideo(ws, msg) {
+  const partyId = userPartyMap.get(ws.userId);
+  if (!partyId) return;
+
+  const party = watchParties.get(partyId);
+  if (!party || !party.hostId) return;
+
+  const hostWs = party.members.get(party.hostId)?.ws;
+  if (!hostWs) return;
+
+  // Send the suggestion ONLY to the host
+  safeSend(hostWs, JSON.stringify({
+    type: 'party:suggest_video',
+    userId: ws.userId,
+    displayName: ws.displayName,
+    videoId: msg.videoId,
+    videoTitle: msg.videoTitle,
+  }));
+}
+
 function handlePartyVideoChange(ws, msg) {
   const partyId = userPartyMap.get(ws.userId);
   if (!partyId) return;
 
   const party = watchParties.get(partyId);
   if (!party) return;
+  
+  // Only the host can officially change the party's video
+  if (party.hostId !== ws.userId) {
+    return;
+  }
 
   party.videoId = msg.videoId || null;
   party.videoTitle = msg.videoTitle || '';

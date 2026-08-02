@@ -15,7 +15,8 @@
   let isInParty = false;
   let isHost = false;
   let partyVideoId = null;
-  let partyVideoTitle = '';
+  let partyVideoTitle = null;
+  let isBrowsing = false;
   let pendingInvite = null;
 
   // ── WebSocket connection ─────────────────────────────────────────────────
@@ -142,17 +143,28 @@
         partyVideoId = msg.videoId;
         partyVideoTitle = msg.videoTitle;
         currentPartyMembers.clear();
-        (msg.members || []).forEach(m => {
+        msg.members.forEach(m => {
           currentPartyMembers.set(m.userId, {
             username: m.username,
             displayName: m.displayName,
             avatarPath: m.avatarPath,
             buffering: m.buffering,
+            browsing: m.browsing,
             isHost: m.isHost,
           });
         });
         window.dispatchEvent(new CustomEvent('party:joined', { detail: msg }));
         savePartyToSession();
+
+        // If this is a fresh join from an invite, redirect to the video if we aren't there
+        if (msg.justJoined && partyVideoId) {
+          const curId = Number(new URLSearchParams(location.search).get('id'));
+          const onWatch = /\/watch\.html$/i.test(location.pathname);
+          if (!onWatch || curId !== partyVideoId) {
+            location.href = `/watch.html?id=${partyVideoId}`;
+            return;
+          }
+        }
 
         // If we just navigated to a new video while in a party, tell everyone
         autoSyncVideoOnRejoin();
@@ -163,7 +175,8 @@
           username: msg.username,
           displayName: msg.displayName,
           avatarPath: msg.avatarPath,
-          buffering: false,
+          buffering: msg.buffering || false,
+          browsing: msg.browsing || false,
           isHost: false,
         });
         window.dispatchEvent(new CustomEvent('party:member_changed', { detail: { action: 'joined', ...msg } }));
@@ -172,6 +185,15 @@
       case 'party:member_left':
         currentPartyMembers.delete(msg.userId);
         window.dispatchEvent(new CustomEvent('party:member_changed', { detail: { action: 'left', ...msg } }));
+        break;
+
+      case 'party:member_changed':
+        const member = currentPartyMembers.get(msg.userId);
+        if (member) {
+          if (typeof msg.browsing === 'boolean') member.browsing = msg.browsing;
+          if (typeof msg.buffering === 'boolean') member.buffering = msg.buffering;
+          window.dispatchEvent(new CustomEvent('party:member_changed', { detail: msg }));
+        }
         break;
 
       case 'party:host_changed':
@@ -233,6 +255,14 @@
         window.dispatchEvent(new CustomEvent('party:chat', { detail: msg }));
         break;
 
+      case 'party:suggest_video':
+        showPartySuggest(msg);
+        break;
+        
+      case 'party:provide_sync':
+        window.dispatchEvent(new CustomEvent('party:provide_sync', { detail: msg }));
+        break;
+
       default:
         break;
     }
@@ -240,27 +270,68 @@
   // ── Auto-sync video when rejoining on a different video ─────────────────
   function autoSyncVideoOnRejoin() {
     const isWatchPage = /\/watch\.html$/i.test(location.pathname);
-    if (!isWatchPage || !isInParty) return;
+    if (!isInParty) return;
+
+    if (!isWatchPage) {
+      WatchParty.setBrowsingStatus(true);
+      return;
+    }
+    
+    WatchParty.setBrowsingStatus(false);
 
     const pageVideoId = Number(new URLSearchParams(location.search).get('id'));
     if (!pageVideoId) return;
 
-    // If we're on a different video than the party knows about, broadcast the change
     if (pageVideoId !== partyVideoId) {
-      const title = document.querySelector('#overlay-video-title')?.textContent
-                 || document.title
-                 || '';
-      // Small delay to let the page finish loading the video title
-      setTimeout(() => {
-        const videoTitle = document.querySelector('#overlay-video-title')?.textContent || title;
+      if (isHost) {
+        // If host navigates, broadcast the change
+        const title = document.querySelector('#overlay-video-title')?.textContent
+                   || document.title
+                   || '';
         const playerTime = window.videojs ? (window.videojs.getPlayer('video-player')?.currentTime() || 0) : 0;
-        send({ type: 'party:video_change', videoId: pageVideoId, videoTitle, currentTime: playerTime });
+        send({ type: 'party:video_change', videoId: pageVideoId, videoTitle: title, currentTime: playerTime });
         partyVideoId = pageVideoId;
-        partyVideoTitle = videoTitle;
-        // Our video is already loaded, so tell the server we're ready
-        setTimeout(() => send({ type: 'party:ready' }), 200);
-      }, 500);
+        partyVideoTitle = title;
+        send({ type: 'party:ready' });
+      } else {
+        // If guest navigates, mark as browsing because they are off-sync
+        WatchParty.setBrowsingStatus(true);
+      }
+    } else {
+      // Rejoined the right video, request sync state from others
+      send({ type: 'party:request_sync' });
     }
+  }
+
+  function showPartySuggest(msg) {
+    let el = document.getElementById('wp-suggest-popup');
+    if (el) el.remove();
+
+    el = document.createElement('div');
+    el.id = 'wp-suggest-popup';
+    el.className = 'wp-invite-toast';
+    el.innerHTML = `
+      <div class="wp-invite-header">
+        <strong>${msg.displayName}</strong> suggests a video:
+      </div>
+      <div class="wp-invite-info" style="margin-bottom: 12px; margin-top: 12px;">
+        <div class="wp-invite-title" style="font-size: 0.95rem;">${msg.videoTitle}</div>
+      </div>
+      <div class="wp-invite-actions">
+        <button class="btn btn-primary" id="wp-suggest-approve">Approve Swap</button>
+        <button class="btn btn-secondary" id="wp-suggest-decline">Dismiss</button>
+      </div>
+      </div>
+    `;
+    document.body.appendChild(el);
+
+    document.getElementById('wp-suggest-approve').onclick = () => {
+      el.remove();
+      WatchParty.changeVideo(msg.videoId, msg.videoTitle, 0);
+    };
+    document.getElementById('wp-suggest-decline').onclick = () => {
+      el.remove();
+    };
   }
 
   // ── Party invite toast ───────────────────────────────────────────────────
@@ -340,6 +411,17 @@
   }
 
   // ── Public API (exposed on window) ───────────────────────────────────────
+  // Hook SPA navigation to detect when leaving watch.html
+  const originalPushState = history.pushState;
+  history.pushState = function(...args) {
+    const ret = originalPushState.apply(this, args);
+    if (isInParty) autoSyncVideoOnRejoin();
+    return ret;
+  };
+  window.addEventListener('popstate', () => {
+    if (isInParty) autoSyncVideoOnRejoin();
+  });
+
   window.WatchParty = {
     connect,
     send,
@@ -356,7 +438,49 @@
     },
     kickMember: (userId) => send({ type: 'party:kick', userId }),
     sendChat: (text) => send({ type: 'party:chat', text }),
-    changeVideo: (videoId, videoTitle) => send({ type: 'party:video_change', videoId, videoTitle }),
+    setBrowsingStatus: (browsing) => {
+      isBrowsing = browsing;
+      send({ type: 'party:status', browsing });
+      
+      let container = document.getElementById('wp-floating-actions');
+      if (browsing && partyVideoId) {
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'wp-floating-actions';
+          container.className = 'wp-floating-actions';
+          document.body.appendChild(container);
+        }
+        container.innerHTML = '';
+        
+        const isWatchPage = /\/watch\.html$/i.test(location.pathname);
+        const curId = Number(new URLSearchParams(location.search).get('id'));
+
+        // Return to Party Button
+        const returnBtn = document.createElement('button');
+        returnBtn.className = 'btn wp-return-btn';
+        returnBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Return to Party`;
+        returnBtn.onclick = () => location.href = `/watch.html?id=${partyVideoId}`;
+        container.appendChild(returnBtn);
+
+        // Suggest Video Button (only if on a video page and not the host)
+        if (isWatchPage && curId && curId !== partyVideoId && !isHost) {
+          const suggestBtn = document.createElement('button');
+          suggestBtn.className = 'btn wp-suggest-btn-persistent';
+          suggestBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg> Suggest to Party`;
+          suggestBtn.onclick = () => {
+             const title = document.querySelector('#overlay-video-title')?.textContent || document.title || '';
+             WatchParty.suggestVideo(curId, title);
+             toast('Suggestion sent to Host!', 'success');
+             suggestBtn.remove();
+          };
+          container.appendChild(suggestBtn);
+        }
+      } else if (container) {
+        container.remove();
+      }
+    },
+    changeVideo: (videoId, videoTitle, currentTime = 0) => send({ type: 'party:video_change', videoId, videoTitle, currentTime }),
+    suggestVideo: (videoId, videoTitle) => send({ type: 'party:suggest_video', videoId, videoTitle }),
 
     // Sync actions (called by video player)
     sendSync: (action, currentTime) => {
