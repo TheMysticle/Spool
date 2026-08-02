@@ -960,9 +960,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         const videoTitle = String(n.video_title || 'a video');
         const isRead = Number(n.is_read) === 1;
         const isReplyToMe = Number(n.is_reply_to_me) === 1;
-        const typeLabel = isReplyToMe
-          ? '<span class="notif-type reply">Reply</span>'
-          : '<span class="notif-type">Comment</span>';
+
+        // Friend request notification
+        if (n.type === 'friend_request') {
+          return `
+            <div class="notif-item unread is-friend-request" data-fr-user-id="${Number(n.user_id)}">
+              <div class="notif-avatar">${avatarUrl
+                ? `<img src="${avatarUrl}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.parentNode.textContent=${fallbackExpr}" />`
+                : escHtml(authorInitial)}</div>
+              <div class="notif-content">
+                <div class="notif-type-row"><span class="notif-type friend-req">Friend Request</span></div>
+                <p class="notif-message"><strong>${escHtml(author)}</strong> wants to be your friend</p>
+                <span class="notif-time">${formatDate(n.created_at)}</span>
+                <div class="notif-fr-actions">
+                  <button class="btn btn-primary btn-sm notif-fr-accept" data-uid="${Number(n.user_id)}" type="button">Accept</button>
+                  <button class="btn btn-ghost btn-sm notif-fr-deny" data-uid="${Number(n.user_id)}" type="button">Deny</button>
+                </div>
+              </div>
+              <div class="unread-dot"></div>
+            </div>
+          `;
+        }
+
+        const typeLabel = n.type === 'channel_upload'
+          ? '<span class="notif-type upload">New Upload</span>'
+          : isReplyToMe
+            ? '<span class="notif-type reply">Reply</span>'
+            : '<span class="notif-type">Comment</span>';
         return `
           <div class="notif-item ${isRead ? '' : 'unread'} ${isReplyToMe ? 'is-reply' : ''}" onclick="handleNotifClick(${Number(n.id)}, ${Number(n.video_id)})">
             <div class="notif-avatar">${avatarUrl
@@ -977,6 +1001,28 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         `;
       }).join('');
+
+      // Bind friend request accept/deny buttons inside notification dropdown
+      notifList.querySelectorAll('.notif-fr-accept').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try {
+            await api(`/api/friends/accept/${btn.dataset.uid}`, { method: 'POST' });
+            toast('Friend request accepted!', 'success');
+            await updateNotifications();
+          } catch (err) { toast(err.message, 'error'); }
+        });
+      });
+      notifList.querySelectorAll('.notif-fr-deny').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try {
+            await api(`/api/friends/deny/${btn.dataset.uid}`, { method: 'POST' });
+            toast('Friend request denied.', 'success');
+            await updateNotifications();
+          } catch (err) { toast(err.message, 'error'); }
+        });
+      });
     } catch (e) {
       console.error('Notif error', e);
     }

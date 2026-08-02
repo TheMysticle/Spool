@@ -1386,6 +1386,7 @@ function initPlayer(videoData, { autoStart = true } = {}) {
       const titleEl = document.getElementById('overlay-video-title');
       if (titleEl) titleEl.textContent = videoData.title || '';
       setupProgressTracking();
+      setupWatchPartyHooks();
 
       // Automatically close menus when the controls fade out
       player.on('userinactive', () => {
@@ -1402,6 +1403,138 @@ function initPlayer(videoData, { autoStart = true } = {}) {
       });
     });
   }
+
+function setupWatchPartyHooks() {
+  if (!window.WatchParty || !player) return;
+
+  // ── Emit sync events ──
+  player.on('play', () => {
+    WatchParty.sendSync('play', player.currentTime());
+    WatchParty.sendReady();
+  });
+  player.on('pause', () => {
+    WatchParty.sendSync('pause', player.currentTime());
+  });
+  player.on('seeked', () => {
+    WatchParty.sendSync('seek', player.currentTime());
+  });
+  player.on('waiting', () => {
+    WatchParty.sendBuffering();
+  });
+  player.on('playing', () => {
+    WatchParty.sendReady();
+  });
+
+  // ── Receive sync events ──
+  window.addEventListener('party:sync', (e) => {
+    const msg = e.detail;
+    WatchParty.lockSync();
+    
+    // Apply time if out of sync
+    const drift = Math.abs(player.currentTime() - msg.currentTime);
+    if (drift > 1.5 || msg.action === 'seek') {
+      player.currentTime(msg.currentTime);
+    }
+
+    if (msg.action === 'play') {
+      player.play();
+    } else if (msg.action === 'pause') {
+      player.pause();
+    }
+    
+    WatchParty.unlockSync();
+  });
+
+  window.addEventListener('party:waiting', (e) => {
+    const msg = e.detail;
+    const overlay = document.getElementById('watch-party-overlay');
+    const textEl = document.getElementById('wp-waiting-text');
+    if (msg.waiting) {
+      WatchParty.lockSync();
+      player.pause();
+      WatchParty.unlockSync();
+      if (textEl) textEl.textContent = `Waiting for ${msg.displayName || 'someone'}...`;
+      if (overlay) overlay.style.display = 'flex';
+    } else {
+      if (overlay) overlay.style.display = 'none';
+      // Only play if we weren't intentionally paused by another action
+      if (player.paused() && !player.ended()) {
+        WatchParty.lockSync();
+        player.play();
+        WatchParty.unlockSync();
+      }
+    }
+  });
+
+  window.addEventListener('party:video_change', (e) => {
+    const msg = e.detail;
+    const currentVideoId = Number(new URLSearchParams(location.search).get('id'));
+    if (msg.videoId && msg.videoId !== currentVideoId) {
+      toast(`${msg.fromUsername} changed the video.`, 'info');
+      navigateToVideo(msg.videoId);
+    }
+  });
+
+  window.addEventListener('party:member_changed', renderWatchPartyBar);
+  window.addEventListener('party:joined', () => {
+    renderWatchPartyBar();
+    toast('Joined watch party!', 'success');
+  });
+  window.addEventListener('party:created', renderWatchPartyBar);
+  window.addEventListener('party:ended', () => {
+    const bar = document.getElementById('watch-party-bar');
+    if (bar) bar.style.display = 'none';
+    const overlay = document.getElementById('watch-party-overlay');
+    if (overlay) overlay.style.display = 'none';
+  });
+
+  // Render initial state
+  if (WatchParty.isInParty()) {
+    renderWatchPartyBar();
+  }
+}
+
+function renderWatchPartyBar() {
+  const bar = document.getElementById('watch-party-bar');
+  const membersEl = document.getElementById('wp-bar-members');
+  const manageBtn = document.getElementById('wp-bar-manage');
+  
+  if (!WatchParty.isInParty()) {
+    if (bar) bar.style.display = 'none';
+    return;
+  }
+
+  if (bar) bar.style.display = 'flex';
+  
+  if (manageBtn) {
+    manageBtn.onclick = () => {
+      if (window.openFriendsPanel) window.openFriendsPanel();
+    };
+  }
+
+  if (membersEl) {
+    const members = WatchParty.getPartyMembers();
+    const token = getToken();
+    let html = '';
+    for (const [uid, m] of members) {
+      const avatarUrl = m.avatarPath && token
+        ? `/api/users/avatar/${uid}?token=${encodeURIComponent(token)}&t=${Date.now()}`
+        : null;
+      const initial = (m.displayName || m.username || '?')[0].toUpperCase();
+      
+      html += `
+        <div class="wp-bar-avatar ${m.buffering ? 'buffering' : ''}" title="${escHtml(m.displayName)}${m.buffering ? ' (Buffering)' : ''}">
+          ${avatarUrl
+            ? `<img src="${avatarUrl}" alt="" loading="lazy" />`
+            : `<span>${escHtml(initial)}</span>`
+          }
+          <div class="fp-status-dot online"></div>
+        </div>
+      `;
+    }
+    membersEl.innerHTML = html;
+  }
+}
 
 // --- Navigation token for SPA race safety ---
 let currentNavToken = 0;

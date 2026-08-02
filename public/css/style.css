@@ -4710,3 +4710,200 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     font-size: 0.75rem !important;
   }
 }
+
+/* ── Friends Panel & Watch Party Styles ─────────────────────────────────── */
+.friends-panel-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+  z-index: 10000; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.friends-panel-overlay.open { opacity: 1; pointer-events: auto; }
+
+.friends-panel {
+  position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
+  background: rgba(18,18,18,0.85); backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255,255,255,0.1);
+  z-index: 10001; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex; flex-direction: column;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+}
+.friends-panel.open { right: 0; }
+@media (max-width: 480px) { .friends-panel { width: 100%; right: -100%; } }
+
+.fp-header {
+  padding: 20px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.fp-header h3 { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-primary); }
+
+.fp-tabs {
+  display: flex; padding: 12px 20px; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05); overflow-x: auto;
+}
+.fp-tabs::-webkit-scrollbar { display: none; }
+.fp-tab {
+  background: rgba(255,255,255,0.05); border: none; color: var(--text-muted);
+  padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  transition: all 0.2s; position: relative;
+}
+.fp-tab:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.fp-tab.active { background: var(--accent); color: white; }
+
+.fp-tab-badge {
+  background: #ef4444; color: white; font-size: 0.7rem; font-weight: 700;
+  padding: 2px 6px; border-radius: 10px; margin-left: 4px; line-height: 1;
+}
+
+.fp-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+
+.fp-add-friend { margin-bottom: 24px; }
+.fp-search-row { display: flex; gap: 8px; }
+.fp-search-input {
+  flex: 1; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-primary); border-radius: 8px; padding: 8px 12px; font-size: 0.9rem;
+}
+.fp-search-input:focus { outline: none; border-color: var(--accent); }
+.fp-add-error { color: #ef4444; font-size: 0.8rem; margin: 4px 0 0 4px; min-height: 1.2em; }
+
+.fp-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; color: var(--text-muted); gap: 12px; padding: 40px 20px;
+}
+.fp-empty p { margin: 0; font-weight: 600; font-size: 1.1rem; color: var(--text-primary); }
+.fp-empty span { font-size: 0.9rem; max-width: 250px; line-height: 1.5; }
+
+.fp-friend-list, .fp-request-list, .fp-member-list { display: flex; flex-direction: column; gap: 12px; }
+
+.fp-friend-card, .fp-request-card, .fp-member-card {
+  display: flex; align-items: center; gap: 12px; padding: 12px;
+  background: rgba(255,255,255,0.03); border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;
+}
+.fp-friend-card:hover, .fp-request-card:hover, .fp-member-card:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.fp-friend-avatar {
+  width: 40px; height: 40px; border-radius: 50%; position: relative;
+  background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
+  font-weight: 600; color: var(--text-primary); font-size: 1.2rem;
+}
+.fp-friend-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.fp-status-dot {
+  position: absolute; bottom: 0; right: 0; width: 12px; height: 12px;
+  border-radius: 50%; background: #6b7280; border: 2px solid #1a1a1a;
+}
+.fp-status-dot.online { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+.fp-friend-avatar.online img, .fp-friend-avatar.online span {
+  box-shadow: 0 0 0 2px #10b981; border-radius: 50%;
+}
+
+.fp-friend-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fp-friend-name { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fp-friend-status { font-size: 0.8rem; color: var(--text-muted); }
+
+.fp-action-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,0.05); color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
+}
+.fp-action-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+.fp-invite-btn:hover, .fp-watch-btn:hover { background: var(--accent); color: white; }
+.fp-remove-btn:hover, .fp-kick-btn:hover { background: #ef4444; color: white; }
+.fp-friend-actions { display: flex; gap: 6px; }
+.fp-request-actions { display: flex; gap: 6px; }
+
+.fp-section-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0 0 12px 4px; }
+
+/* Watch Party specific */
+.fp-party-info {
+  background: rgba(var(--accent-rgb), 0.1); border: 1px solid rgba(var(--accent-rgb), 0.2);
+  border-radius: 12px; padding: 16px; margin-bottom: 20px;
+}
+.fp-party-video { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; line-height: 1.4; }
+.fp-party-video span { flex: 1; }
+.fp-party-id { font-size: 0.8rem; color: var(--text-muted); font-family: monospace; }
+
+.fp-member-card.buffering { opacity: 0.7; }
+
+.fp-invite-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.fp-quick-invite {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-primary); padding: 6px 12px; border-radius: 16px; font-size: 0.85rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.fp-quick-invite:hover { background: rgba(255,255,255,0.1); }
+.fp-quick-invite:disabled { opacity: 0.5; cursor: default; }
+
+.fp-party-chat { margin-top: auto; display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; margin-bottom: 16px; }
+.fp-chat-messages { height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.fp-chat-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: auto; margin-bottom: auto; }
+.fp-chat-msg { font-size: 0.85rem; line-height: 1.4; }
+.fp-chat-msg strong { color: var(--accent); margin-right: 4px; }
+.fp-chat-msg span { color: var(--text-primary); }
+.fp-chat-input-row { display: flex; gap: 8px; }
+.fp-chat-input { flex: 1; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; }
+
+.fp-party-footer { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; }
+.fp-party-footer .btn { width: 100%; }
+
+/* Watch Party Toast Invite */
+.wp-invite-toast {
+  background: rgba(20,20,20,0.95); backdrop-filter: blur(10px);
+  border: 1px solid rgba(var(--accent-rgb), 0.3); border-radius: 12px;
+  padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column; gap: 12px; pointer-events: auto;
+  animation: slide-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.wp-invite-header { display: flex; gap: 12px; align-items: center; }
+.wp-invite-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0;
+}
+.wp-invite-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.wp-invite-info { display: flex; flex-direction: column; font-size: 0.9rem; line-height: 1.3; }
+.wp-invite-info span { color: var(--text-muted); font-size: 0.8rem; }
+.wp-invite-info em { color: var(--accent); font-style: normal; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.wp-invite-actions { display: flex; gap: 8px; }
+.wp-invite-actions .btn { flex: 1; }
+
+/* Watch Party Overlay */
+.watch-party-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 10; display: flex; align-items: center; justify-content: center;
+}
+.wp-waiting-content { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+.wp-spinner {
+  width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.wp-waiting-content p { margin: 0; font-size: 1.1rem; font-weight: 600; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Watch Party Bar (under player) */
+.watch-party-bar {
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+  background: rgba(var(--accent-rgb), 0.1); border: 1px solid rgba(var(--accent-rgb), 0.2);
+  border-radius: 8px; margin-bottom: 16px;
+}
+.wp-bar-left { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent); }
+.wp-bar-members { flex: 1; display: flex; gap: -8px; overflow-x: auto; padding-left: 8px; }
+.wp-bar-members::-webkit-scrollbar { display: none; }
+.wp-bar-avatar {
+  width: 32px; height: 32px; border-radius: 50%; position: relative;
+  background: #333; display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 600; border: 2px solid #1a1a1a; margin-left: -8px;
+  transition: transform 0.2s;
+}
+.wp-bar-avatar:hover { transform: translateY(-4px); z-index: 2; }
+.wp-bar-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.wp-bar-avatar.buffering { opacity: 0.5; animation: pulse-opacity 1s infinite alternate; }
+@keyframes pulse-opacity { from { opacity: 0.4; } to { opacity: 0.8; } }
+
+/* Notifications integration */
+.notif-type.friend-req { color: var(--accent); background: rgba(var(--accent-rgb), 0.1); }
+.notif-fr-actions { display: flex; gap: 8px; margin-top: 8px; }

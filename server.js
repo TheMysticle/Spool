@@ -20,6 +20,8 @@ const seriesRoutes = require('./src/routes/series');
 const shareRoutes = require('./src/routes/share');
 const uploadRoutes = require('./src/routes/upload');
 const channelRoutes = require('./src/routes/channels');
+const friendsRoutes = require('./src/routes/friends');
+const { initWebSocket } = require('./src/websocket');
 
 const app = express();
 
@@ -63,7 +65,9 @@ app.use(
               'fonts.gstatic.com',
               'vjs.zencdn.net',
               'cdn.jsdelivr.net',
-              'unpkg.com'
+              'unpkg.com',
+              'wss:',
+              'ws:'
             ],
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
@@ -128,6 +132,7 @@ app.use('/api/series', seriesRoutes);
 app.use('/api/share', shareRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/channels', channelRoutes);
+app.use('/api/friends', friendsRoutes);
 
 const { getVideoByShareToken } = require('./src/database');
 
@@ -225,12 +230,13 @@ function logTlsOpenSslHint(err) {
 }
 
 function startHttpServer() {
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n╔══════════════════════════════════════════╗`);
     console.log(`║       Spool — v1.0.0          ║`);
     console.log(`║   Running on http://0.0.0.0:${PORT}       ║`);
     console.log(`╚══════════════════════════════════════════╝\n`);
   });
+  initWebSocket(server);
 }
 
 if (hasTlsFiles) {
@@ -244,6 +250,7 @@ if (hasTlsFiles) {
       console.log(`║  Running on https://0.0.0.0:${PORT}      ║`);
       console.log(`╚══════════════════════════════════════════╝\n`);
     });
+    initWebSocket(server);
   } catch (err) {
     console.warn(`[TLS] Failed to start HTTPS: ${err.code || err.message}`);
     logTlsOpenSslHint(err);

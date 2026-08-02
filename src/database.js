@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
@@ -626,6 +626,31 @@ function initDatabase() {
     console.log(`[DB] Admin user created → username: ${adminUsername}`);
   }
 
+  // ── Friends & Watch Party tables ──────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id     INTEGER NOT NULL,
+      friend_id   INTEGER NOT NULL,
+      status      TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted','blocked')),
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, friend_id),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(friend_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_friends_user_id ON friends(user_id);
+    CREATE INDEX IF NOT EXISTS idx_friends_friend_id ON friends(friend_id);
+
+    CREATE TABLE IF NOT EXISTS watch_parties (
+      id          TEXT PRIMARY KEY,
+      host_id     INTEGER NOT NULL,
+      video_id    INTEGER,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(host_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
   console.log('[DB] Database initialised:', DB_PATH);
 }
 
@@ -1169,9 +1194,18 @@ const getNotifications = (userId, limit = 20) => {
     JOIN videos v ON v.id = cn.video_id
     LEFT JOIN channels ch ON ch.id = cn.channel_id
     WHERE cn.user_id = ?
+    UNION ALL
+    SELECT f.id, 0 AS video_id, f.user_id, 'Friend request' AS content, f.created_at AS created_at,
+           u2.display_name, u2.username, u2.avatar_path, '' AS video_title,
+           0 AS is_read,
+           0 AS is_reply_to_me,
+           'friend_request' AS type
+    FROM friends f
+    JOIN users u2 ON u2.id = f.user_id
+    WHERE f.friend_id = ? AND f.status = 'pending'
     ORDER BY 5 DESC
     LIMIT ?
-  `).all(userId, userId, userId, userId, userId, userId, userId, safeLimit);
+  `).all(userId, userId, userId, userId, userId, userId, userId, userId, safeLimit);
 };
 
 const markNotificationRead = (userId, commentId) => {
@@ -1762,6 +1796,90 @@ const addChannelNotification = (channelId, videoId) => {
 const markChannelNotificationRead = (userId, notifId) =>
   db.prepare('UPDATE channel_notifications SET is_read = 1 WHERE id = ? AND user_id = ?').run(notifId, userId);
 
+// ── Friend queries ───────────────────────────────────────────────────────────
+const sendFriendRequest = (userId, friendId) => {
+  // Check if reverse friendship already exists
+  const existing = db.prepare(
+    'SELECT id, status FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)'
+  ).get(userId, friendId, friendId, userId);
+  if (existing) {
+    if (existing.status === 'accepted') return { error: 'Already friends.' };
+    if (existing.status === 'pending') return { error: 'Friend request already pending.' };
+    if (existing.status === 'blocked') return { error: 'Cannot send request.' };
+  }
+  db.prepare(
+    'INSERT INTO friends (user_id, friend_id, status) VALUES (?, ?, ?)'
+  ).run(userId, friendId, 'pending');
+  return { ok: true };
+};
+
+const acceptFriendRequest = (userId, fromUserId) => {
+  // The request was sent BY fromUserId TO userId
+  const req = db.prepare(
+    'SELECT id FROM friends WHERE user_id = ? AND friend_id = ? AND status = ?'
+  ).get(fromUserId, userId, 'pending');
+  if (!req) return { error: 'No pending request found.' };
+  db.prepare(
+    "UPDATE friends SET status = 'accepted', updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND friend_id = ?"
+  ).run(fromUserId, userId);
+  // Create the reverse relationship too
+  db.prepare(
+    "INSERT OR IGNORE INTO friends (user_id, friend_id, status) VALUES (?, ?, 'accepted')"
+  ).run(userId, fromUserId);
+  return { ok: true };
+};
+
+const denyFriendRequest = (userId, fromUserId) => {
+  const req = db.prepare(
+    'SELECT id FROM friends WHERE user_id = ? AND friend_id = ? AND status = ?'
+  ).get(fromUserId, userId, 'pending');
+  if (!req) return { error: 'No pending request found.' };
+  db.prepare(
+    'DELETE FROM friends WHERE user_id = ? AND friend_id = ?'
+  ).run(fromUserId, userId);
+  return { ok: true };
+};
+
+const removeFriend = (userId, friendId) => {
+  db.prepare(
+    'DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)'
+  ).run(userId, friendId, friendId, userId);
+  return { ok: true };
+};
+
+const getFriends = (userId) =>
+  db.prepare(`
+    SELECT u.id, u.username, u.display_name, u.avatar_path, f.created_at AS friends_since
+    FROM friends f
+    JOIN users u ON u.id = CASE WHEN f.user_id = ? THEN f.friend_id ELSE f.user_id END
+    WHERE (f.user_id = ? OR f.friend_id = ?) AND f.status = 'accepted'
+    GROUP BY u.id
+    ORDER BY u.display_name ASC
+  `).all(userId, userId, userId);
+
+const getPendingFriendRequests = (userId) =>
+  db.prepare(`
+    SELECT u.id, u.username, u.display_name, u.avatar_path, f.created_at
+    FROM friends f
+    JOIN users u ON u.id = f.user_id
+    WHERE f.friend_id = ? AND f.status = 'pending'
+    ORDER BY f.created_at DESC
+  `).all(userId);
+
+const getSentFriendRequests = (userId) =>
+  db.prepare(`
+    SELECT u.id, u.username, u.display_name, u.avatar_path, f.created_at
+    FROM friends f
+    JOIN users u ON u.id = f.friend_id
+    WHERE f.user_id = ? AND f.status = 'pending'
+    ORDER BY f.created_at DESC
+  `).all(userId);
+
+const getFriendship = (userId, friendId) =>
+  db.prepare(
+    'SELECT * FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)'
+  ).get(userId, friendId, friendId, userId);
+
 module.exports = {
   initDatabase,
   // users
@@ -1878,6 +1996,15 @@ module.exports = {
   getVideoCount,
   addChannelNotification,
   markChannelNotificationRead,
+  // friends
+  sendFriendRequest,
+  acceptFriendRequest,
+  denyFriendRequest,
+  removeFriend,
+  getFriends,
+  getPendingFriendRequests,
+  getSentFriendRequests,
+  getFriendship,
   // shutdown
   closeDatabase: () => { try { if (db) db.close(); } catch (e) { console.warn('[DB] Close error:', e.message); } },
 };
