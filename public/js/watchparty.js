@@ -16,7 +16,6 @@
   let isHost = false;
   let partyVideoId = null;
   let partyVideoTitle = '';
-  let syncLock = false; // prevent echo loops when applying remote sync
   let pendingInvite = null;
 
   // ── WebSocket connection ─────────────────────────────────────────────────
@@ -39,6 +38,24 @@
       reconnectAttempts = 0;
       console.log('[WS] Connected');
       window.dispatchEvent(new CustomEvent('ws:connected'));
+
+      // Auto-join party if we arrived via an invite link (?party=...)
+      const urlParams = new URLSearchParams(location.search);
+      const pendingPartyId = urlParams.get('party');
+      if (pendingPartyId) {
+        send({ type: 'party:join', partyId: pendingPartyId });
+        // Clean the party param from the URL so refreshes don't re-join
+        urlParams.delete('party');
+        const clean = urlParams.toString();
+        const newUrl = location.pathname + (clean ? '?' + clean : '') + location.hash;
+        history.replaceState(null, '', newUrl);
+      } else {
+        // Rejoin party from session if we navigated between pages
+        const savedPartyId = sessionStorage.getItem('wp_partyId');
+        if (savedPartyId) {
+          send({ type: 'party:rejoin', partyId: savedPartyId });
+        }
+      }
     };
 
     ws.onmessage = (event) => {
@@ -115,6 +132,7 @@
           });
         }
         window.dispatchEvent(new CustomEvent('party:created', { detail: msg }));
+        savePartyToSession();
         break;
 
       case 'party:joined':
@@ -134,6 +152,10 @@
           });
         });
         window.dispatchEvent(new CustomEvent('party:joined', { detail: msg }));
+        savePartyToSession();
+
+        // If we just navigated to a new video while in a party, tell everyone
+        autoSyncVideoOnRejoin();
         break;
 
       case 'party:member_joined':
@@ -167,14 +189,13 @@
         isInParty = false;
         isHost = false;
         currentPartyMembers.clear();
+        clearPartyFromSession();
         window.dispatchEvent(new CustomEvent('party:ended', { detail: { kicked: wasKicked } }));
         if (wasKicked) toast('You were removed from the watch party.', 'error');
         break;
 
       case 'party:sync':
-        if (!syncLock) {
-          window.dispatchEvent(new CustomEvent('party:sync', { detail: msg }));
-        }
+        window.dispatchEvent(new CustomEvent('party:sync', { detail: msg }));
         break;
 
       case 'party:waiting':
@@ -198,6 +219,14 @@
         partyVideoId = msg.videoId;
         partyVideoTitle = msg.videoTitle;
         window.dispatchEvent(new CustomEvent('party:video_change', { detail: msg }));
+        // Navigate if we're not already on this video
+        if (msg.videoId) {
+          const curId = Number(new URLSearchParams(location.search).get('id'));
+          const onWatch = /\/watch\.html$/i.test(location.pathname);
+          if (!onWatch || curId !== msg.videoId) {
+            location.href = `/watch.html?id=${msg.videoId}`;
+          }
+        }
         break;
 
       case 'party:chat':
@@ -206,6 +235,31 @@
 
       default:
         break;
+    }
+  }
+  // ── Auto-sync video when rejoining on a different video ─────────────────
+  function autoSyncVideoOnRejoin() {
+    const isWatchPage = /\/watch\.html$/i.test(location.pathname);
+    if (!isWatchPage || !isInParty) return;
+
+    const pageVideoId = Number(new URLSearchParams(location.search).get('id'));
+    if (!pageVideoId) return;
+
+    // If we're on a different video than the party knows about, broadcast the change
+    if (pageVideoId !== partyVideoId) {
+      const title = document.querySelector('#overlay-video-title')?.textContent
+                 || document.title
+                 || '';
+      // Small delay to let the page finish loading the video title
+      setTimeout(() => {
+        const videoTitle = document.querySelector('#overlay-video-title')?.textContent || title;
+        const playerTime = window.videojs ? (window.videojs.getPlayer('video-player')?.currentTime() || 0) : 0;
+        send({ type: 'party:video_change', videoId: pageVideoId, videoTitle, currentTime: playerTime });
+        partyVideoId = pageVideoId;
+        partyVideoTitle = videoTitle;
+        // Our video is already loaded, so tell the server we're ready
+        setTimeout(() => send({ type: 'party:ready' }), 200);
+      }, 500);
     }
   }
 
@@ -248,15 +302,20 @@
     container.appendChild(el);
 
     document.getElementById('wp-invite-accept').addEventListener('click', () => {
-      send({ type: 'party:invite_response', accepted: true, partyId: msg.partyId });
       el.remove();
-      // Navigate to the video if not already there
       if (msg.videoId) {
         const currentVideoId = Number(new URLSearchParams(location.search).get('id'));
         const isWatchPage = /\/watch\.html$/i.test(location.pathname);
-        if (!isWatchPage || currentVideoId !== msg.videoId) {
+        if (isWatchPage && currentVideoId === msg.videoId) {
+          // Already on the right video — just join directly
+          send({ type: 'party:join', partyId: msg.partyId });
+        } else {
+          // Navigate to the video; auto-join happens via onopen after reconnect
           location.href = `/watch.html?id=${msg.videoId}&party=${msg.partyId}`;
         }
+      } else {
+        // No video — join in-place
+        send({ type: 'party:join', partyId: msg.partyId });
       }
     });
 
@@ -267,6 +326,17 @@
 
     // Auto-dismiss after 30 seconds
     setTimeout(() => el.remove(), 30000);
+  }
+
+  // ── Session persistence helpers ─────────────────────────────────────────
+  function savePartyToSession() {
+    if (currentPartyId) {
+      sessionStorage.setItem('wp_partyId', currentPartyId);
+    }
+  }
+
+  function clearPartyFromSession() {
+    sessionStorage.removeItem('wp_partyId');
   }
 
   // ── Public API (exposed on window) ───────────────────────────────────────
@@ -280,22 +350,21 @@
     // Party actions
     createParty: (videoId, videoTitle) => send({ type: 'party:create', videoId, videoTitle }),
     inviteToParty: (userId) => send({ type: 'party:invite', userId }),
-    leaveParty: () => send({ type: 'party:leave' }),
+    leaveParty: () => {
+      clearPartyFromSession();
+      send({ type: 'party:leave' });
+    },
     kickMember: (userId) => send({ type: 'party:kick', userId }),
     sendChat: (text) => send({ type: 'party:chat', text }),
     changeVideo: (videoId, videoTitle) => send({ type: 'party:video_change', videoId, videoTitle }),
 
     // Sync actions (called by video player)
     sendSync: (action, currentTime) => {
-      if (syncLock || !isInParty) return;
+      if (!isInParty) return;
       send({ type: 'party:sync', action, currentTime });
     },
     sendBuffering: () => { if (isInParty) send({ type: 'party:buffering' }); },
     sendReady: () => { if (isInParty) send({ type: 'party:ready' }); },
-
-    // Sync lock to prevent echo
-    lockSync: () => { syncLock = true; },
-    unlockSync: () => { setTimeout(() => { syncLock = false; }, 300); },
 
     // State getters
     isInParty: () => isInParty,

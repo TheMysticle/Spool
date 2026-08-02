@@ -1349,6 +1349,8 @@ function initPlayer(videoData, { autoStart = true } = {}) {
 
     const attemptAutoplay = () => {
       if (!autoStart || hasAutoplayStarted) return;
+      // If in a watch party, don't autoplay — wait for party sync
+      if ((window.WatchParty && WatchParty.isInParty()) || sessionStorage.getItem('wp_partyId')) return;
       hasAutoplayStarted = true;
       const playPromise = player.play();
       if (playPromise && typeof playPromise.then === 'function') {
@@ -1407,61 +1409,100 @@ function initPlayer(videoData, { autoStart = true } = {}) {
 function setupWatchPartyHooks() {
   if (!window.WatchParty || !player) return;
 
-  // ── Emit sync events ──
+  let _wpWaiting = false;      // are we in a "waiting for sync" state?
+  let _wpIgnoreNextPlay = false;
+  let _wpIgnoreNextPause = false;
+  let _wpIgnoreNextSeek = false;
+
+  // ── Emit sync events (only for USER-initiated actions) ──
   player.on('play', () => {
+    if (_wpIgnoreNextPlay) {
+      _wpIgnoreNextPlay = false;
+      return;
+    }
     WatchParty.sendSync('play', player.currentTime());
-    WatchParty.sendReady();
   });
   player.on('pause', () => {
+    if (_wpIgnoreNextPause) {
+      _wpIgnoreNextPause = false;
+      return;
+    }
     WatchParty.sendSync('pause', player.currentTime());
   });
   player.on('seeked', () => {
+    if (_wpIgnoreNextSeek) {
+      _wpIgnoreNextSeek = false;
+      return;
+    }
     WatchParty.sendSync('seek', player.currentTime());
   });
   player.on('waiting', () => {
     WatchParty.sendBuffering();
   });
-  player.on('playing', () => {
+  player.on('canplay', () => {
     WatchParty.sendReady();
   });
+
+  const checkAndSendReady = () => {
+    if (player.readyState() >= 3) {
+      WatchParty.sendReady();
+    }
+  };
+  window.addEventListener('party:joined', checkAndSendReady);
+  window.addEventListener('party:created', checkAndSendReady);
 
   // ── Receive sync events ──
   window.addEventListener('party:sync', (e) => {
     const msg = e.detail;
-    WatchParty.lockSync();
-    
-    // Apply time if out of sync
+    if (_wpWaiting) return;
+
     const drift = Math.abs(player.currentTime() - msg.currentTime);
     if (drift > 1.5 || msg.action === 'seek') {
+      _wpIgnoreNextSeek = true;
       player.currentTime(msg.currentTime);
     }
-
     if (msg.action === 'play') {
-      player.play();
+      if (player.paused()) {
+        _wpIgnoreNextPlay = true;
+        const p = player.play();
+        if (p && p.catch) p.catch(() => { _wpIgnoreNextPlay = false; });
+      }
     } else if (msg.action === 'pause') {
-      player.pause();
+      if (!player.paused()) {
+        _wpIgnoreNextPause = true;
+        player.pause();
+      }
     }
-    
-    WatchParty.unlockSync();
   });
 
   window.addEventListener('party:waiting', (e) => {
     const msg = e.detail;
     const overlay = document.getElementById('watch-party-overlay');
     const textEl = document.getElementById('wp-waiting-text');
+    
     if (msg.waiting) {
-      WatchParty.lockSync();
-      player.pause();
-      WatchParty.unlockSync();
-      if (textEl) textEl.textContent = `Waiting for ${msg.displayName || 'someone'}...`;
+      _wpWaiting = true;
+      if (!player.paused()) {
+        _wpIgnoreNextPause = true;
+        player.pause();
+      }
+      if (textEl) {
+        textEl.textContent = msg.videoSync
+          ? 'Waiting for everyone to load the video...'
+          : `Waiting for ${msg.displayName || 'someone'}...`;
+      }
       if (overlay) overlay.style.display = 'flex';
     } else {
+      _wpWaiting = false;
       if (overlay) overlay.style.display = 'none';
-      // Only play if we weren't intentionally paused by another action
-      if (player.paused() && !player.ended()) {
-        WatchParty.lockSync();
-        player.play();
-        WatchParty.unlockSync();
+      if (typeof msg.syncTime === 'number') {
+        _wpIgnoreNextSeek = true;
+        player.currentTime(msg.syncTime);
+      }
+      if (player.paused()) {
+        _wpIgnoreNextPlay = true;
+        const p = player.play();
+        if (p && p.catch) p.catch(() => { _wpIgnoreNextPlay = false; });
       }
     }
   });

@@ -17,6 +17,9 @@ const onlineUsers = new Map();
 const watchParties = new Map();
 // userId → partyId (quick lookup)
 const userPartyMap = new Map();
+// userId → { timeout, partyId } (grace period for page navigations)
+const pendingLeaves = new Map();
+const RECONNECT_GRACE_MS = 15000;
 
 let wss = null;
 
@@ -61,6 +64,20 @@ function initWebSocket(server) {
   });
 
   wss.on('connection', (ws) => {
+    // ── Cancel any pending leave (user navigated between pages) ──────────
+    const pendingLeave = pendingLeaves.get(ws.userId);
+    if (pendingLeave) {
+      clearTimeout(pendingLeave.timeout);
+      pendingLeaves.delete(ws.userId);
+      // Re-associate the user's WS in their party
+      const partyId = pendingLeave.partyId;
+      const party = watchParties.get(partyId);
+      if (party && party.members.has(ws.userId)) {
+        const member = party.members.get(ws.userId);
+        member.ws = ws;
+      }
+    }
+
     // ── Track online presence ──────────────────────────────────────────────
     if (!onlineUsers.has(ws.userId)) {
       onlineUsers.set(ws.userId, new Set());
@@ -95,8 +112,11 @@ function initWebSocket(server) {
         case 'party:join':
           handlePartyJoin(ws, msg);
           break;
+        case 'party:rejoin':
+          handlePartyRejoin(ws, msg);
+          break;
         case 'party:leave':
-          handlePartyLeave(ws);
+          handlePartyLeave(ws, true);
           break;
         case 'party:sync':
           handlePartySync(ws, msg);
@@ -134,8 +154,8 @@ function initWebSocket(server) {
           broadcastPresence(ws.userId, false);
         }
       }
-      // Remove from party if in one
-      handlePartyLeave(ws);
+      // Start grace period instead of immediately leaving party
+      schedulePartyLeave(ws);
     });
   });
 
@@ -279,8 +299,49 @@ function handlePartyInvite(ws, msg) {
 
 function handlePartyInviteResponse(ws, msg) {
   if (msg.accepted && msg.partyId) {
-    // Auto-join the party
     handlePartyJoin(ws, { partyId: msg.partyId });
+  }
+}
+
+function handlePartyRejoin(ws, msg) {
+  const partyId = msg.partyId;
+  const party = watchParties.get(partyId);
+  if (!party) {
+    // Party is gone
+    safeSend(ws, JSON.stringify({ type: 'party:left' }));
+    userPartyMap.delete(ws.userId);
+    return;
+  }
+
+  if (party.members.has(ws.userId)) {
+    // Already in the party (reconnect handled in connection handler),
+    // just re-send the full state
+    const member = party.members.get(ws.userId);
+    member.ws = ws;
+
+    const membersList = [];
+    for (const [uid, m] of party.members) {
+      membersList.push({
+        userId: uid,
+        username: m.username,
+        displayName: m.displayName,
+        avatarPath: m.avatarPath,
+        buffering: m.buffering,
+        isHost: uid === party.hostId,
+      });
+    }
+
+    safeSend(ws, JSON.stringify({
+      type: 'party:joined',
+      partyId,
+      hostId: party.hostId,
+      videoId: party.videoId,
+      videoTitle: party.videoTitle,
+      members: membersList,
+    }));
+  } else {
+    // Not in the party anymore, try to join
+    handlePartyJoin(ws, { partyId });
   }
 }
 
@@ -343,7 +404,34 @@ function handlePartyJoin(ws, msg) {
   }, ws.userId);
 }
 
-function handlePartyLeave(ws) {
+// Schedule a delayed party leave (grace period for page navigation)
+function schedulePartyLeave(ws) {
+  const partyId = userPartyMap.get(ws.userId);
+  if (!partyId) return;
+
+  // Only schedule if this was the user's last open socket
+  const sockets = onlineUsers.get(ws.userId);
+  if (sockets && sockets.size > 0) return; // Still has other tabs open
+
+  // Don't double-schedule
+  if (pendingLeaves.has(ws.userId)) return;
+
+  const timeout = setTimeout(() => {
+    pendingLeaves.delete(ws.userId);
+    handlePartyLeave(ws, false);
+  }, RECONNECT_GRACE_MS);
+
+  pendingLeaves.set(ws.userId, { timeout, partyId });
+}
+
+function handlePartyLeave(ws, intentional = false) {
+  // Cancel any pending leave timer
+  const pending = pendingLeaves.get(ws.userId);
+  if (pending) {
+    clearTimeout(pending.timeout);
+    pendingLeaves.delete(ws.userId);
+  }
+
   const partyId = userPartyMap.get(ws.userId);
   if (!partyId) return;
 
@@ -356,10 +444,11 @@ function handlePartyLeave(ws) {
   party.members.delete(ws.userId);
   userPartyMap.delete(ws.userId);
 
-  safeSend(ws, JSON.stringify({ type: 'party:left' }));
+  if (intentional) {
+    safeSend(ws, JSON.stringify({ type: 'party:left' }));
+  }
 
   if (party.members.size === 0) {
-    // Party is empty, clean up
     watchParties.delete(partyId);
     return;
   }
@@ -382,7 +471,6 @@ function handlePartyLeave(ws) {
     displayName: ws.displayName,
   });
 
-  // Check if anyone was waiting on this user buffering
   checkBufferingState(partyId);
 }
 
@@ -443,14 +531,18 @@ function checkBufferingState(partyId) {
     broadcastToParty(partyId, {
       type: 'party:waiting',
       waiting: false,
+      syncTime: party.videoSyncMode ? party.syncTime : undefined,
     });
+    party.videoSyncMode = false;
   } else {
     // Still waiting for someone
+    const names = bufferingMembers.map(m => m.displayName).join(', ');
     broadcastToParty(partyId, {
       type: 'party:waiting',
       waiting: true,
       userId: bufferingMembers[0].userId,
-      displayName: bufferingMembers[0].displayName,
+      displayName: names,
+      videoSync: bufferingMembers.length > 1,
     });
   }
 }
@@ -513,13 +605,29 @@ function handlePartyVideoChange(ws, msg) {
 
   party.videoId = msg.videoId || null;
   party.videoTitle = msg.videoTitle || '';
+  party.syncTime = msg.currentTime || 0;
+  party.videoSyncMode = true;
 
+  // Mark ALL members as buffering — everyone needs to load the new video
+  for (const [uid, m] of party.members) {
+    m.buffering = true;
+  }
+
+  // Tell other members to navigate to the new video
   broadcastToParty(partyId, {
     type: 'party:video_change',
     videoId: msg.videoId,
     videoTitle: msg.videoTitle,
     fromUserId: ws.userId,
     fromUsername: ws.displayName,
+  }, ws.userId);
+
+  // Tell ALL members (including sender) to wait
+  broadcastToParty(partyId, {
+    type: 'party:waiting',
+    waiting: true,
+    displayName: 'everyone to load the video',
+    videoSync: true,
   });
 }
 
