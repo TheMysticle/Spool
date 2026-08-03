@@ -4984,18 +4984,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
   z-index: 10; display: flex; align-items: center; justify-content: center;
 }
-.wp-waiting-content { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
-.vjs-current-chapter-title {
-  display: flex;
-  align-items: center;
-  font-family: var(--font);
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  margin-left: 2px;
-  padding-left: 0;
-  border-left: none;
-}
+
 .chapters-chip-bar.show { margin-bottom: 8px; }
 .wp-spinner {
   width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
@@ -5182,6 +5171,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   position: absolute;
   top: 0;
   bottom: 0;
+  width: 2px;
   background-color: var(--bg-base);
   z-index: 2;
 }

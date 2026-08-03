@@ -1182,9 +1182,11 @@ function linkifyTimestamps(text) {
           const controlBar = player.controlBar.el();
           currentChapterTitleEl = document.createElement('div');
           currentChapterTitleEl.className = 'vjs-current-chapter-title';
-          const timeControl = controlBar.querySelector('.vjs-time-control') || controlBar.querySelector('.vjs-remaining-time');
-          if (timeControl) {
-            controlBar.insertBefore(currentChapterTitleEl, timeControl.nextSibling);
+          
+          // Insert before progress control so it sits on the left, right after the time
+          const progControl = controlBar.querySelector('.vjs-progress-control');
+          if (progControl) {
+            controlBar.insertBefore(currentChapterTitleEl, progControl);
           } else {
             controlBar.appendChild(currentChapterTitleEl);
           }
@@ -1237,6 +1239,17 @@ function linkifyTimestamps(text) {
 
           chapterTitleDisplay.textContent = activeChapter.title;
           chapterTitleDisplay.style.display = 'block';
+
+          // Update highlight overlay position/width
+          const holder = progressControl.querySelector('.vjs-progress-holder');
+          const highlightOverlay = holder ? holder.querySelector('.vjs-chapter-hover-highlight') : null;
+          if (highlightOverlay) {
+            const startPct = (activeChapter.time / duration) * 100;
+            const endPct = nextChapter ? (nextChapter.time / duration) * 100 : 100;
+            highlightOverlay.style.left = `${startPct}%`;
+            highlightOverlay.style.width = `${endPct - startPct}%`;
+            highlightOverlay.style.opacity = '1';
+          }
         } else {
           chapterTitleDisplay.style.display = 'none';
         }
@@ -1263,7 +1276,12 @@ function linkifyTimestamps(text) {
       progressControl.addEventListener('touchmove', handleHover, { passive: true });
       
       const showPreview = () => { previewContainer.classList.add('show'); };
-      const hidePreview = () => { previewContainer.classList.remove('show'); };
+      const hidePreview = () => { 
+        previewContainer.classList.remove('show'); 
+        const holder = progressControl.querySelector('.vjs-progress-holder');
+        const highlightOverlay = holder ? holder.querySelector('.vjs-chapter-hover-highlight') : null;
+        if (highlightOverlay) highlightOverlay.style.opacity = '0';
+      };
 
       progressControl.addEventListener('mouseenter', showPreview);
       progressControl.addEventListener('mouseleave', hidePreview);
