@@ -1242,14 +1242,14 @@ function initPlayer(videoData, { autoStart = true } = {}) {
 
       // Livechat Toggle Button
       const Button = videojs.getComponent('Button');
-      const LivechatToggle = videojs.extend(Button, {
-        constructor: function() {
-          Button.apply(this, arguments);
+      class LivechatToggle extends Button {
+        constructor(player, options) {
+          super(player, options);
           this.controlText('Toggle Livechat');
           this.addClass('vjs-livechat-toggle');
           this.hide(); // Hidden by default, shown if in a party
-        },
-        handleClick: function() {
+        }
+        handleClick() {
           const fl = document.getElementById('floating-livechat');
           if (fl) {
             fl.classList.toggle('hidden');
@@ -1262,7 +1262,7 @@ function initPlayer(videoData, { autoStart = true } = {}) {
             }
           }
         }
-      });
+      }
       videojs.registerComponent('LivechatToggle', LivechatToggle);
       
       // Add it before fullscreen toggle

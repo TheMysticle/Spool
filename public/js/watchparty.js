@@ -507,6 +507,7 @@
 
     // State getters
     isInParty: () => isInParty,
+    isBrowsing: () => isBrowsing,
     isPartyHost: () => isHost,
     getPartyId: () => currentPartyId,
     getPartyMembers: () => currentPartyMembers,
