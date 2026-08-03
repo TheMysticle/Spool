@@ -212,6 +212,8 @@ async function scanVideos(options = {}) {
         }
 
         const thumbRelative = fs.existsSync(thumbPath) ? `/thumbnails/${thumbName}` : null;
+        const channelMatch = filePath.replace(/\\/g, '/').match(/\/channels\/(\d+)\//);
+        const channelId = channelMatch ? parseInt(channelMatch[1], 10) : null;
 
         upsertVideo({
           filename,
@@ -224,6 +226,7 @@ async function scanVideos(options = {}) {
           thumbnail_path: thumbRelative,
           video_width: meta.width,
           video_height: meta.height,
+          channel_id: channelId,
         });
         
         const ext = path.extname(filePath).toLowerCase();
