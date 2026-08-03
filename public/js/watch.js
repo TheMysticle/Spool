@@ -2018,15 +2018,37 @@ window.navigateToVideo = navigateToVideo;
     });
   }
 
-  // ── Progress tracking ──────────────────────────────────────────────────────────
+  let cumulativeWatchTime = 0;
+  let lastCheckTime = -1;
+  let hasRecordedView = false;
+
   function setupProgressTracking() {
     lastSavedTime = 0;
+    cumulativeWatchTime = 0;
+    lastCheckTime = -1;
+    hasRecordedView = false;
     player.off('timeupdate', onTimeUpdate); // remove previous
     player.on('timeupdate', onTimeUpdate);
   }
 
   function onTimeUpdate() {
-    const currentTime = Math.floor(player.currentTime());
+    const rawTime = player.currentTime();
+    
+    // Accumulate watch time (ignore jumps larger than 1.5 second, meaning they skipped)
+    if (lastCheckTime !== -1 && rawTime > lastCheckTime) {
+      const diff = rawTime - lastCheckTime;
+      if (diff < 1.5) {
+        cumulativeWatchTime += diff;
+      }
+    }
+    lastCheckTime = rawTime;
+
+    if (cumulativeWatchTime >= 15 && !hasRecordedView) {
+      hasRecordedView = true;
+      api(`/api/videos/${videoId}/view`, { method: 'POST' }).catch(() => {});
+    }
+
+    const currentTime = Math.floor(rawTime);
     if (currentTime % 10 === 0 && currentTime !== lastSavedTime && currentTime > 0) {
       lastSavedTime = currentTime;
       saveProgress(currentTime);

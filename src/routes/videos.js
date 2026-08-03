@@ -685,9 +685,6 @@ router.get('/:id/stream', authOrShareToken, async (req, res) => {
 
   // ── Legacy cached transcode (for backward compatibility) ───────────────────
   if (transcodeMode === '1') {
-    if (!isPreview && (!req.headers.range || req.headers.range.startsWith('bytes=0-'))) {
-      incrementViewCount(id);
-    }
 
     try {
       const mp4Path = await ensureTranscodedMp4(filePath, quality, video.video_height || 0);
@@ -701,12 +698,19 @@ router.get('/:id/stream', authOrShareToken, async (req, res) => {
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
   const range = req.headers.range;
 
-  // Increment view count once per full (non-range) or first-range request (except for hover/scroll previews)
-  if (!isPreview && (!range || range.startsWith('bytes=0-'))) {
-    incrementViewCount(id);
-  }
+  // View count logic has been moved to POST /api/videos/:id/view
 
   return streamFileWithRange(filePath, req, res, contentType);
+});
+
+// ── POST /api/videos/:id/view ──────────────────────────────────────────────
+router.post('/:id/view', authOrShareToken, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid id' });
+  }
+  incrementViewCount(id);
+  res.json({ ok: true });
 });
 
 // ── GET /api/videos/:id/hls/:quality/index.m3u8 — start/join HLS transcode ───
