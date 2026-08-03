@@ -1184,10 +1184,10 @@ function linkifyTimestamps(text) {
           currentChapterTitleEl.className = 'vjs-current-chapter-title';
           
           // Insert after time remaining so it sits to its right, but pushed away from quality
-          const timeRemainingComp = cBar.getChild('remainingTimeDisplay');
-          const timeRemainingEl = timeRemainingComp ? timeRemainingComp.el() : null;
-          if (timeRemainingEl) {
-            cBar.el().insertBefore(currentChapterTitleEl, timeRemainingEl.nextSibling);
+          const timeDisplayComp = cBar.getChild('durationDisplay') || cBar.getChild('currentTimeDisplay') || cBar.getChild('timeControl');
+          const timeDisplayEl = timeDisplayComp ? timeDisplayComp.el() : null;
+          if (timeDisplayEl) {
+            cBar.el().insertBefore(currentChapterTitleEl, timeDisplayEl.nextSibling);
           } else {
             cBar.el().appendChild(currentChapterTitleEl);
           }
