@@ -22,6 +22,7 @@ function extractToken(req) {
     const isMediaPath =
       p.endsWith('/stream') ||
       p.endsWith('/thumbnail') ||
+      p.endsWith('/download') ||
       p.includes('/hls/') ||
       p.includes('/avatar') ||
       p.includes('/image');
