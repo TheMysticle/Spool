@@ -1621,6 +1621,72 @@ function setupWatchPartyHooks() {
   // Render initial state
   if (WatchParty.isInParty()) {
     renderWatchPartyBar();
+    const toggle = player.controlBar.getChild('LivechatToggle');
+    if (toggle) toggle.show();
+    // Re-render chat if friends panel has it
+    if (window.chatMessages) renderFloatingChat(window.chatMessages);
+  }
+
+  // ─── Floating Livechat Integration ───
+  function appendFloatingChat(msg) {
+    const flMessages = document.getElementById('fl-messages');
+    if (!flMessages) return;
+    flMessages.insertAdjacentHTML('beforeend', `
+      <div class="fl-msg">
+        <strong>${escHtml(msg.displayName)}:</strong>
+        <span>${escHtml(msg.text)}</span>
+      </div>
+    `);
+    flMessages.scrollTop = flMessages.scrollHeight;
+  }
+
+  function renderFloatingChat(messages) {
+    const flMessages = document.getElementById('fl-messages');
+    if (!flMessages) return;
+    flMessages.innerHTML = '';
+    if (Array.isArray(messages)) {
+      messages.forEach(msg => appendFloatingChat(msg));
+    }
+  }
+
+  window.addEventListener('party:joined', (e) => {
+    const toggle = player.controlBar.getChild('LivechatToggle');
+    if (toggle) toggle.show();
+    if (e.detail && e.detail.messages) renderFloatingChat(e.detail.messages);
+  });
+
+  window.addEventListener('party:state', (e) => {
+    const toggle = player.controlBar.getChild('LivechatToggle');
+    if (toggle) toggle.show();
+    if (e.detail && e.detail.messages) renderFloatingChat(e.detail.messages);
+  });
+
+  window.addEventListener('party:left', () => {
+    const toggle = player.controlBar.getChild('LivechatToggle');
+    if (toggle) {
+      toggle.hide();
+      toggle.removeClass('active');
+    }
+    const fl = document.getElementById('floating-livechat');
+    if (fl) fl.classList.add('hidden');
+  });
+
+  window.addEventListener('party:chat', (e) => {
+    appendFloatingChat(e.detail);
+  });
+
+  const flInput = document.getElementById('fl-input');
+  if (flInput) {
+    flInput.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') {
+        const text = flInput.value.trim();
+        if (text && window.WatchParty) {
+          WatchParty.sendChat(text);
+          flInput.value = '';
+        }
+      }
+    });
   }
 }
 
