@@ -1979,7 +1979,7 @@ const getFavoriteVideos = (userId, limit = 100) =>
     .prepare(
       `SELECT v.id, v.filename, v.title, v.original_title, v.description, v.category,
               v.content_date, v.file_created_at, v.duration, v.file_size, v.thumbnail_path,
-              v.video_width, v.video_height, v.view_count, v.scanned_at, f.created_at AS favorited_at,
+              v.video_width, v.video_height, v.view_count, v.scanned_at, v.updated_at, v.is_vhs, f.created_at AS favorited_at,
               CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_name') ELSE c.name END AS channel_name, 
               CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_avatar') ELSE c.avatar_path END AS channel_avatar_path
        FROM user_favorites f

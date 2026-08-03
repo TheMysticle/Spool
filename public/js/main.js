@@ -1133,11 +1133,11 @@
         onpointerdown="handleHomeCardPointerDown(event, 'video', ${video.id})"
         onpointerup="clearHomeCardPointerTimer()" onpointerleave="clearHomeCardPointerTimer()" onpointercancel="clearHomeCardPointerTimer()"
         onkeydown="if(event.key==='Enter')handleHomeVideoCardClick(event, ${video.id})">
+        <button class="card-favorite-btn ${isFav ? 'active' : ''}" type="button" aria-pressed="${isFav ? 'true' : 'false'}" title="${isFav ? 'Remove favorite' : 'Add to favorites'}" onpointerdown="event.stopPropagation()" onclick="toggleFavorite(event, ${video.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-4.35-9.5-8.14C.98 10.5 1.4 7.2 3.9 5.6c2.01-1.29 4.62-.9 6.1.9L12 8.4l2-1.9c1.48-1.8 4.09-2.19 6.1-.9 2.5 1.6 2.92 4.9 1.4 7.26C19 16.65 12 21 12 21z"/></svg>
+        </button>
+        ${adminGear}
         <div class="card-thumb">
-          <button class="card-favorite-btn ${isFav ? 'active' : ''}" type="button" aria-pressed="${isFav ? 'true' : 'false'}" title="${isFav ? 'Remove favorite' : 'Add to favorites'}" onpointerdown="event.stopPropagation()" onclick="toggleFavorite(event, ${video.id})">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-4.35-9.5-8.14C.98 10.5 1.4 7.2 3.9 5.6c2.01-1.29 4.62-.9 6.1.9L12 8.4l2-1.9c1.48-1.8 4.09-2.19 6.1-.9 2.5 1.6 2.92 4.9 1.4 7.26C19 16.65 12 21 12 21z"/></svg>
-          </button>
-          ${adminGear}
           ${thumb
             ? `<img src="${thumb}" alt="${escHtml(video.title)}" loading="lazy" />`
             : `<div class="thumb-placeholder">
@@ -1880,12 +1880,13 @@
           </div>
           
         </div>
-        <div class="channel-tab-content" id="channel-tab-content" style="padding: 0 40px 40px;"></div>
+        <div id="channel-page-content" class="channel-tab-content" style="padding: 0 40px 40px;"></div>
       `;
       
       switchChannelTab(id, initialTab);
 
     } catch (e) {
+      console.error(e);
       container.innerHTML = '<div class="state-empty"><p>Error loading channel profile.</p></div>';
     }
   }
@@ -2618,17 +2619,20 @@
     else loadVideos();
   });
 
-  setupHoverPreview();
-  syncUI();
-  updateSearchClearButton();
-  if (state.mode === 'people') loadPeopleDirectory();
-  else if (state.mode === 'series' && !state.seriesId) loadSeriesDirectory();
-  else if (state.mode === 'channels') loadChannelsDirectory();
-  else if (state.mode === 'channel_profile') {
-    renderChannelPage(state.channelId);
-  } else {
-    loadVideos();
-  }
+  (async function init() {
+    await loadFavoriteIds();
+    setupHoverPreview();
+    syncUI();
+    updateSearchClearButton();
+    if (state.mode === 'people') loadPeopleDirectory();
+    else if (state.mode === 'series' && !state.seriesId) loadSeriesDirectory();
+    else if (state.mode === 'channels') loadChannelsDirectory();
+    else if (state.mode === 'channel_profile') {
+      renderChannelPage(state.channelId);
+    } else {
+      loadVideos();
+    }
+  })();
 
   // ── Hover preview ─────────────────────────────────────────────────────────
   function setupHoverPreview() {

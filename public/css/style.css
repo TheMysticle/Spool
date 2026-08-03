@@ -628,6 +628,7 @@ h3 { font-size: 1rem; }
 }
 
 .video-card {
+  position: relative;
   display: flex; flex-direction: column; gap: 12px; background: transparent;
   border: none; border-radius: 0; cursor: pointer; text-decoration: none; color: inherit;
   height: 100%;
