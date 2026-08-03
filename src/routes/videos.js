@@ -976,10 +976,10 @@ router.get('/:id/download', authenticate, (req, res) => {
   }
 
   const id = parseInt(req.params.id, 10);
-  const video = db.getVideoById(id);
+  const video = getVideoById(id);
   if (!video) return res.status(404).json({ error: 'Video not found.' });
 
-  const canAccess = checkVideoAccess(req.user, video);
+  const canAccess = req.user.role === 'admin' || canUserAccessVideo(id, req.user.id);
   if (!canAccess) return res.status(403).json({ error: 'Forbidden.' });
 
   const absPath = path.resolve(video.filepath);
