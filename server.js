@@ -88,6 +88,7 @@ const globalLimiter = rateLimit({
   max: API_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: { error: 'Too many API requests, please retry shortly.' },
   // Video playback can trigger many range/thumbnail requests, especially on
   // flaky mobile networks. Do not count these against the general API quota.
@@ -102,6 +103,7 @@ const loginLimiter = rateLimit({
   max: 10, // max 10 login attempts per 15 min per IP
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: { error: 'Too many login attempts, please try again later.' },
 });
 
