@@ -2098,6 +2098,20 @@ window.navigateToVideo = navigateToVideo;
     return true;
   }
 
+  // ── Reload video info (called from shared Video Settings modal) ────────────
+  window.reloadVideoInfo = async function () {
+    try {
+      const data = await api(`/api/videos/${videoId}`);
+      currentVideo = {
+        ...data,
+        channel: data.channel || currentVideo?.channel || null,
+      };
+      renderVideoInfo(currentVideo);
+    } catch (err) {
+      console.error('[reloadVideoInfo]', err);
+    }
+  };
+
   // ── Render video info ──────────────────────────────────────────────────────
   function renderVideoInfo(video) {
     const channelData = video.channel || {};
@@ -2119,17 +2133,13 @@ window.navigateToVideo = navigateToVideo;
 
     const adminMenu = canEditVideo(currentVideo) ? `
       <div class="watch-admin-dropdown-wrap">
-        <button class="btn-action icon-only" id="watch-admin-menu-btn" type="button" title="Admin Options" aria-label="Admin Options">
+        <button class="btn-action icon-only" id="watch-admin-menu-btn" type="button" title="Video Options" aria-label="Video Options">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
         </button>
         <div class="watch-admin-menu" id="watch-admin-menu">
-          <button class="dropdown-item" id="menu-manage-btn" type="button">
+          <button class="dropdown-item" id="menu-settings-btn" type="button">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Manage Access
-          </button>
-          <button class="dropdown-item" id="menu-edit-btn" type="button">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            Edit Info
+            Video Settings
           </button>
           <button class="dropdown-item" id="menu-debug-btn" type="button">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
@@ -2217,18 +2227,9 @@ window.navigateToVideo = navigateToVideo;
         });
       }
 
-      document.getElementById('menu-manage-btn')?.addEventListener('click', () => {
+      document.getElementById('menu-settings-btn')?.addEventListener('click', () => {
         menu?.classList.remove('show');
         openVideoAdminPopup(video.id);
-      });
-
-      document.getElementById('menu-edit-btn')?.addEventListener('click', () => {
-        menu?.classList.remove('show');
-        if (!currentVideo) return;
-        document.getElementById('watch-edit-title').value = currentVideo.title || '';
-        document.getElementById('watch-edit-category').value = currentVideo.category || 'video';
-        document.getElementById('watch-edit-desc').value = currentVideo.description || '';
-        openModal('watch-edit-modal');
       });
 
       document.getElementById('menu-debug-btn')?.addEventListener('click', () => {
@@ -3202,102 +3203,6 @@ window.navigateToVideo = navigateToVideo;
     setSelectedGif(null);
   });
 
-  function ensureWatchEditModal() {
-    if (!canEditVideo(currentVideo) || document.getElementById('watch-edit-modal')) return;
-
-    const html = `
-      <div class="modal-overlay" id="watch-edit-modal">
-        <div class="modal edit-modal">
-          <div class="modal-header">
-            <h3>Edit Video Info</h3>
-            <button class="btn-icon" id="watch-edit-close" type="button" aria-label="Close">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="watch-edit-title">Title</label>
-            <input class="form-input" id="watch-edit-title" type="text" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="watch-edit-date">Date</label>
-            <input class="form-input" id="watch-edit-date" type="date" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="watch-edit-category">Category</label>
-            <select class="form-input" id="watch-edit-category">
-              <option value="video">Video</option>
-              <option value="livestream">Live Stream</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="watch-edit-desc">Description</label>
-            <textarea class="form-input" id="watch-edit-desc" rows="5"></textarea>
-          </div>
-          <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="watch-edit-is-vhs">
-            <label class="form-label" for="watch-edit-is-vhs" style="margin:0;">Tag as VHS</label>
-          </div>
-          <p id="watch-edit-error" class="form-error"></p>
-          <div class="modal-footer">
-            <button class="btn btn-ghost" id="watch-edit-cancel" type="button">Cancel</button>
-            <button class="btn btn-primary" id="watch-edit-save" type="button">Save Changes</button>
-          </div>
-        </div>
-      </div>`;
-
-    document.body.insertAdjacentHTML('beforeend', html);
-
-    // Pre-fill the checkbox
-    const isVhsCheckbox = document.getElementById('watch-edit-is-vhs');
-    if (isVhsCheckbox && currentVideo.is_vhs) {
-      isVhsCheckbox.checked = true;
-    }
-    
-    // Pre-fill the date picker
-    const dateInput = document.getElementById('watch-edit-date');
-    if (dateInput && currentVideo.content_date) {
-      dateInput.value = currentVideo.content_date.split('T')[0];
-    }
-
-    document.getElementById('watch-edit-close')?.addEventListener('click', () => closeModal('watch-edit-modal'));
-    document.getElementById('watch-edit-cancel')?.addEventListener('click', () => closeModal('watch-edit-modal'));
-    document.getElementById('watch-edit-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) closeModal('watch-edit-modal');
-    });
-
-    document.getElementById('watch-edit-save')?.addEventListener('click', async () => {
-      const saveBtn = document.getElementById('watch-edit-save');
-      const errorEl = document.getElementById('watch-edit-error');
-      if (!saveBtn || !errorEl) return;
-
-      saveBtn.disabled = true;
-      errorEl.textContent = '';
-      try {
-        const dateValue = document.getElementById('watch-edit-date').value;
-        const updated = await api(`/api/videos/${videoId}`, {
-          method: 'PUT',
-          body: JSON.stringify({
-            title: document.getElementById('watch-edit-title').value.trim(),
-            content_date: dateValue ? new Date(dateValue).toISOString() : null,
-            category: document.getElementById('watch-edit-category').value,
-            description: document.getElementById('watch-edit-desc').value.trim(),
-            is_vhs: document.getElementById('watch-edit-is-vhs').checked ? 1 : 0,
-          }),
-        });
-        currentVideo = {
-          ...updated.video,
-          channel: updated.video?.channel || currentVideo?.channel || null,
-        };
-        renderVideoInfo(currentVideo);
-        closeModal('watch-edit-modal');
-        toast('Video updated!');
-      } catch (err) {
-        errorEl.textContent = err.message;
-      } finally {
-        saveBtn.disabled = false;
-      }
-    });
-  }
 
   // ── Keyboard shortcut: Player controls & modals ──────────────────────────────
   function showCenterIcon(type, value) {
@@ -3346,9 +3251,9 @@ window.navigateToVideo = navigateToVideo;
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const editModal = document.getElementById('watch-edit-modal');
+      const editModal = document.getElementById('video-settings-popup');
       const personModal = document.getElementById('person-details-modal');
-      if (editModal?.classList.contains('open')) closeModal('watch-edit-modal');
+      if (editModal?.classList.contains('open')) closeModal('video-settings-popup');
       if (personModal?.classList.contains('open')) closeModal('person-details-modal');
       return;
     }
@@ -3476,7 +3381,6 @@ window.navigateToVideo = navigateToVideo;
         renderUpNext(shuffleVideos(normalizeVideoList(listData)), autoplayContext);
       }
       await loadComments();
-      ensureWatchEditModal();
     } catch (err) {
       document.getElementById('video-info').innerHTML =
         `<p style="color:var(--danger)">Error loading video: ${escHtml(err.message)}</p>`;

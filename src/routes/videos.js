@@ -34,6 +34,7 @@ const {
   getVideoAccess,
   setVideoPeople,
   getSetting,
+  getAllUsers,
 } = require('../database');
 const { authenticate, requireAdmin, authOrShareToken } = require('../middleware/auth');
 const os = require('os');
@@ -641,6 +642,32 @@ router.put('/:id/access', authenticate, (req, res) => {
   });
 
   res.json({ message: 'Access updated.', access: getVideoAccess(id) });
+});
+
+// ── GET /api/videos/:id/viewers ───────────────────────────────────────────────
+// Returns non-admin users for the access-control UI. Available to admins and
+// channel owners so they can manage viewer permissions without full admin access.
+router.get('/:id/viewers', authenticate, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
+  const video = getVideoById(id);
+  if (!video) return res.status(404).json({ error: 'Video not found.' });
+
+  let canEdit = req.user.role === 'admin';
+  if (!canEdit && video.channel_id) {
+    const channel = getChannelById(video.channel_id);
+    if (channel && channel.user_id === req.user.id) canEdit = true;
+  }
+  if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
+
+  // Return only non-sensitive fields for non-admin users
+  const users = getAllUsers().map(u => ({
+    id: u.id,
+    username: u.username,
+    display_name: u.display_name,
+    role: u.role,
+  }));
+  res.json(users);
 });
 
 // ── PUT /api/videos/:id/people ────────────────────────────────────────────────

@@ -230,48 +230,95 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// ── Video Admin Popup (admin-only, available on all pages) ────────────────────
+// ── Video Settings Popup (unified, available on all pages) ────────────────────
 (function () {
   let _vapVideoId = null;
   let _vapCurrentPeopleIds = [];
-  let _vapDirty = false;
+  let _vapVideoData = null;
 
-  function ensureVideoAdminModal() {
-    if (document.getElementById('video-admin-popup')) return;
+  function ensureVideoSettingsModal() {
+    if (document.getElementById('video-settings-popup')) return;
     const html = `
-      <div class="modal-overlay" id="video-admin-popup">
+      <div class="modal-overlay" id="video-settings-popup">
         <div class="modal vap-modal">
           <div class="modal-header">
-            <h3>Manage Video</h3>
+            <h3>Video Settings</h3>
             <button class="btn-icon" id="vap-close" type="button" aria-label="Close">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
+          <div class="vap-tabs">
+            <button class="vap-tab-btn active" data-tab="details" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Details
+            </button>
+            <button class="vap-tab-btn" data-tab="access" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Access
+            </button>
+            <button class="vap-tab-btn" data-tab="people" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              People
+            </button>
+          </div>
           <div class="vap-body">
-            <div class="vap-section">
-              <div class="vap-section-header-row">
-                <div>
-                  <h4 class="vap-section-title">Public Access</h4>
-                  <p class="vap-hint">Allow all registered users to view this video.</p>
+            <!-- Details Tab -->
+            <div class="vap-tab-panel active" id="vap-panel-details">
+              <div class="vap-section">
+                <div class="form-group">
+                  <label class="form-label" for="vap-edit-title">Title</label>
+                  <input class="form-input" id="vap-edit-title" type="text" />
                 </div>
-                <label class="switch">
-                  <input type="checkbox" id="vap-all-users" />
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div id="vap-users-section" class="vap-users-section">
-                <p class="vap-subsection-label">Or restrict to specific viewers:</p>
-                <div id="vap-users-list" class="vap-users-list"></div>
+                <div class="form-group">
+                  <label class="form-label" for="vap-edit-date">Date</label>
+                  <input class="form-input" id="vap-edit-date" type="date" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="vap-edit-category">Category</label>
+                  <select class="form-input" id="vap-edit-category">
+                    <option value="video">Video</option>
+                    <option value="livestream">Live Stream</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="vap-edit-desc">Description</label>
+                  <textarea class="form-input" id="vap-edit-desc" rows="4"></textarea>
+                </div>
+                <div class="form-group" style="display:flex; align-items:center; gap:8px;">
+                  <input type="checkbox" id="vap-edit-is-vhs" style="accent-color: var(--accent);">
+                  <label class="form-label" for="vap-edit-is-vhs" style="margin:0;">Tag as VHS</label>
+                </div>
               </div>
             </div>
-            <div class="vap-divider"></div>
-            <div class="vap-section">
-              <h4 class="vap-section-title">People Tags</h4>
-              <p class="vap-hint">Tag people so this video appears on their profile.</p>
-              <select id="vap-person-select" class="form-input vap-person-select">
-                <option value="">+ Add person to video\u2026</option>
-              </select>
-              <div id="vap-people-list" class="vap-people-list"></div>
+            <!-- Access Tab -->
+            <div class="vap-tab-panel" id="vap-panel-access">
+              <div class="vap-section">
+                <div class="vap-section-header-row">
+                  <div>
+                    <h4 class="vap-section-title">Public Access</h4>
+                    <p class="vap-hint">Allow all registered users to view this video.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="vap-all-users" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div id="vap-users-section" class="vap-users-section">
+                  <p class="vap-subsection-label">Or restrict to specific viewers:</p>
+                  <div id="vap-users-list" class="vap-users-list"></div>
+                </div>
+              </div>
+            </div>
+            <!-- People Tab -->
+            <div class="vap-tab-panel" id="vap-panel-people">
+              <div class="vap-section">
+                <h4 class="vap-section-title">People Tags</h4>
+                <p class="vap-hint">Tag people so this video appears on their profile.</p>
+                <select id="vap-person-select" class="form-input vap-person-select">
+                  <option value="">+ Add person to video\u2026</option>
+                </select>
+                <div id="vap-people-list" class="vap-people-list"></div>
+              </div>
             </div>
           </div>
           <p id="vap-error" class="form-error" style="padding:0 1.25rem; margin-top: 0;"></p>
@@ -283,10 +330,20 @@ function closeModal(id) {
       </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
 
-    document.getElementById('vap-close').addEventListener('click', () => closeModal('video-admin-popup'));
-    document.getElementById('vap-cancel').addEventListener('click', () => closeModal('video-admin-popup'));
-    document.getElementById('video-admin-popup').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) closeModal('video-admin-popup');
+    // Tab switching
+    document.querySelectorAll('.vap-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.vap-tab-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.vap-tab-panel').forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`vap-panel-${btn.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    document.getElementById('vap-close').addEventListener('click', () => closeModal('video-settings-popup'));
+    document.getElementById('vap-cancel').addEventListener('click', () => closeModal('video-settings-popup'));
+    document.getElementById('video-settings-popup').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal('video-settings-popup');
     });
 
     document.getElementById('vap-all-users').addEventListener('change', () => {
@@ -318,23 +375,47 @@ function closeModal(id) {
 
     document.getElementById('vap-save').addEventListener('click', async () => {
       const errEl = document.getElementById('vap-error');
+      const saveBtn = document.getElementById('vap-save');
       errEl.textContent = '';
-      const allUsers = document.getElementById('vap-all-users').checked;
-      const userIds = [];
-      document.querySelectorAll('.vap-user-cb:checked').forEach((cb) => {
-        userIds.push(parseInt(cb.value, 10));
-      });
+      saveBtn.disabled = true;
+
       try {
+        // Save details
+        const dateValue = document.getElementById('vap-edit-date').value;
+        await api(`/api/videos/${_vapVideoId}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            title: document.getElementById('vap-edit-title').value.trim(),
+            content_date: dateValue ? new Date(dateValue).toISOString() : null,
+            category: document.getElementById('vap-edit-category').value,
+            description: document.getElementById('vap-edit-desc').value.trim(),
+            is_vhs: document.getElementById('vap-edit-is-vhs').checked ? 1 : 0,
+          }),
+        });
+
+        // Save access
+        const allUsers = document.getElementById('vap-all-users').checked;
+        const userIds = [];
+        document.querySelectorAll('.vap-user-cb:checked').forEach((cb) => {
+          userIds.push(parseInt(cb.value, 10));
+        });
         await api(`/api/videos/${_vapVideoId}/access`, {
           method: 'PUT',
           body: JSON.stringify({ all_users: allUsers, user_ids: userIds }),
         });
-        toast('Access saved.');
-        closeModal('video-admin-popup');
+
+        toast('Video settings saved.');
+        closeModal('video-settings-popup');
+        // Refresh video info on watch page
+        if (typeof window.currentVideo !== 'undefined' && typeof window.reloadVideoInfo === 'function') {
+          window.reloadVideoInfo();
+        }
         // Reload current page video grid if on browse
         if (typeof loadVideos === 'function') loadVideos();
       } catch (err) {
         errEl.textContent = err.message;
+      } finally {
+        saveBtn.disabled = false;
       }
     });
   }
@@ -383,8 +464,8 @@ function closeModal(id) {
         });
       });
 
-      // Refresh add dropdown
-      const allPeople = await api('/api/admin/people');
+      // Refresh add dropdown — use /api/people (authenticated, not admin-only)
+      const allPeople = await api('/api/people');
       const sel = document.getElementById('vap-person-select');
       sel.innerHTML = '<option value="">+ Add person to video\u2026</option>' +
         allPeople
@@ -397,26 +478,47 @@ function closeModal(id) {
   }
 
   window.openVideoAdminPopup = async function (videoId) {
-    const video = window.currentVideo || { id: videoId }; // Best effort fallback
-    // We actually need the video object to check ownership reliably.
-    // If it's called from home screen, it might only have videoId.
-    // So we will just fetch the video if not provided?
-    // Let's rely on the server rejecting unauthorized actions.
     if (!getUser()) return;
-    ensureVideoAdminModal();
+    ensureVideoSettingsModal();
     _vapVideoId = videoId;
+    _vapVideoData = null;
     document.getElementById('vap-error').textContent = '';
     document.getElementById('vap-users-list').innerHTML = 'Loading\u2026';
     document.getElementById('vap-people-list').innerHTML = 'Loading\u2026';
-    openModal('video-admin-popup');
+    // Reset details fields
+    document.getElementById('vap-edit-title').value = '';
+    document.getElementById('vap-edit-date').value = '';
+    document.getElementById('vap-edit-category').value = 'video';
+    document.getElementById('vap-edit-desc').value = '';
+    document.getElementById('vap-edit-is-vhs').checked = false;
+    // Reset to first tab
+    document.querySelectorAll('.vap-tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.vap-tab-panel').forEach((p) => p.classList.remove('active'));
+    document.querySelector('.vap-tab-btn[data-tab="details"]').classList.add('active');
+    document.getElementById('vap-panel-details').classList.add('active');
+
+    openModal('video-settings-popup');
 
     try {
-      const [access, allUsers] = await Promise.all([
+      // Fetch video details, access config, and viewers in parallel
+      // Use /api/videos/:id/viewers (accessible to channel owners) instead of /api/admin/users
+      const [videoData, access, allUsers] = await Promise.all([
+        api(`/api/videos/${videoId}`),
         api(`/api/videos/${videoId}/access`),
-        api('/api/admin/users'),
+        api(`/api/videos/${videoId}/viewers`),
       ]);
 
-      // Render access
+      // Fill in details tab
+      _vapVideoData = videoData;
+      document.getElementById('vap-edit-title').value = videoData.title || '';
+      if (videoData.content_date) {
+        document.getElementById('vap-edit-date').value = videoData.content_date.split('T')[0];
+      }
+      document.getElementById('vap-edit-category').value = videoData.category || 'video';
+      document.getElementById('vap-edit-desc').value = videoData.description || '';
+      document.getElementById('vap-edit-is-vhs').checked = !!videoData.is_vhs;
+
+      // Render access tab
       const allCb = document.getElementById('vap-all-users');
       allCb.checked = access.all_users;
       const usersSection = document.getElementById('vap-users-section');
@@ -438,12 +540,14 @@ function closeModal(id) {
         document.getElementById('vap-users-list').innerHTML = '<p class="vap-empty">No viewer accounts yet.</p>';
       }
 
+      // Render people tab
       await renderVapPeople();
     } catch (err) {
       document.getElementById('vap-error').textContent = err.message;
     }
   };
 })();
+
 
 // ── Avatar helpers ───────────────────────────────────────────────────────────
 function refreshAvatars(user) {
