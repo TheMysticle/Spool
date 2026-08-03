@@ -85,6 +85,8 @@ function initDatabase() {
       role          TEXT    NOT NULL DEFAULT 'viewer'  CHECK(role IN ('admin', 'viewer')),
       created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_login    DATETIME,
+      can_upload    INTEGER NOT NULL DEFAULT 0,
+      can_download  INTEGER NOT NULL DEFAULT 0,
       volume        REAL    DEFAULT 1.0
     );
 
@@ -431,6 +433,10 @@ function initDatabase() {
   if (!hasTwofaEnabled) {
     db.exec('ALTER TABLE users ADD COLUMN twofa_enabled INTEGER NOT NULL DEFAULT 0');
   }
+  const hasCanDownload = userColumns.some((col) => col.name === 'can_download');
+  if (!hasCanDownload) {
+    db.exec('ALTER TABLE users ADD COLUMN can_download INTEGER NOT NULL DEFAULT 0');
+  }
 
   const commentColumns = db.prepare('PRAGMA table_info(comments)').all();
   const hasParentCommentId = commentColumns.some((col) => col.name === 'parent_comment_id');
@@ -747,10 +753,10 @@ const getUserByUsername = (username) =>
   db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
 const getUserById = (id) =>
-  db.prepare('SELECT id, username, display_name, avatar_path, role, created_at, last_login, can_upload, volume FROM users WHERE id = ?').get(id);
+  db.prepare('SELECT id, username, display_name, avatar_path, role, created_at, last_login, can_upload, can_download, volume FROM users WHERE id = ?').get(id);
 
 const getAllUsers = () =>
-  db.prepare('SELECT id, username, display_name, avatar_path, role, created_at, last_login, can_upload, volume FROM users ORDER BY created_at ASC').all();
+  db.prepare('SELECT id, username, display_name, avatar_path, role, created_at, last_login, can_upload, can_download, volume FROM users ORDER BY created_at ASC').all();
 
 const createUser = (username, passwordHash, displayName, role = 'viewer') =>
   db.prepare(
@@ -758,7 +764,7 @@ const createUser = (username, passwordHash, displayName, role = 'viewer') =>
   ).run(username, passwordHash, displayName || username, role);
 
 const updateUser = (id, fields) => {
-  const allowed = ['display_name', 'role', 'password_hash', 'avatar_path', 'twofa_secret', 'twofa_enabled', 'can_upload', 'volume'];
+  const allowed = ['display_name', 'role', 'password_hash', 'avatar_path', 'twofa_secret', 'twofa_enabled', 'can_upload', 'can_download', 'volume'];
   const sets = Object.keys(fields)
     .filter((k) => allowed.includes(k))
     .map((k) => `${k} = ?`)

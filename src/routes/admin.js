@@ -74,7 +74,7 @@ router.get('/channels', (req, res) => {
 
 // ── POST /api/admin/users ─────────────────────────────────────────────────────
 router.post('/users', async (req, res) => {
-  const { username, password, display_name, role = 'viewer', can_upload } = req.body;
+  const { username, password, display_name, role = 'viewer', can_upload, can_download } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'username and password are required.' });
@@ -99,8 +99,13 @@ router.post('/users', async (req, res) => {
 
   const hash = await bcrypt.hash(password, 12);
   const info = createUser(username.toLowerCase(), hash, display_name || username, role);
-  if (can_upload) {
-    updateUser(info.lastInsertRowid, { can_upload: 1 });
+  
+  const updates = {};
+  if (can_upload) updates.can_upload = 1;
+  if (can_download) updates.can_download = 1;
+  
+  if (Object.keys(updates).length > 0) {
+    updateUser(info.lastInsertRowid, updates);
   }
 
   res.status(201).json({ message: 'User created.' });
@@ -151,6 +156,10 @@ router.put('/users/:id', async (req, res) => {
       }
     }
     fields.can_upload = canUploadVal;
+  }
+  
+  if (req.body.can_download !== undefined) {
+    fields.can_download = req.body.can_download ? 1 : 0;
   }
 
   updateUser(id, fields);

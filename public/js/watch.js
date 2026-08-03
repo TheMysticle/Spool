@@ -2245,6 +2245,12 @@ window.navigateToVideo = navigateToVideo;
     const favIconOutline = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
     const favIconFilled = `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
 
+    const canDownload = currentUser && (currentUser.role === 'admin' || currentUser.can_download);
+    const downloadBtn = canDownload ? `
+      <a href="/api/videos/${video.id}/download?token=${encodeURIComponent(getToken() || '')}" class="btn-action icon-only" id="watch-download-btn" title="Download Video" aria-label="Download Video" download>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </a>` : '';
+
     const shareBtn = canEditVideo(currentVideo) ? `
       <button class="btn-action icon-only" id="watch-share-btn" type="button" title="Share Video" aria-label="Share Video">
         <svg style="transform: translateX(-1px);" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
@@ -2314,6 +2320,7 @@ window.navigateToVideo = navigateToVideo;
           <button class="btn-action icon-only ${isFav ? 'favorite-active' : ''}" id="watch-favorite-btn" type="button" aria-pressed="${isFav ? 'true' : 'false'}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}" aria-label="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
             ${isFav ? favIconFilled : favIconOutline}
           </button>
+          ${downloadBtn}
           ${shareBtn}
           ${chaptersBtn}
           ${adminMenu}

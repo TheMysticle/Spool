@@ -526,11 +526,11 @@
         <tr>
           <td data-label="Username" style="font-weight:600;color:var(--text-primary)">${escHtml(u.username)}</td>
           <td data-label="Display Name">${escHtml(u.display_name || '—')}</td>
-          <td data-label="Role"><span class="badge badge-${u.role}">${u.role}</span>${u.can_upload ? ' <span class="badge" style="background:var(--success);color:#fff">Uploader</span>' : ''}</td>
+          <td data-label="Role"><span class="badge badge-${u.role}">${u.role}</span>${u.can_upload ? ' <span class="badge" style="background:var(--success);color:#fff">Uploader</span>' : ''}${u.can_download ? ' <span class="badge" style="background:var(--accent);color:#fff">Downloader</span>' : ''}</td>
           <td data-label="Last Login">${formatDate(u.last_login)}</td>
           <td data-label="Actions">
             <div class="admin-row-actions">
-              <button class="btn btn-ghost btn-sm" onclick="editUser(${u.id}, '${escHtml(u.username)}', '${escHtml(u.display_name || '')}', '${u.role}', ${u.can_upload})" aria-label="Edit">Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="editUser(${u.id}, '${escHtml(u.username)}', '${escHtml(u.display_name || '')}', '${u.role}', ${u.can_upload}, ${u.can_download})" aria-label="Edit">Edit</button>
               <button class="btn btn-ghost btn-sm btn-icon" onclick="openAuthResetModal(${u.id}, '${escHtml(u.username)}')" aria-label="Reset Authentication" style="padding: 4px 8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
@@ -552,9 +552,11 @@
     document.getElementById('user-modal-title').textContent = 'Create New User';
     document.getElementById('user-modal-id').value = '';
     document.getElementById('user-username').value = '';
+    document.getElementById('user-username').disabled = false;
     document.getElementById('user-display-name').value = '';
     document.getElementById('user-role').value = 'viewer';
     document.getElementById('user-can-upload').checked = false;
+    document.getElementById('user-can-download').checked = false;
     document.getElementById('user-password').value = '';
     document.getElementById('user-modal-error').textContent = '';
 
@@ -566,13 +568,15 @@
     openModal('user-modal');
   });
 
-  window.editUser = function (id, username, displayName, role, canUpload) {
+  window.editUser = (id, username, displayName, role, can_upload, can_download) => {
     document.getElementById('user-modal-title').textContent = 'Edit User Account';
     document.getElementById('user-modal-id').value = id;
     document.getElementById('user-username').value = username;
+    document.getElementById('user-username').disabled = true;
     document.getElementById('user-display-name').value = displayName;
     document.getElementById('user-role').value = role;
-    document.getElementById('user-can-upload').checked = !!canUpload;
+    document.getElementById('user-can-upload').checked = !!can_upload;
+    document.getElementById('user-can-download').checked = !!can_download;
     document.getElementById('user-password').value = '';
     document.getElementById('user-modal-error').textContent = '';
 
@@ -651,12 +655,13 @@
     const display_name = document.getElementById('user-display-name').value.trim();
     const role = document.getElementById('user-role').value;
     const can_upload = document.getElementById('user-can-upload').checked ? 1 : 0;
+    const can_download = document.getElementById('user-can-download').checked ? 1 : 0;
     const password = document.getElementById('user-password').value;
 
     try {
       if (id) {
         // Editing existing user
-        const payload = { display_name, role, can_upload };
+        const payload = { display_name, role, can_upload, can_download };
         if (password) payload.new_password = password;
         await api(`/api/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
         toast('User updated.');
@@ -666,7 +671,7 @@
         if (!password) { errEl.textContent = 'Password is required for new users.'; saveBtn.disabled = false; return; }
         await api('/api/admin/users', {
           method: 'POST',
-          body: JSON.stringify({ username, password, display_name, role, can_upload }),
+          body: JSON.stringify({ username, password, display_name, role, can_upload, can_download }),
         });
         toast('User created.');
       }

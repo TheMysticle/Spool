@@ -860,6 +860,36 @@ router.get('/channel/avatar', authOrShareToken, (req, res) => {
   return res.sendFile(absPath);
 });
 
+// ── GET /api/videos/:id/download ─────────────────────────────────────────────
+router.get('/:id/download', requireAuth, (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized.' });
+  if (req.user.role !== 'admin' && !req.user.can_download) {
+    return res.status(403).json({ error: 'You do not have permission to download videos.' });
+  }
+
+  const id = parseInt(req.params.id, 10);
+  const video = db.getVideoById(id);
+  if (!video) return res.status(404).json({ error: 'Video not found.' });
+
+  const canAccess = checkVideoAccess(req.user, video);
+  if (!canAccess) return res.status(403).json({ error: 'Forbidden.' });
+
+  const absPath = path.resolve(video.file_path);
+  if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'File not found on disk.' });
+
+  // Use Express' res.download which natively handles Streams and Range requests,
+  // bypassing memory buffering issues.
+  // We disable cache so Cloudflare doesn't try to buffer/cache massive files.
+  res.setHeader('Cache-Control', 'no-store, no-transform');
+  
+  const ext = path.extname(absPath);
+  let safeTitle = video.title || 'video';
+  // Strip characters that might break content-disposition
+  safeTitle = safeTitle.replace(/[/\\?%*:|"<>]/g, '-');
+  
+  return res.download(absPath, `${safeTitle}${ext}`);
+});
+
 // ── GET /api/videos/:id/thumbnail — serve thumbnail ──────────────────────────
 router.get('/:id/thumbnail', authOrShareToken, async (req, res) => {
   const id = parseInt(req.params.id, 10);
