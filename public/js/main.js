@@ -961,7 +961,7 @@
   function renderVideoCard(video) {
     const thumb = thumbUrl(video);
     const dur = formatDuration(video.duration);
-    const created = formatDate(video.content_date || video.file_created_at || video.scanned_at);
+    const created = formatVideoDate(video);
     const isFav = favoriteIds.has(video.id);
     
     const authorName = video.channel_name || globalChannelProfile.channel_name || 'Mysticle Archive';
@@ -1249,7 +1249,7 @@
   function renderSeriesPlaylistItem(video, index) {
     const thumb = thumbUrl(video);
     const dur = formatDuration(video.duration) || '—';
-    const created = formatDate(video.content_date || video.file_created_at || video.scanned_at);
+    const created = formatVideoDate(video);
     const progress = Math.min(Math.max(Number(userProgress[video.id] || 0), 0), 100);
 
     return `

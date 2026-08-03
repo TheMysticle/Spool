@@ -186,11 +186,82 @@ function parseVideoData(rawTitle, fallbackDate) {
 }
 
 function formatDate(dt) {
-  if (!dt) return '-';
-  if (typeof dt === 'string' && /^\d{4}$/.test(dt)) return dt;
-  const date = dt instanceof Date ? dt : new Date(dt);
-  if (Number.isNaN(date.getTime())) return '-';
-  return date.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+  if (dt == null || dt === '') return '-';
+
+  // Numeric values from SQLite DATETIME affinity:
+  // year-only "2002" is often returned as integer 2002.
+  // new Date(2002) is ~2s after epoch → "1 Jan 1970" — must NOT treat small ints as timestamps.
+  if (typeof dt === 'number') {
+    if (!Number.isFinite(dt) || dt <= 0) return '-';
+    if (dt >= 1900 && dt <= 2100 && Number.isInteger(dt)) return String(dt);
+    // Real ms timestamps are >= ~1e12 for modern dates; reject junk/epoch
+    if (dt < 1e11) return '-';
+    const date = new Date(dt);
+    if (Number.isNaN(date.getTime()) || date.getUTCFullYear() < 1900) return '-';
+    return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  if (dt instanceof Date) {
+    if (Number.isNaN(dt.getTime()) || dt.getUTCFullYear() < 1900) return '-';
+    return dt.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  const s = String(dt).trim();
+  if (!s || s === '0' || s === 'null' || s === 'undefined') return '-';
+
+  // Year only — never expand to 1 Jan
+  if (/^\d{4}$/.test(s)) return s;
+
+  // Full calendar date YYYY-MM-DD (optional time) — format in UTC so the calendar day is stable
+  const dayMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+  if (dayMatch) {
+    const year = Number(dayMatch[1]);
+    const month = Number(dayMatch[2]);
+    const day = Number(dayMatch[3]);
+    if (year < 1900) return '-';
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+  }
+
+  // Year-month only
+  const ymMatch = s.match(/^(\d{4})-(\d{2})$/);
+  if (ymMatch) {
+    const year = Number(ymMatch[1]);
+    const month = Number(ymMatch[2]);
+    if (year < 1900 || month < 1 || month > 12) return '-';
+    const date = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0));
+    return date.toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    });
+  }
+
+  const date = new Date(s);
+  if (Number.isNaN(date.getTime()) || date.getUTCFullYear() < 1900) return '-';
+  return date.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+/** Prefer VHS range when set; otherwise content/file date. Year-only stays year-only. */
+function formatVideoDate(video) {
+  if (!video) return '-';
+  if (video.vhs_start_date || video.vhs_end_date) {
+    const s = video.vhs_start_date ? formatDate(video.vhs_start_date) : '';
+    const e = video.vhs_end_date ? formatDate(video.vhs_end_date) : '';
+    if (s && e && s !== '-' && e !== '-') return `${s} — ${e}`;
+    if (s && s !== '-') return s;
+    if (e && e !== '-') return e;
+  }
+  const primary = formatDate(video.content_date);
+  if (primary && primary !== '-') return primary;
+  const fallback = formatDate(video.file_created_at || video.scanned_at);
+  return fallback && fallback !== '-' ? fallback : '-';
 }
 
 const BROWSE_STATE_KEY = 'ma_browse_state';
@@ -663,7 +734,10 @@ function closeModal(id) {
       _vapVideoData = videoData;
       document.getElementById('vap-edit-title').value = videoData.title || '';
       const toDateInput = (raw) => {
-        if (!raw) return '';
+        if (raw == null || raw === '') return '';
+        if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1900 && raw <= 2100) {
+          return String(raw);
+        }
         const s = String(raw).trim();
         if (/^\d{4}$/.test(s)) return s;
         return s.split('T')[0];

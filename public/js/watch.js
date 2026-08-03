@@ -2287,12 +2287,7 @@ window.navigateToVideo = navigateToVideo;
     const categoryLabel = video.category === 'livestream' ? 'Live Stream' : 'Video';
     const viewsStr = `${video.view_count.toLocaleString()} view${video.view_count !== 1 ? 's' : ''}`;
     
-    let dateStr = formatDate(video.content_date || video.file_created_at || video.scanned_at);
-    if (video.vhs_start_date || video.vhs_end_date) {
-      const s = video.vhs_start_date ? formatDate(video.vhs_start_date) : '';
-      const e = video.vhs_end_date ? formatDate(video.vhs_end_date) : '';
-      dateStr = (s && e) ? `${s} — ${e}` : (s || e);
-    }
+    const dateStr = formatVideoDate(video);
     
     const sizeTag = video.file_size ? `<span class="meta-tag">${formatFileSize(video.file_size)}</span>` : '';
     const durationTag = video.duration ? `<span class="meta-tag">${formatDuration(video.duration)}</span>` : '';
@@ -2633,12 +2628,7 @@ window.navigateToVideo = navigateToVideo;
     const token = getToken();
     el.innerHTML = others.map((v) => {
         const targetUrl = nextVideoUrl(v.id);
-        let dateLabel = formatDate(v.content_date || v.file_created_at || v.scanned_at);
-        if (v.vhs_start_date || v.vhs_end_date) {
-          const s = v.vhs_start_date ? formatDate(v.vhs_start_date) : '';
-          const e = v.vhs_end_date ? formatDate(v.vhs_end_date) : '';
-          dateLabel = (s && e) ? `${s} — ${e}` : (s || e);
-        }
+        const dateLabel = formatVideoDate(v);
         const durationLabel = v.duration ? formatDuration(v.duration) : '';
         return `
         <div class="mini-card" onclick="navigateToVideo(${v.id})" role="button" tabindex="0" data-video-id="${v.id}">
