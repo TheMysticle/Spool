@@ -254,7 +254,7 @@ function formatVideoDate(video) {
   if (video.vhs_start_date || video.vhs_end_date) {
     const s = video.vhs_start_date ? formatDate(video.vhs_start_date) : '';
     const e = video.vhs_end_date ? formatDate(video.vhs_end_date) : '';
-    if (s && e && s !== '-' && e !== '-') return `${s} — ${e}`;
+    if (s && e && s !== '-' && e !== '-') return `${s} – ${e}`;
     if (s && s !== '-') return s;
     if (e && e !== '-') return e;
   }

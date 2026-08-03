@@ -730,12 +730,69 @@ h3 { font-size: 1rem; }
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .card-meta .meta-dot {
   font-size: 0.8rem;
   line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Long date ranges: single line; fade when clipped; seamless infinite marquee on hover */
+.card-meta .card-meta-date {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+.card-meta .card-meta-date.is-clipped {
+  mask-image: linear-gradient(to right, #000 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 70%, transparent 100%);
+}
+.card-meta .card-meta-date.is-clipped.is-hovering {
+  mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+.card-meta .card-meta-date .card-meta-date-track {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+  width: max-content;
+  will-change: transform;
+  transform: translateX(0);
+}
+.card-meta .card-meta-date.is-hovering .card-meta-date-track {
+  animation-name: card-meta-marquee-left;
+  animation-duration: var(--marquee-duration, 8s);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: none;
+}
+.card-meta .card-meta-date .card-meta-date-segment {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.card-meta .card-meta-date .card-meta-date-inner {
+  display: inline-block;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.card-meta .card-meta-date .card-meta-date-gap {
+  display: inline-block;
+  width: 2em;
+  flex-shrink: 0;
+}
+@keyframes card-meta-marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
 .card-category { display: none; }

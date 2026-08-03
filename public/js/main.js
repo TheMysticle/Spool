@@ -958,6 +958,144 @@
   // Stored globally to pass from getAllVideos wrapper into card renders
   let globalChannelProfile = { channel_name: 'Mysticle Archive', channel_avatar: null };
 
+  function refreshCardMetaDateClipped(root = document) {
+    const scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('.card-meta-date').forEach((el) => {
+      // Prefer measuring the first text node/inner without destroying hover state
+      if (el.classList.contains('is-hovering')) return;
+      const inner = el.querySelector('.card-meta-date-inner');
+      if (!inner) return;
+      const clipped = inner.scrollWidth > el.clientWidth + 1;
+      el.classList.toggle('is-clipped', clipped);
+    });
+  }
+
+  function bindCardMetaDateHoverScroll() {
+    if (window.__cardMetaDateScrollBound) return;
+    window.__cardMetaDateScrollBound = true;
+
+    const SPEED = 30; // px per second
+
+    function getLabel(el) {
+      const t = el.getAttribute('title');
+      if (t) return t.trim();
+      const inner = el.querySelector('.card-meta-date-inner');
+      return (inner?.textContent || '').trim();
+    }
+
+    function resetToStatic(el) {
+      const label = getLabel(el);
+      const track = el.querySelector('.card-meta-date-track');
+      if (!track) return;
+      el.classList.remove('is-hovering');
+      track.style.animation = 'none';
+      track.style.transform = 'translateX(0)';
+      track.innerHTML = `<span class="card-meta-date-inner"></span>`;
+      const inner = track.querySelector('.card-meta-date-inner');
+      if (inner) inner.textContent = label;
+      // measure after layout
+      requestAnimationFrame(() => {
+        if (!el.isConnected) return;
+        const node = el.querySelector('.card-meta-date-inner');
+        if (node && node.scrollWidth > el.clientWidth + 1) el.classList.add('is-clipped');
+        else el.classList.remove('is-clipped');
+      });
+    }
+
+    function startMarquee(el) {
+      if (el.classList.contains('is-hovering')) return;
+      const label = getLabel(el);
+      const track = el.querySelector('.card-meta-date-track');
+      if (!track || !label) return;
+
+      // Measure current single inner
+      let inner = el.querySelector('.card-meta-date-inner');
+      if (!inner) {
+        track.innerHTML = `<span class="card-meta-date-inner"></span>`;
+        inner = track.querySelector('.card-meta-date-inner');
+        inner.textContent = label;
+      }
+      if (inner.scrollWidth <= el.clientWidth + 1) {
+        el.classList.remove('is-clipped');
+        return;
+      }
+
+      // Build two identical halves for seamless -50% loop:
+      // [text][gap] [text][gap]
+      track.style.animation = 'none';
+      track.style.transform = 'translateX(0)';
+      track.innerHTML = '';
+      for (let i = 0; i < 2; i++) {
+        const seg = document.createElement('span');
+        seg.className = 'card-meta-date-segment';
+        if (i === 1) seg.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('span');
+        text.className = 'card-meta-date-inner';
+        text.textContent = label;
+        const gap = document.createElement('span');
+        gap.className = 'card-meta-date-gap';
+        gap.setAttribute('aria-hidden', 'true');
+        seg.append(text, gap);
+        track.appendChild(seg);
+      }
+
+      // Duration from half-width
+      const half = track.scrollWidth / 2;
+      const duration = Math.max(5, half / SPEED);
+      el.style.setProperty('--marquee-duration', duration + 's');
+
+      el.classList.add('is-clipped', 'is-hovering');
+      void track.offsetWidth;
+      // Set animation inline so it always runs (avoids stuck animation: none)
+      track.style.animation = `card-meta-marquee-left ${duration}s linear infinite`;
+    }
+
+    // Use pointer events on the date element via delegation
+    document.addEventListener('pointerover', (e) => {
+      const el = e.target?.closest?.('.card-meta-date');
+      if (!el || el.classList.contains('is-hovering')) return;
+      startMarquee(el);
+    });
+
+    document.addEventListener('pointerout', (e) => {
+      const el = e.target?.closest?.('.card-meta-date');
+      if (!el || !el.classList.contains('is-hovering')) return;
+      const related = e.relatedTarget;
+      if (related && el.contains(related)) return;
+      resetToStatic(el);
+    });
+
+    window.addEventListener('resize', () => refreshCardMetaDateClipped());
+  }
+
+  bindCardMetaDateHoverScroll();
+  window.refreshCardMetaDateClipped = refreshCardMetaDateClipped;
+
+  // When cards are injected, mark which dates are clipped (for fade without prior hover)
+  const metaDateObserver = new MutationObserver(() => {
+    requestAnimationFrame(() => refreshCardMetaDateClipped());
+  });
+  const observeMetaRoots = () => {
+    ['video-grid', 'people-grid'].forEach((id) => {
+      const node = document.getElementById(id);
+      if (node && !node.dataset.metaDateObserved) {
+        node.dataset.metaDateObserved = '1';
+        metaDateObserver.observe(node, { childList: true, subtree: true });
+      }
+    });
+    const mainEl = document.querySelector('main.main-content');
+    if (mainEl && !mainEl.dataset.metaDateObserved) {
+      mainEl.dataset.metaDateObserved = '1';
+      metaDateObserver.observe(mainEl, { childList: true, subtree: true });
+    }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', observeMetaRoots);
+  } else {
+    observeMetaRoots();
+  }
+  requestAnimationFrame(() => refreshCardMetaDateClipped());
+
   function renderVideoCard(video) {
     const thumb = thumbUrl(video);
     const dur = formatDuration(video.duration);
@@ -1019,7 +1157,7 @@
               <span class="meta-dot">•</span>
               <span>${Number(video.view_count || 0).toLocaleString()} view${Number(video.view_count || 0) === 1 ? '' : 's'}</span>
               <span class="meta-dot">•</span>
-              <span>${escHtml(created || 'Recently')}</span>
+              <span class="card-meta-date" title="${escHtml(created || 'Recently')}"><span class="card-meta-date-track"><span class="card-meta-date-inner">${escHtml(created || 'Recently')}</span></span></span>
             </div>
           </div>
         </div>
@@ -1269,7 +1407,7 @@
         </div>
         <div class="series-playlist-copy">
           <h4>${escHtml(video.title)}</h4>
-          <p>${video.view_count} view${video.view_count !== 1 ? 's' : ''} · ${escHtml(created)}</p>
+          <p title="${escHtml(created)}">${video.view_count} view${video.view_count !== 1 ? 's' : ''} · ${escHtml(created)}</p>
         </div>
       </article>`;
   }
