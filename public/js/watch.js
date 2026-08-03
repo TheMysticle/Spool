@@ -2365,8 +2365,16 @@ window.navigateToVideo = navigateToVideo;
 
     document.getElementById('watch-favorite-btn')?.addEventListener('click', async () => {
       try {
-        await toggleFavorite(video.id);
+        const isNowFav = await toggleFavorite(video.id);
         renderVideoInfo(video);
+        if (isNowFav) {
+          const newBtn = document.getElementById('watch-favorite-btn');
+          if (newBtn) {
+            newBtn.classList.remove('animate-pop');
+            void newBtn.offsetWidth; // trigger reflow
+            newBtn.classList.add('animate-pop');
+          }
+        }
       } catch (err) {
         toast(err.message || 'Failed to update favorite.', 'error');
       }

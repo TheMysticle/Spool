@@ -941,6 +941,13 @@
         btn.classList.toggle('active', !isFav);
         btn.setAttribute('aria-pressed', String(!isFav));
         btn.setAttribute('title', !isFav ? 'Remove favorite' : 'Add to favorites');
+        if (!isFav) {
+          btn.classList.remove('animate-pop');
+          void btn.offsetWidth; // trigger reflow
+          btn.classList.add('animate-pop');
+        } else {
+          btn.classList.remove('animate-pop');
+        }
       }
     } catch (err) {
       toast(err.message || 'Failed to update favorite.', 'error');
