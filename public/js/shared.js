@@ -224,10 +224,20 @@ document.addEventListener('DOMContentLoaded', bindBrandHomeNavigation);
 
 // ── Modal helpers ─────────────────────────────────────────────────────────────
 function openModal(id) {
-  document.getElementById(id).classList.add('open');
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
 }
 function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('open');
+    if (!document.querySelector('.modal-overlay.open')) {
+      document.body.style.overflow = '';
+    }
+  }
 }
 
 // ── Video Settings Popup (unified, available on all pages) ────────────────────
