@@ -58,9 +58,16 @@ const checkPeoplePermission = (req, res, next) => {
     const id = parseInt(req.params.id, 10);
     const person = getPersonById(id);
     if (!person) return res.status(404).json({ error: 'Person not found.' });
-    if (person.channel_id !== userChannel.id) {
+
+    const ownsAsChannel = person.channel_id != null && Number(person.channel_id) === Number(userChannel.id);
+    const isLinkedSelf = person.user_id != null && Number(person.user_id) === Number(req.user.id);
+    // Channel-owned people, or the profile linked to this user (e.g. admin-created)
+    if (!ownsAsChannel && !isLinkedSelf) {
       return res.status(403).json({ error: 'You do not have permission to modify this person.' });
     }
+    req.personRecord = person;
+    req.personOwnsAsChannel = ownsAsChannel;
+    req.personIsLinkedSelf = isLinkedSelf;
   }
   next();
 };
@@ -101,9 +108,15 @@ router.put('/:id', authenticate, checkPeoplePermission, (req, res) => {
   if (title_tags !== undefined) syncAutoTaggedPeopleForPerson(id);
 
   if ('user_id' in req.body) {
-    // Only admins can link users to people? For now we'll let owners link users if they want.
-    const uid = user_id ? parseInt(user_id, 10) : null;
-    setPersonUserLink(id, uid);
+    // Admins can always link; channel owners can link on their own people only.
+    // Linked-self profiles created by admin must not be unlinked by the user.
+    if (req.user.role === 'admin') {
+      const uid = user_id ? parseInt(user_id, 10) : null;
+      setPersonUserLink(id, uid);
+    } else if (req.personOwnsAsChannel) {
+      const uid = user_id ? parseInt(user_id, 10) : null;
+      setPersonUserLink(id, uid);
+    }
   }
 
   res.json({ message: 'Person updated.', person: getPersonById(id) });
@@ -114,6 +127,18 @@ router.delete('/:id', authenticate, checkPeoplePermission, (req, res) => {
   const { getPersonById, deletePerson, getPersonVhsPhotos } = require('../database');
   const id = parseInt(req.params.id, 10);
   const person = getPersonById(id);
+
+  // Non-admins may only delete people owned by their channel.
+  // Linked self profiles created by an admin (no channel_id) cannot be deleted by the user.
+  if (req.user.role !== 'admin') {
+    const channelId = req.userChannel ? Number(req.userChannel.id) : null;
+    const ownedByChannel = person.channel_id != null && Number(person.channel_id) === channelId;
+    if (!ownedByChannel) {
+      return res.status(403).json({
+        error: 'You cannot delete this person profile. Contact an admin if it needs to be removed.',
+      });
+    }
+  }
 
   if (person.image_path) {
     try {

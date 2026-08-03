@@ -2143,7 +2143,22 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     const grid = overlay.querySelector('#chan-people-grid');
     try {
       const allPeople = await api('/api/people');
-      loadedPeople = allPeople.filter(p => p.channel_id === parseInt(channelId, 10));
+      const me = (typeof getUser === 'function' ? getUser() : null) || {};
+      const myUserId = me.id != null ? Number(me.id) : null;
+      const chanId = parseInt(channelId, 10);
+      // Channel-owned people + person profile linked to this user (e.g. admin-created)
+      loadedPeople = allPeople.filter((p) => {
+        if (p.channel_id != null && Number(p.channel_id) === chanId) return true;
+        if (myUserId != null && p.user_id != null && Number(p.user_id) === myUserId) return true;
+        return false;
+      });
+      // Prefer channel-owned first, then linked self
+      loadedPeople.sort((a, b) => {
+        const aOwn = a.channel_id != null && Number(a.channel_id) === chanId ? 0 : 1;
+        const bOwn = b.channel_id != null && Number(b.channel_id) === chanId ? 0 : 1;
+        if (aOwn !== bOwn) return aOwn - bOwn;
+        return String(a.name || '').localeCompare(String(b.name || ''));
+      });
       if (!loadedPeople.length) {
         grid.innerHTML = '<p style="color:var(--text-muted);">You have not added any people yet.</p>';
         return;
@@ -2151,6 +2166,15 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
       grid.innerHTML = loadedPeople.map(p => {
         const initial = escHtml((p.name || '?').charAt(0).toUpperCase());
         const avatarHtml = p.image_path ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(getToken() || '')}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:2rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--bg);">${initial}</span>`;
+        const ownedByChannel = p.channel_id != null && Number(p.channel_id) === chanId;
+        const isLinkedSelf = myUserId != null && p.user_id != null && Number(p.user_id) === myUserId;
+        const canDelete = ownedByChannel;
+        const badge = !ownedByChannel && isLinkedSelf
+          ? `<div style="font-size:0.7rem;color:var(--accent);font-weight:600;margin-bottom:8px;">Your profile</div>`
+          : '';
+        const delBtn = canDelete
+          ? `<button class="btn btn-ghost btn-sm" onclick="deleteChanPerson(${p.id}, '${escHtml(p.name)}')" style="flex:1; color:var(--danger);">Del</button>`
+          : `<button class="btn btn-ghost btn-sm" disabled title="This profile was created by an admin and cannot be deleted" style="flex:1; opacity:0.45; cursor:not-allowed;">Del</button>`;
         return `
           <div style="background:var(--bg-hover); border-radius:8px; overflow:hidden; border:1px solid var(--border); display:flex; flex-direction:column;">
             <div style="height:120px; position:relative; background:var(--bg);">
@@ -2158,10 +2182,11 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
             </div>
             <div style="padding:12px;">
               <div style="font-weight:500; font-size:0.9rem; margin-bottom:4px;" class="truncate">${escHtml(p.name)}</div>
+              ${badge}
               <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;" class="truncate">${escHtml(p.title_tags || 'No tags')}</div>
               <div style="display:flex; gap:8px;">
                 <button class="btn btn-ghost btn-sm" onclick="editChanPerson(${p.id})" style="flex:1;">Edit</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteChanPerson(${p.id}, '${escHtml(p.name)}')" style="flex:1; color:var(--danger);">Del</button>
+                ${delBtn}
               </div>
             </div>
           </div>
@@ -2286,6 +2311,12 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
   };
 
   window.deleteChanPerson = async function(id, name) {
+    const person = loadedPeople.find((x) => Number(x.id) === Number(id));
+    const chanId = parseInt(channelId, 10);
+    if (person && !(person.channel_id != null && Number(person.channel_id) === chanId)) {
+      toast('This profile was created by an admin and cannot be deleted.', 'error');
+      return;
+    }
     if (!confirm('Delete "' + name + '"?')) return;
     try {
       await api('/api/people/' + id, { method: 'DELETE' });
