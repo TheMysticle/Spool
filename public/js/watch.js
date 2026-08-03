@@ -2343,10 +2343,15 @@ window.navigateToVideo = navigateToVideo;
       ${chaptersChipBar}
       <div class="description-box">
         <div class="description-meta">
-          <span>${viewsStr}</span>
-          <span>${dateStr}</span>
-          ${durationTag}
-          ${sizeTag}
+          <div class="meta-text-group">
+            <span>${viewsStr}</span>
+            <span class="meta-dot">•</span>
+            <span>${dateStr}</span>
+          </div>
+          <div class="meta-chips-group">
+            ${durationTag}
+            ${sizeTag}
+          </div>
         </div>
         ${descHtml}
         ${video.location ? `

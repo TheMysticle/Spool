@@ -1622,7 +1622,16 @@ select.bulk-select-mini[multiple] {
 
 .description-meta {
   font-weight: 700; color: var(--text-primary);
-  margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+}
+
+.meta-text-group, .meta-chips-group {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+
+.meta-dot {
+  color: var(--text-muted);
+  font-size: 0.8em;
 }
 
 .meta-tag {
@@ -1644,6 +1653,11 @@ select.bulk-select-mini[multiple] {
     flex-wrap: nowrap;
     flex-shrink: 0;
     gap: 6px;
+  }
+  .description-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 
