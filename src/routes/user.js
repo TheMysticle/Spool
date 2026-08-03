@@ -140,18 +140,27 @@ router.post('/avatar', authenticate, (req, res) => {
 router.delete('/avatar', authenticate, (req, res) => {
   const avatarPath = getUserAvatarPathById(req.user.id);
   if (avatarPath) {
-    const absPath = path.join(DATA_DIR, avatarPath);
-    if (fs.existsSync(absPath)) {
-      try {
-        fs.unlinkSync(absPath);
-      } catch (err) {
-        console.warn('[Avatar] Failed to delete avatar file:', err.message);
-      }
-    }
+    const absPath = path.join(DATA_DIR, '..', avatarPath);
+    if (fs.existsSync(absPath)) fs.unlinkSync(absPath);
+    updateUser(req.user.id, { avatar_path: null });
   }
+  res.json({ message: 'Avatar removed.' });
+});
 
-  updateUser(req.user.id, { avatar_path: null });
-  return res.json({ message: 'Avatar removed.' });
+// ── POST /api/user/volume ───────────────────────────────────────────────────
+// Expects JSON body: { volume: 0.5 }
+router.post('/volume', authenticate, (req, res) => {
+  let { volume } = req.body;
+  
+  if (typeof volume !== 'number') {
+    return res.status(400).json({ error: 'volume must be a number.' });
+  }
+  
+  if (volume < 0) volume = 0;
+  if (volume > 1) volume = 1;
+  
+  updateUser(req.user.id, { volume });
+  res.json({ message: 'Volume saved successfully.', volume });
 });
 
 // ── GET /api/user/notifications ──────────────────────────────────────────────

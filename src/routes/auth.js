@@ -66,6 +66,7 @@ function issueAuthResponse(user) {
       display_name: user.display_name,
       avatar_path: user.avatar_path || null,
       role: user.role,
+      volume: user.volume !== undefined ? user.volume : 1.0,
     },
   };
 }
@@ -199,9 +200,9 @@ router.post('/2fa/verify', (req, res) => {
 
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 router.get('/me', authenticate, (req, res) => {
-  const { id, username, display_name, avatar_path, role, can_upload } = req.user;
+  const { id, username, display_name, avatar_path, role, can_upload, volume } = req.user;
   const channel = require('../database').getChannelByUserId(id);
-  res.json({ id, username, display_name, avatar_path, role, can_upload, channel_id: (role === 'admin') ? 'main' : (channel ? channel.id : null) });
+  res.json({ id, username, display_name, avatar_path, role, can_upload, volume: volume !== undefined ? volume : 1.0, channel_id: (role === 'admin') ? 'main' : (channel ? channel.id : null) });
 });
 
 // ── POST /api/auth/change-password ────────────────────────────────────────────

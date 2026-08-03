@@ -323,11 +323,26 @@
       </div>
       </div>
     `;
-    document.body.appendChild(el);
+    
+    let container = document.getElementById('wp-toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'wp-toast-container';
+      container.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;';
+      document.body.appendChild(container);
+    }
+    container.appendChild(el);
 
     document.getElementById('wp-suggest-approve').onclick = () => {
       el.remove();
-      WatchParty.changeVideo(msg.videoId, msg.videoTitle, 0);
+      const isWatchPage = /\/watch\.html$/i.test(location.pathname);
+      if (isWatchPage && typeof window.navigateToVideo === 'function') {
+        // navigateToVideo will automatically call WatchParty.changeVideo internally
+        window.navigateToVideo(msg.videoId);
+      } else {
+        WatchParty.changeVideo(msg.videoId, msg.videoTitle, 0);
+        location.href = `/watch.html?id=${msg.videoId}`;
+      }
     };
     document.getElementById('wp-suggest-decline').onclick = () => {
       el.remove();

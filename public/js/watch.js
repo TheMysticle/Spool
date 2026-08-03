@@ -1219,6 +1219,24 @@ function initPlayer(videoData, { autoStart = true } = {}) {
         ],
       },
     });
+
+    const userObj = getUser();
+    if (userObj && typeof userObj.volume === 'number') {
+      player.volume(userObj.volume);
+    }
+
+    let volumeSaveTimeout;
+    player.on('volumechange', () => {
+      const vol = player.volume();
+      clearTimeout(volumeSaveTimeout);
+      volumeSaveTimeout = setTimeout(() => {
+        api('/api/user/volume', {
+          method: 'POST',
+          body: JSON.stringify({ volume: vol })
+        }).catch(err => console.error('Failed to save volume:', err));
+      }, 1000);
+    });
+
     player.ready(() => {
       const playerEl = player.el();
 
@@ -1536,6 +1554,13 @@ function setupWatchPartyHooks() {
     if (msg.videoId && msg.videoId !== currentVideoId) {
       toast(`${msg.fromUsername} changed the video.`, 'info');
       navigateToVideo(msg.videoId, false, true);
+    } else if (msg.videoId && msg.videoId === currentVideoId) {
+      if (window.WatchParty && WatchParty.isInParty()) {
+        WatchParty.setBrowsingStatus(false);
+        if (player.readyState() >= 3) {
+          WatchParty.sendReady();
+        }
+      }
     }
   });
 
