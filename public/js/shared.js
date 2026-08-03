@@ -991,7 +991,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ? '<span class="notif-type reply">Reply</span>'
             : '<span class="notif-type">Comment</span>';
         return `
-          <div class="notif-item ${isRead ? '' : 'unread'} ${isReplyToMe ? 'is-reply' : ''}" onclick="handleNotifClick(${Number(n.id)}, ${Number(n.video_id)})">
+          <div class="notif-item ${isRead ? '' : 'unread'} ${isReplyToMe ? 'is-reply' : ''}" onclick="handleNotifClick(${Number(n.id)}, ${Number(n.video_id)}, '${n.type}')">
             <div class="notif-avatar">${avatarUrl
               ? `<img src="${avatarUrl}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.parentNode.textContent=${fallbackExpr}" />`
               : escHtml(authorInitial)}</div>
@@ -1031,16 +1031,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  window.handleNotifClick = async (commentId, videoId) => {
-    const safeCommentId = Number(commentId);
+  window.handleNotifClick = async (id, videoId, type = 'comment') => {
+    const safeId = Number(id);
     const safeVideoId = Number(videoId);
-    const targetHash = `#comment-${safeCommentId}`;
+    const targetHash = type === 'channel_upload' ? '' : `#comment-${safeId}`;
     const currentVideoId = Number(new URLSearchParams(location.search).get('id'));
     const isWatchPage = /\/watch\.html$/i.test(location.pathname);
     const isSameVideoPage = isWatchPage && currentVideoId === safeVideoId;
 
     try {
-      await api(`/api/user/notifications/${safeCommentId}/read`, { method: 'POST' });
+      await api(`/api/user/notifications/${safeId}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      });
       await updateNotifications();
       notifDropdown?.classList.remove('show');
 

@@ -169,13 +169,14 @@ router.get('/notifications', authenticate, (req, res) => {
   res.json(getNotifications(req.user.id, limit));
 });
 
-// ── POST /api/user/notifications/:commentId/read ─────────────────────────────
-router.post('/notifications/:commentId/read', authenticate, (req, res) => {
-  const commentId = parseInt(req.params.commentId, 10);
-  if (!Number.isInteger(commentId) || commentId <= 0) {
-    return res.status(400).json({ error: 'Invalid comment id.' });
+// ── POST /api/user/notifications/:id/read ─────────────────────────────
+router.post('/notifications/:id/read', authenticate, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const type = req.body.type || 'comment';
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid id.' });
   }
-  markNotificationRead(req.user.id, commentId);
+  markNotificationRead(req.user.id, id, type);
   res.json({ ok: true });
 });
 

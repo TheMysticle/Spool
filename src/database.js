@@ -1212,12 +1212,16 @@ const getNotifications = (userId, limit = 20) => {
   `).all(userId, userId, userId, userId, userId, userId, userId, userId, safeLimit);
 };
 
-const markNotificationRead = (userId, commentId) => {
-  const id = Number(commentId);
-  if (!Number.isInteger(id) || id <= 0) return;
-  db.prepare(`
-    INSERT OR IGNORE INTO comment_reads (user_id, comment_id) VALUES (?, ?)
-  `).run(userId, id);
+const markNotificationRead = (userId, id, type = 'comment') => {
+  const safeId = Number(id);
+  if (!Number.isInteger(safeId) || safeId <= 0) return;
+  if (type === 'channel_upload') {
+    db.prepare(`UPDATE channel_notifications SET is_read = 1 WHERE id = ? AND user_id = ?`).run(safeId, userId);
+  } else {
+    db.prepare(`
+      INSERT OR IGNORE INTO comment_reads (user_id, comment_id) VALUES (?, ?)
+    `).run(userId, safeId);
+  }
 };
 
 // ── Progress queries ────────────────────────────────────────────────────────
