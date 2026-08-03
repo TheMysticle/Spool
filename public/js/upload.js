@@ -239,6 +239,16 @@
     });
   }
 
+  let activeUploads = 0;
+
+  window.addEventListener('beforeunload', (e) => {
+    if (activeUploads > 0) {
+      e.preventDefault();
+      e.returnValue = 'You have uploads in progress. Are you sure you want to leave?';
+      return e.returnValue;
+    }
+  });
+
   function startUpload(files, datePref, customDate, isVhs = false) {
     const token = localStorage.getItem('ma_token');
 
@@ -257,6 +267,7 @@
 
       const uploadId = 'upload_' + Date.now() + '_' + index;
       addProgressDialog(uploadId, `Uploading ${file.name}...`);
+      activeUploads++;
       
       const xhr = new XMLHttpRequest();
       xhr.open('POST', '/api/upload');
@@ -270,6 +281,7 @@
       });
 
       xhr.onload = () => {
+        activeUploads--;
         if (xhr.status >= 200 && xhr.status < 300) {
           let responseTitle = file.name;
           let videoId = null;
@@ -289,7 +301,12 @@
       };
       
       xhr.onerror = () => {
+        activeUploads--;
         finishProgressDialog(uploadId, 'Network error during upload', 'error');
+      };
+      
+      xhr.onabort = () => {
+        activeUploads--;
       };
 
       // Store xhr so we can abort it if needed
