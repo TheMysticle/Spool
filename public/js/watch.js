@@ -1179,16 +1179,17 @@ function linkifyTimestamps(text) {
 
         // Add current chapter title to control bar
         if (!currentChapterTitleEl) {
-          const controlBar = player.controlBar.el();
+          const cBar = player.controlBar;
           currentChapterTitleEl = document.createElement('div');
           currentChapterTitleEl.className = 'vjs-current-chapter-title';
           
-          // Insert before time remaining so it sits to its left
-          const timeRemaining = controlBar.querySelector('.vjs-remaining-time');
-          if (timeRemaining) {
-            controlBar.insertBefore(currentChapterTitleEl, timeRemaining);
+          // Insert after time remaining so it sits to its right, but pushed away from quality
+          const timeRemainingComp = cBar.getChild('remainingTimeDisplay');
+          const timeRemainingEl = timeRemainingComp ? timeRemainingComp.el() : null;
+          if (timeRemainingEl) {
+            cBar.el().insertBefore(currentChapterTitleEl, timeRemainingEl.nextSibling);
           } else {
-            controlBar.appendChild(currentChapterTitleEl);
+            cBar.el().appendChild(currentChapterTitleEl);
           }
         }
       });
