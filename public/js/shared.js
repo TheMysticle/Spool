@@ -228,6 +228,7 @@ function openModal(id) {
   if (el) {
     el.classList.add('open');
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
   }
 }
 function closeModal(id) {
@@ -236,6 +237,7 @@ function closeModal(id) {
     el.classList.remove('open');
     if (!document.querySelector('.modal-overlay.open')) {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
   }
 }
