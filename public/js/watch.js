@@ -1109,8 +1109,18 @@ function linkifyTimestamps(text) {
       // Create Live Thumbnail Preview Elements
       const previewContainer = document.createElement('div');
       previewContainer.className = 'vjs-thumbnail-preview';
-      previewContainer.innerHTML = '<canvas class="vjs-thumbnail-canvas" width="160" height="90"></canvas>';
+      previewContainer.innerHTML = '<canvas class="vjs-thumbnail-canvas" width="160" height="90"></canvas><div class="vjs-thumbnail-time">0:00</div>';
       progressControl.appendChild(previewContainer);
+
+      const timeDisplay = previewContainer.querySelector('.vjs-thumbnail-time');
+      const formatTime = (seconds) => {
+        if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+      };
 
       const canvas = previewContainer.querySelector('.vjs-thumbnail-canvas');
       const ctx = canvas.getContext('2d');
@@ -1149,6 +1159,8 @@ function linkifyTimestamps(text) {
         
         const duration = player.duration() || 0;
         const hoverTime = percent * duration;
+        
+        timeDisplay.textContent = formatTime(hoverTime);
 
         // Position the container
         const containerWidth = 160;
