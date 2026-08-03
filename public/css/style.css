@@ -5072,6 +5072,31 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .wp-bar-avatar.buffering { opacity: 0.5; animation: pulse-opacity 1s infinite alternate; }
 @keyframes pulse-opacity { from { opacity: 0.4; } to { opacity: 0.8; } }
 
+/* ── Video Location UI ──────────────────────────────────────────────────────── */
+.video-location-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  width: fit-content;
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.video-location-container:hover {
+  opacity: 0.8;
+}
+
+.location-pin-icon {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.video-location-text {
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
 /* Notifications integration */
 .notif-type.friend-req { color: var(--accent); background: rgba(var(--accent-rgb), 0.1); }
 .notif-fr-actions { display: flex; gap: 8px; margin-top: 8px; }
