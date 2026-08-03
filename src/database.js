@@ -1463,6 +1463,10 @@ const getAllPeople = ({ userId = null, isAdmin = true } = {}) =>
                        JOIN people p2 ON p2.id = vp2.person_id
                        WHERE vp2.video_id = tagged_videos.video_id AND p2.user_id = ?
                      )
+                     OR EXISTS (
+                       SELECT 1 FROM channels c
+                       WHERE c.id = v.channel_id AND c.user_id = ?
+                     )
                    )
                ), 0) AS video_count
         FROM people p
@@ -1471,7 +1475,7 @@ const getAllPeople = ({ userId = null, isAdmin = true } = {}) =>
       WHERE sub.video_count > 0 OR ? = 1
       ORDER BY sub.name ASC`
     )
-    .all(isAdmin ? 1 : 0, userId, userId, isAdmin ? 1 : 0);
+    .all(isAdmin ? 1 : 0, userId, userId, userId, isAdmin ? 1 : 0);
 
 const getPersonById = (id) =>
   db.prepare('SELECT * FROM people WHERE id = ?').get(id);
