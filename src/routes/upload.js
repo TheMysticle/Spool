@@ -239,7 +239,7 @@ router.post('/chunk', authenticate, requireUploadPrivileges, chunkUpload.single(
   }
 });
 
-router.post('/complete', authenticate, requireUploadPrivileges, async (req, res) => {
+router.post('/complete', authenticate, requireUploadPrivileges, upload.none(), async (req, res) => {
   const { uploadId, originalName, datePref, customDate, isVhs, lastModifiedData } = req.body;
   const partPath = path.join(TMP_DIR, uploadId + '.part');
   if (!fs.existsSync(partPath)) return res.status(400).json({ error: 'Incomplete upload' });
