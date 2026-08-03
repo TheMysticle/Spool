@@ -2345,7 +2345,6 @@ window.navigateToVideo = navigateToVideo;
         <div class="description-meta">
           <div class="meta-text-group">
             <span>${viewsStr}</span>
-            <span class="meta-dot">•</span>
             <span>${dateStr}</span>
           </div>
           <div class="meta-chips-group">
