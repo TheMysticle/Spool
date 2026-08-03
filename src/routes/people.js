@@ -111,7 +111,7 @@ router.put('/:id', authenticate, checkPeoplePermission, (req, res) => {
 
 // ── DELETE /api/people/:id ──────────────────────────────────────────────────
 router.delete('/:id', authenticate, checkPeoplePermission, (req, res) => {
-  const { getPersonById, deletePerson } = require('../database');
+  const { getPersonById, deletePerson, getPersonVhsPhotos } = require('../database');
   const id = parseInt(req.params.id, 10);
   const person = getPersonById(id);
 
@@ -121,6 +121,16 @@ router.delete('/:id', authenticate, checkPeoplePermission, (req, res) => {
       if (fs.existsSync(imgFile)) fs.unlinkSync(imgFile);
     } catch {}
   }
+
+  try {
+    const vhsPhotos = getPersonVhsPhotos(id);
+    for (const ph of vhsPhotos) {
+      try {
+        const imgFile = path.join(PEOPLE_DIR, path.basename(ph.image_path));
+        if (fs.existsSync(imgFile)) fs.unlinkSync(imgFile);
+      } catch {}
+    }
+  } catch {}
 
   deletePerson(id);
   res.json({ message: 'Person deleted.' });
@@ -160,6 +170,131 @@ router.post('/:id/image', authenticate, checkPeoplePermission, (req, res) => {
 
   setPersonImage(id, filename);
   res.json({ message: 'Image saved.', path: `/api/people/${id}/image` });
+});
+
+
+// ── GET /api/people/:id/vhs-photos ──────────────────────────────────────────
+router.get('/:id/vhs-photos', authenticate, (req, res) => {
+  const { getPersonById, getPersonVhsPhotos } = require('../database');
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid person id.' });
+  const person = getPersonById(id);
+  if (!person) return res.status(404).json({ error: 'Person not found.' });
+  res.json(getPersonVhsPhotos(id));
+});
+
+// ── GET /api/people/:id/vhs-photos/:photoId/image ────────────────────────────
+router.get('/:id/vhs-photos/:photoId/image', authOrShareToken, (req, res) => {
+  const { getPersonVhsPhotoById } = require('../database');
+  const personId = parseInt(req.params.id, 10);
+  const photoId = parseInt(req.params.photoId, 10);
+  if (isNaN(personId) || isNaN(photoId)) {
+    return res.status(400).json({ error: 'Invalid ids.' });
+  }
+
+  const photo = getPersonVhsPhotoById(photoId);
+  if (!photo || photo.person_id !== personId) {
+    return res.status(404).json({ error: 'Photo not found.' });
+  }
+
+  const imgFile = path.join(PEOPLE_DIR, path.basename(photo.image_path));
+  const resolved = path.resolve(imgFile);
+  const resolvedDir = path.resolve(PEOPLE_DIR);
+  if (!resolved.startsWith(resolvedDir + path.sep) && resolved !== resolvedDir) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+  if (!fs.existsSync(resolved)) {
+    return res.status(404).json({ error: 'Image file not found.' });
+  }
+
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  return res.sendFile(resolved);
+});
+
+// ── POST /api/people/:id/vhs-photos ─────────────────────────────────────────
+router.post('/:id/vhs-photos', authenticate, checkPeoplePermission, (req, res) => {
+  const { getPersonById, addPersonVhsPhoto } = require('../database');
+  const id = parseInt(req.params.id, 10);
+  const person = getPersonById(id);
+  if (!person) return res.status(404).json({ error: 'Person not found.' });
+
+  const { imageBase64, effective_date, label } = req.body || {};
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    return res.status(400).json({ error: 'imageBase64 is required.' });
+  }
+
+  const matches = imageBase64.match(/^data:image\/(jpeg|png|webp);base64,(.+)$/i);
+  if (!matches) return res.status(400).json({ error: 'Invalid image format.' });
+
+  const imgData = Buffer.from(matches[2], 'base64');
+  if (imgData.length > 2 * 1024 * 1024) {
+    return res.status(400).json({ error: 'Image too large (max 2MB).' });
+  }
+
+  let eff = null;
+  if (effective_date != null && String(effective_date).trim()) {
+    const v = String(effective_date).trim();
+    if (!/^\d{4}$/.test(v) && !/^\d{4}-\d{2}$/.test(v) && !/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+      return res.status(400).json({ error: 'effective_date must be YYYY, YYYY-MM, or YYYY-MM-DD.' });
+    }
+    eff = v;
+  }
+
+  fs.mkdirSync(PEOPLE_DIR, { recursive: true });
+  const filename = `person_${id}_vhs_${Date.now()}.jpg`;
+  fs.writeFileSync(path.join(PEOPLE_DIR, filename), imgData);
+
+  const photo = addPersonVhsPhoto(id, filename, eff, typeof label === 'string' ? label.trim().slice(0, 120) : '');
+  res.status(201).json(photo);
+});
+
+// ── PUT /api/people/:id/vhs-photos/:photoId ─────────────────────────────────
+router.put('/:id/vhs-photos/:photoId', authenticate, checkPeoplePermission, (req, res) => {
+  const { getPersonVhsPhotoById, updatePersonVhsPhoto } = require('../database');
+  const personId = parseInt(req.params.id, 10);
+  const photoId = parseInt(req.params.photoId, 10);
+  const photo = getPersonVhsPhotoById(photoId);
+  if (!photo || photo.person_id !== personId) {
+    return res.status(404).json({ error: 'Photo not found.' });
+  }
+
+  const fields = {};
+  if ('effective_date' in (req.body || {})) {
+    const v = req.body.effective_date;
+    if (v == null || String(v).trim() === '') {
+      fields.effective_date = null;
+    } else {
+      const s = String(v).trim();
+      if (!/^\d{4}$/.test(s) && !/^\d{4}-\d{2}$/.test(s) && !/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        return res.status(400).json({ error: 'effective_date must be YYYY, YYYY-MM, or YYYY-MM-DD.' });
+      }
+      fields.effective_date = s;
+    }
+  }
+  if ('label' in (req.body || {})) {
+    fields.label = String(req.body.label || '').trim().slice(0, 120);
+  }
+
+  res.json(updatePersonVhsPhoto(photoId, fields));
+});
+
+// ── DELETE /api/people/:id/vhs-photos/:photoId ──────────────────────────────
+router.delete('/:id/vhs-photos/:photoId', authenticate, checkPeoplePermission, (req, res) => {
+  const { getPersonVhsPhotoById, deletePersonVhsPhoto } = require('../database');
+  const personId = parseInt(req.params.id, 10);
+  const photoId = parseInt(req.params.photoId, 10);
+  const photo = getPersonVhsPhotoById(photoId);
+  if (!photo || photo.person_id !== personId) {
+    return res.status(404).json({ error: 'Photo not found.' });
+  }
+
+  try {
+    const imgFile = path.join(PEOPLE_DIR, path.basename(photo.image_path));
+    if (fs.existsSync(imgFile)) fs.unlinkSync(imgFile);
+  } catch {}
+
+  deletePersonVhsPhoto(photoId);
+  res.json({ message: 'Photo deleted.' });
 });
 
 module.exports = router;

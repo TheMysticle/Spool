@@ -1100,6 +1100,257 @@
   // ══════════════════════════════════════════════════════════════════════════
   let _personImgBase64 = null;
   let _personImgRemoved = false;
+  let _vhsPhotosDraft = []; // loaded photos for current person modal
+  let _vhsPhotoPendingBase64 = null;
+  let _vhsPhotosLocalDraft = []; // queued while creating a new person (no id yet)
+
+  function ensurePersonVhsSection() {
+    if (document.getElementById('person-vhs-section')) return;
+    const modal = document.querySelector('#person-modal .modal');
+    if (!modal) return;
+    const linkGroup = document.getElementById('person-user-link')?.closest('.form-group');
+    const anchor = linkGroup || document.getElementById('person-modal-error');
+    if (!anchor) return;
+
+    const section = document.createElement('div');
+    section.id = 'person-vhs-section';
+    section.style.cssText = 'margin-top:20px;padding-top:16px;border-top:1px solid var(--border-subtle);';
+    section.innerHTML = `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;">
+        <div>
+          <h4 style="margin:0 0 4px;font-size:0.95rem;font-weight:600;">VHS Era Photos</h4>
+          <p style="margin:0;font-size:0.8rem;color:var(--text-secondary);line-height:1.4;">
+            Optional. Shown only on VHS videos. Matched by date so faces can age through the years.
+          </p>
+        </div>
+      </div>
+      <div id="person-vhs-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
+      <div id="person-vhs-add-row" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:120px;">
+          <label class="form-label" for="person-vhs-date">Around (year or date)</label>
+          <input class="form-input" id="person-vhs-date" type="text" placeholder="YYYY or YYYY-MM-DD" />
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:120px;">
+          <label class="form-label" for="person-vhs-label">Label (optional)</label>
+          <input class="form-input" id="person-vhs-label" type="text" placeholder="e.g. School years" />
+        </div>
+        <input type="file" id="person-vhs-file" accept="image/jpeg,image/png,image/webp" style="display:none;" />
+        <button type="button" class="btn btn-ghost btn-sm" id="person-vhs-pick">Choose image</button>
+        <button type="button" class="btn btn-primary btn-sm" id="person-vhs-add" disabled>Add photo</button>
+      </div>
+      <p id="person-vhs-hint" style="margin:8px 0 0;font-size:0.75rem;color:var(--text-muted);"></p>
+    `;
+    anchor.parentNode.insertBefore(section, anchor);
+
+    document.getElementById('person-vhs-pick')?.addEventListener('click', () => {
+      document.getElementById('person-vhs-file')?.click();
+    });
+    document.getElementById('person-vhs-file')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      const hint = document.getElementById('person-vhs-hint');
+      const addBtn = document.getElementById('person-vhs-add');
+      _vhsPhotoPendingBase64 = null;
+      if (addBtn) addBtn.disabled = true;
+      if (!file) return;
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        if (hint) hint.textContent = 'Only jpg, png, or webp allowed.';
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        if (hint) hint.textContent = 'Image too large (max 2MB).';
+        return;
+      }
+      if (typeof window.openAvatarCropper !== 'function') {
+        if (hint) hint.textContent = 'Cropper unavailable.';
+        return;
+      }
+      if (hint) hint.textContent = 'Crop and confirm the photo…';
+      window.openAvatarCropper(file, (croppedBase64) => {
+        _vhsPhotoPendingBase64 = croppedBase64;
+        if (addBtn) addBtn.disabled = false;
+        if (hint) hint.textContent = 'Ready — cropped photo selected.';
+      });
+    });
+    document.getElementById('person-vhs-add')?.addEventListener('click', async () => {
+      const id = document.getElementById('person-modal-id')?.value;
+      const hint = document.getElementById('person-vhs-hint');
+      if (!_vhsPhotoPendingBase64) return;
+      const effective_date = (document.getElementById('person-vhs-date')?.value || '').trim();
+      const label = (document.getElementById('person-vhs-label')?.value || '').trim();
+
+      // Creating a new person — queue locally until save
+      if (!id) {
+        _vhsPhotosLocalDraft.push({
+          localId: `local_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          imageBase64: _vhsPhotoPendingBase64,
+          effective_date: effective_date || null,
+          label,
+        });
+        _vhsPhotoPendingBase64 = null;
+        const addBtn = document.getElementById('person-vhs-add');
+        if (addBtn) addBtn.disabled = true;
+        if (document.getElementById('person-vhs-date')) document.getElementById('person-vhs-date').value = '';
+        if (document.getElementById('person-vhs-label')) document.getElementById('person-vhs-label').value = '';
+        if (hint) hint.textContent = 'Queued — will upload when you save this person.';
+        renderPersonVhsList('');
+        return;
+      }
+
+      try {
+        await api(`/api/people/${id}/vhs-photos`, {
+          method: 'POST',
+          body: JSON.stringify({
+            imageBase64: _vhsPhotoPendingBase64,
+            effective_date: effective_date || null,
+            label,
+          }),
+        });
+        _vhsPhotoPendingBase64 = null;
+        const addBtn = document.getElementById('person-vhs-add');
+        if (addBtn) addBtn.disabled = true;
+        if (document.getElementById('person-vhs-date')) document.getElementById('person-vhs-date').value = '';
+        if (document.getElementById('person-vhs-label')) document.getElementById('person-vhs-label').value = '';
+        if (hint) hint.textContent = 'Photo added.';
+        await loadPersonVhsPhotos(id);
+        toast('VHS era photo added.');
+      } catch (err) {
+        if (hint) hint.textContent = err.message || 'Failed to add photo.';
+      }
+    });
+  }
+
+  function renderPersonVhsList(personId) {
+    const list = document.getElementById('person-vhs-list');
+    if (!list) return;
+    const token = getToken();
+
+    // Local drafts (new person not saved yet)
+    if (!personId) {
+      if (!_vhsPhotosLocalDraft.length) {
+        list.innerHTML = '<p style="margin:0;font-size:0.85rem;color:var(--text-muted);">No era photos yet. You can add them now — they upload when you save.</p>';
+        return;
+      }
+      list.innerHTML = _vhsPhotosLocalDraft.map((ph) => {
+        const dateLabel = ph.effective_date || 'Any era';
+        const label = ph.label ? ` · ${escHtml(ph.label)}` : '';
+        return `
+          <div class="person-vhs-row" data-local-id="${ph.localId}" style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:12px;">
+            <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--bg-hover);flex-shrink:0;">
+              <img src="${ph.imageBase64}" alt="" style="width:100%;height:100%;object-fit:cover;" />
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary);">${escHtml(String(dateLabel))}${label}</div>
+              <div style="font-size:0.75rem;color:var(--accent);">Queued — uploads on save</div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm person-vhs-delete-local" data-local-id="${ph.localId}">Remove</button>
+          </div>`;
+      }).join('');
+      list.querySelectorAll('.person-vhs-delete-local').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          _vhsPhotosLocalDraft = _vhsPhotosLocalDraft.filter((p) => p.localId !== btn.dataset.localId);
+          renderPersonVhsList('');
+        });
+      });
+      return;
+    }
+
+    if (!_vhsPhotosDraft.length) {
+      list.innerHTML = '<p style="margin:0;font-size:0.85rem;color:var(--text-muted);">No era photos yet.</p>';
+      return;
+    }
+    list.innerHTML = _vhsPhotosDraft.map((ph) => {
+      const dateLabel = ph.effective_date || 'Any era';
+      const label = ph.label ? ` · ${escHtml(ph.label)}` : '';
+      const src = `/api/people/${personId}/vhs-photos/${ph.id}/image?token=${encodeURIComponent(token || '')}`;
+      return `
+        <div class="person-vhs-row" data-photo-id="${ph.id}" style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:12px;">
+          <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--bg-hover);flex-shrink:0;">
+            <img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;" />
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:0.9rem;font-weight:600;color:var(--text-primary);">${escHtml(String(dateLabel))}${label}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Shown on VHS around this time</div>
+          </div>
+          <input class="form-input person-vhs-date-edit" data-photo-id="${ph.id}" value="${escHtml(ph.effective_date || '')}" placeholder="YYYY" style="width:110px;padding:8px 10px;font-size:0.85rem;" />
+          <button type="button" class="btn btn-ghost btn-sm person-vhs-save-date" data-photo-id="${ph.id}">Save</button>
+          <button type="button" class="btn btn-danger btn-sm person-vhs-delete" data-photo-id="${ph.id}">Remove</button>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.person-vhs-save-date').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const photoId = btn.dataset.photoId;
+        const input = list.querySelector(`.person-vhs-date-edit[data-photo-id="${photoId}"]`);
+        const effective_date = (input?.value || '').trim() || null;
+        try {
+          await api(`/api/people/${personId}/vhs-photos/${photoId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ effective_date }),
+          });
+          toast('Era date updated.');
+          await loadPersonVhsPhotos(personId);
+        } catch (err) {
+          toast(err.message || 'Failed to update.', 'error');
+        }
+      });
+    });
+    list.querySelectorAll('.person-vhs-delete').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remove this VHS era photo?')) return;
+        try {
+          await api(`/api/people/${personId}/vhs-photos/${btn.dataset.photoId}`, { method: 'DELETE' });
+          toast('Photo removed.');
+          await loadPersonVhsPhotos(personId);
+        } catch (err) {
+          toast(err.message || 'Failed to delete.', 'error');
+        }
+      });
+    });
+  }
+
+  async function flushLocalVhsDrafts(personId) {
+    if (!personId || !_vhsPhotosLocalDraft.length) return;
+    const queued = [..._vhsPhotosLocalDraft];
+    _vhsPhotosLocalDraft = [];
+    for (const ph of queued) {
+      try {
+        await api(`/api/people/${personId}/vhs-photos`, {
+          method: 'POST',
+          body: JSON.stringify({
+            imageBase64: ph.imageBase64,
+            effective_date: ph.effective_date || null,
+            label: ph.label || '',
+          }),
+        });
+      } catch (err) {
+        console.error('[VHS photos] failed to upload queued photo', err);
+      }
+    }
+  }
+
+  async function loadPersonVhsPhotos(personId) {
+    ensurePersonVhsSection();
+    const section = document.getElementById('person-vhs-section');
+    if (section) section.style.opacity = '1';
+    if (!personId) {
+      _vhsPhotosDraft = [];
+      renderPersonVhsList('');
+      const hint = document.getElementById('person-vhs-hint');
+      if (hint) hint.textContent = _vhsPhotosLocalDraft.length
+        ? `${_vhsPhotosLocalDraft.length} photo(s) queued — will upload on save.`
+        : 'You can add era photos now; they upload when you save the person.';
+      return;
+    }
+    try {
+      _vhsPhotosDraft = await api(`/api/people/${personId}/vhs-photos`);
+    } catch {
+      _vhsPhotosDraft = [];
+    }
+    renderPersonVhsList(personId);
+  }
+
+
 
   async function loadPeople() {
     const grid = document.getElementById('people-admin-grid');
@@ -1170,7 +1421,11 @@
     preview.style.background = '';
     _personImgBase64 = null;
     _personImgRemoved = false;
+    _vhsPhotoPendingBase64 = null;
+    _vhsPhotosLocalDraft = [];
     populatePersonUserSelect(null);
+    ensurePersonVhsSection();
+    loadPersonVhsPhotos('');
     openModal('person-modal');
   });
 
@@ -1202,6 +1457,9 @@
       }
 
       await populatePersonUserSelect(p.user_id);
+      _vhsPhotosLocalDraft = [];
+      ensurePersonVhsSection();
+      await loadPersonVhsPhotos(id);
       openModal('person-modal');
     } catch (err) {
       toast(err.message, 'error');
@@ -1317,9 +1575,21 @@
         });
       }
 
+      // Upload any era photos queued during create
+      if (personId && _vhsPhotosLocalDraft.length) {
+        await flushLocalVhsDrafts(personId);
+      }
+
       toast(id ? 'Person updated.' : 'Person added.');
-      closeModal('person-modal');
-      loadPeople();
+      if (!id && personId) {
+        document.getElementById('person-modal-id').value = String(personId);
+        document.getElementById('person-modal-title').textContent = 'Edit Person';
+        await loadPersonVhsPhotos(personId);
+        loadPeople();
+      } else {
+        closeModal('person-modal');
+        loadPeople();
+      }
     } catch (err) {
       errEl.textContent = err.message;
     } finally {

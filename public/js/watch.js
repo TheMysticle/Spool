@@ -2460,11 +2460,23 @@ window.navigateToVideo = navigateToVideo;
       const personFullName = (p) =>
         `${p?.name || ''} ${p?.second_name || ''} ${p?.surname || ''}`.replace(/\s+/g, ' ').trim() || 'Unknown';
 
+      const personImageSrc = (p) => {
+        if (p?.vhs_photo_id) {
+          return `/api/people/${p.id}/vhs-photos/${p.vhs_photo_id}/image?${getAuthQueryString()}`;
+        }
+        if (p?.image_path) {
+          return `/api/people/${p.id}/image?${getAuthQueryString()}`;
+        }
+        return null;
+      };
+
+
       listEl.innerHTML = people.map((p) => {
         const firstName = (p.name || '').trim() || 'Unknown';
         const fullName = personFullName(p);
-        const avatarInner = p.image_path
-          ? `<img src="/api/people/${p.id}/image?${getAuthQueryString()}" alt="${escHtml(firstName)}" />`
+        const imgSrc = personImageSrc(p);
+        const avatarInner = imgSrc
+          ? `<img src="${imgSrc}" alt="${escHtml(firstName)}" />`
           : escHtml((firstName || '?')[0].toUpperCase());
         return `<div class="person-tag-chip" data-person-id="${p.id}" role="button" tabindex="0" aria-label="View details for ${escHtml(fullName)}">
           <div class="chip-avatar">${avatarInner}</div>
@@ -2494,8 +2506,9 @@ window.navigateToVideo = navigateToVideo;
           chip.classList.add('active');
 
           const fullName = personFullName(person);
-          const avatarInner = person.image_path
-            ? `<img src="/api/people/${person.id}/image?${getAuthQueryString()}" alt="${escHtml(fullName)}" />`
+          const imgSrc = personImageSrc(person);
+          const avatarInner = imgSrc
+            ? `<img src="${imgSrc}" alt="${escHtml(fullName)}" />`
             : escHtml((person.name || '?')[0].toUpperCase());
 
           spotlightEl.innerHTML = `

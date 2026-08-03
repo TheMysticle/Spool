@@ -1704,12 +1704,15 @@ window.openAvatarCropper = function(file, onCropComplete) {
 
 window.openChannelEditor = function(channelId, currentName, currentAvatar, currentBanner, onSaveComplete) {
   let _chanPersonImgBase64 = null;
+  let _chanVhsPhotos = [];
+  let _chanVhsPendingBase64 = null;
+  let _chanVhsLocalDraft = [];
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.style.zIndex = '10000';
   
   overlay.innerHTML = `
-    <div class="modal" style="width: 100%; max-width: 600px; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+    <div class="modal" style="width: 100%; max-width: 600px; max-height: 92vh; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
       <div class="modal-header" style="padding: 24px 24px 0 24px; margin-bottom: 0;">
         <h3>Channel Settings</h3>
         <button class="icon-btn" onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: var(--text); cursor: pointer;">
@@ -1730,7 +1733,7 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         </div>
       </div>
 
-      <div style="padding: 24px; overflow-y: auto; max-height: 60vh;">
+      <div style="padding: 24px; overflow-y: auto; flex: 1; min-height: 0; max-height: min(70vh, 640px);">
         
         <div id="panel-chan-general" class="chan-tab-panel" style="display: block;">
           <div style="margin-bottom: 32px;">
@@ -1762,8 +1765,8 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
             <input type="text" id="editor-name-input" value="${escHtml(currentName)}" class="form-input" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem;" placeholder="Enter channel name...">
           </div>
         </div>
-      </div>
-      <div id="panel-chan-people" class="chan-tab-panel" style="display: none;">
+        </div>
+        <div id="panel-chan-people" class="chan-tab-panel" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h4 style="margin: 0; font-weight: 500;">Manage People</h4>
             <button class="btn btn-primary btn-sm" id="chan-add-person-btn">Add Person</button>
@@ -1806,6 +1809,25 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
               <p class="vap-hint" style="margin-bottom: 6px;">Title Tags automatically assign this person to videos containing these words in the title.</p>
               <input type="text" id="chan-person-tags" class="form-input" placeholder="e.g. Presenter, Editor">
             </div>
+            <div id="chan-person-vhs-section" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle);">
+              <h4 style="margin:0 0 4px;font-size:0.95rem;font-weight:600;">VHS Era Photos</h4>
+              <p class="vap-hint" style="margin:0 0 12px;">Optional. Shown only on VHS videos and matched by date.</p>
+              <div id="chan-person-vhs-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+                <div class="form-group" style="margin:0;flex:1;min-width:110px;">
+                  <label class="form-label" for="chan-person-vhs-date">Around</label>
+                  <input class="form-input" id="chan-person-vhs-date" type="text" placeholder="YYYY or YYYY-MM-DD" />
+                </div>
+                <div class="form-group" style="margin:0;flex:1;min-width:110px;">
+                  <label class="form-label" for="chan-person-vhs-label">Label</label>
+                  <input class="form-input" id="chan-person-vhs-label" type="text" placeholder="Optional" />
+                </div>
+                <input type="file" id="chan-person-vhs-file" accept="image/jpeg,image/png,image/webp" style="display:none;" />
+                <button type="button" class="btn btn-ghost btn-sm" id="chan-person-vhs-pick">Choose image</button>
+                <button type="button" class="btn btn-primary btn-sm" id="chan-person-vhs-add" disabled>Add photo</button>
+              </div>
+              <p id="chan-person-vhs-hint" style="margin:8px 0 0;font-size:0.75rem;color:var(--text-muted);"></p>
+            </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
               <button class="btn btn-ghost btn-sm" id="chan-person-cancel">Cancel</button>
               <button class="btn btn-primary btn-sm" id="chan-person-save">Save</button>
@@ -1828,6 +1850,214 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     </div>
   `;
   document.body.appendChild(overlay);
+
+  function renderChanVhsList(personId) {
+    const list = overlay.querySelector('#chan-person-vhs-list');
+    if (!list) return;
+    const token = getToken();
+
+    if (!personId) {
+      if (!_chanVhsLocalDraft.length) {
+        list.innerHTML = '<p style="margin:0;font-size:0.85rem;color:var(--text-muted);">No era photos yet. You can add them now — they upload when you save.</p>';
+        return;
+      }
+      list.innerHTML = _chanVhsLocalDraft.map((ph) => {
+        const dateLabel = ph.effective_date || 'Any era';
+        const label = ph.label ? ` · ${escHtml(ph.label)}` : '';
+        return `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:12px;">
+            <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--bg-hover);flex-shrink:0;">
+              <img src="${ph.imageBase64}" alt="" style="width:100%;height:100%;object-fit:cover;" />
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.88rem;font-weight:600;">${escHtml(String(dateLabel))}${label}</div>
+              <div style="font-size:0.72rem;color:var(--accent);">Queued — uploads on save</div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm chan-vhs-delete-local" data-local-id="${ph.localId}">Remove</button>
+          </div>`;
+      }).join('');
+      list.querySelectorAll('.chan-vhs-delete-local').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          _chanVhsLocalDraft = _chanVhsLocalDraft.filter((p) => p.localId !== btn.dataset.localId);
+          renderChanVhsList('');
+        });
+      });
+      return;
+    }
+
+    if (!_chanVhsPhotos.length) {
+      list.innerHTML = '<p style="margin:0;font-size:0.85rem;color:var(--text-muted);">No era photos yet.</p>';
+      return;
+    }
+    list.innerHTML = _chanVhsPhotos.map((ph) => {
+      const dateLabel = ph.effective_date || 'Any era';
+      const label = ph.label ? ` · ${escHtml(ph.label)}` : '';
+      const src = `/api/people/${personId}/vhs-photos/${ph.id}/image?token=${encodeURIComponent(token || '')}`;
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:12px;">
+          <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--bg-hover);flex-shrink:0;">
+            <img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;" />
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:0.88rem;font-weight:600;">${escHtml(String(dateLabel))}${label}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">VHS era photo</div>
+          </div>
+          <input class="form-input chan-vhs-date-edit" data-photo-id="${ph.id}" value="${escHtml(ph.effective_date || '')}" placeholder="YYYY" style="width:100px;padding:8px 10px;font-size:0.85rem;" />
+          <button type="button" class="btn btn-ghost btn-sm chan-vhs-save-date" data-photo-id="${ph.id}">Save</button>
+          <button type="button" class="btn btn-danger btn-sm chan-vhs-delete" data-photo-id="${ph.id}">Remove</button>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.chan-vhs-save-date').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const photoId = btn.dataset.photoId;
+        const input = list.querySelector(`.chan-vhs-date-edit[data-photo-id="${photoId}"]`);
+        const effective_date = (input?.value || '').trim() || null;
+        try {
+          await api(`/api/people/${personId}/vhs-photos/${photoId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ effective_date }),
+          });
+          toast('Era date updated.');
+          await loadChanVhsPhotos(personId);
+        } catch (err) {
+          toast(err.message || 'Failed to update.', 'error');
+        }
+      });
+    });
+    list.querySelectorAll('.chan-vhs-delete').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remove this VHS era photo?')) return;
+        try {
+          await api(`/api/people/${personId}/vhs-photos/${btn.dataset.photoId}`, { method: 'DELETE' });
+          toast('Photo removed.');
+          await loadChanVhsPhotos(personId);
+        } catch (err) {
+          toast(err.message || 'Failed to delete.', 'error');
+        }
+      });
+    });
+  }
+
+  async function loadChanVhsPhotos(personId) {
+    const section = overlay.querySelector('#chan-person-vhs-section');
+    const hint = overlay.querySelector('#chan-person-vhs-hint');
+    const addBtn = overlay.querySelector('#chan-person-vhs-add');
+    _chanVhsPendingBase64 = null;
+    if (addBtn) addBtn.disabled = true;
+    if (section) section.style.opacity = '1';
+    if (!personId) {
+      _chanVhsPhotos = [];
+      renderChanVhsList('');
+      if (hint) hint.textContent = _chanVhsLocalDraft.length
+        ? `${_chanVhsLocalDraft.length} photo(s) queued — will upload on save.`
+        : 'You can add era photos now; they upload when you save the person.';
+      return;
+    }
+    try {
+      _chanVhsPhotos = await api(`/api/people/${personId}/vhs-photos`);
+    } catch {
+      _chanVhsPhotos = [];
+    }
+    renderChanVhsList(personId);
+    if (hint) hint.textContent = '';
+  }
+
+  async function flushChanVhsLocalDrafts(personId) {
+    if (!personId || !_chanVhsLocalDraft.length) return;
+    const queued = [..._chanVhsLocalDraft];
+    _chanVhsLocalDraft = [];
+    for (const ph of queued) {
+      try {
+        await api(`/api/people/${personId}/vhs-photos`, {
+          method: 'POST',
+          body: JSON.stringify({
+            imageBase64: ph.imageBase64,
+            effective_date: ph.effective_date || null,
+            label: ph.label || '',
+          }),
+        });
+      } catch (err) {
+        console.error('[VHS photos] failed to upload queued photo', err);
+      }
+    }
+  }
+
+  overlay.querySelector('#chan-person-vhs-pick')?.addEventListener('click', () => {
+    overlay.querySelector('#chan-person-vhs-file')?.click();
+  });
+  overlay.querySelector('#chan-person-vhs-file')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    const hint = overlay.querySelector('#chan-person-vhs-hint');
+    const addBtn = overlay.querySelector('#chan-person-vhs-add');
+    _chanVhsPendingBase64 = null;
+    if (addBtn) addBtn.disabled = true;
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      if (hint) hint.textContent = 'Only jpg, png, or webp allowed.';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      if (hint) hint.textContent = 'Image too large (max 2MB).';
+      return;
+    }
+    if (typeof window.openAvatarCropper !== 'function') {
+      if (hint) hint.textContent = 'Cropper unavailable.';
+      return;
+    }
+    if (hint) hint.textContent = 'Crop and confirm the photo…';
+    window.openAvatarCropper(file, (croppedBase64) => {
+      _chanVhsPendingBase64 = croppedBase64;
+      if (addBtn) addBtn.disabled = false;
+      if (hint) hint.textContent = 'Ready — cropped photo selected.';
+    });
+  });
+  overlay.querySelector('#chan-person-vhs-add')?.addEventListener('click', async () => {
+    const id = overlay.querySelector('#chan-person-id')?.value;
+    const hint = overlay.querySelector('#chan-person-vhs-hint');
+    if (!_chanVhsPendingBase64) return;
+    const effective_date = (overlay.querySelector('#chan-person-vhs-date')?.value || '').trim();
+    const label = (overlay.querySelector('#chan-person-vhs-label')?.value || '').trim();
+
+    if (!id) {
+      _chanVhsLocalDraft.push({
+        localId: `local_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        imageBase64: _chanVhsPendingBase64,
+        effective_date: effective_date || null,
+        label,
+      });
+      _chanVhsPendingBase64 = null;
+      const addBtn = overlay.querySelector('#chan-person-vhs-add');
+      if (addBtn) addBtn.disabled = true;
+      if (overlay.querySelector('#chan-person-vhs-date')) overlay.querySelector('#chan-person-vhs-date').value = '';
+      if (overlay.querySelector('#chan-person-vhs-label')) overlay.querySelector('#chan-person-vhs-label').value = '';
+      if (hint) hint.textContent = 'Queued — will upload when you save this person.';
+      renderChanVhsList('');
+      return;
+    }
+
+    try {
+      await api(`/api/people/${id}/vhs-photos`, {
+        method: 'POST',
+        body: JSON.stringify({
+          imageBase64: _chanVhsPendingBase64,
+          effective_date: effective_date || null,
+          label,
+        }),
+      });
+      _chanVhsPendingBase64 = null;
+      const addBtn = overlay.querySelector('#chan-person-vhs-add');
+      if (addBtn) addBtn.disabled = true;
+      if (overlay.querySelector('#chan-person-vhs-date')) overlay.querySelector('#chan-person-vhs-date').value = '';
+      if (overlay.querySelector('#chan-person-vhs-label')) overlay.querySelector('#chan-person-vhs-label').value = '';
+      if (hint) hint.textContent = 'Photo added.';
+      await loadChanVhsPhotos(id);
+      toast('VHS era photo added.');
+    } catch (err) {
+      if (hint) hint.textContent = err.message || 'Failed to add photo.';
+    }
+  });
 
   // Avatar Upload Logic
   document.getElementById('editor-avatar-btn').addEventListener('click', () => {
@@ -1969,7 +2199,12 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     _chanPersonImgBase64 = null;
     overlay.querySelector('#chan-person-avatar-img').style.display = 'none';
     overlay.querySelector('#chan-person-avatar-placeholder').style.display = 'flex';
+    _chanVhsLocalDraft = [];
     overlay.querySelector('#chan-person-form').style.display = 'block';
+    loadChanVhsPhotos('');
+    setTimeout(() => {
+      overlay.querySelector('#chan-person-vhs-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
   });
 
   overlay.querySelector('#chan-person-cancel').addEventListener('click', () => {
@@ -2002,9 +2237,19 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         });
       }
 
+      if (savedPersonId && _chanVhsLocalDraft.length) {
+        await flushChanVhsLocalDrafts(savedPersonId);
+      }
+
       toast('Person saved.');
-      overlay.querySelector('#chan-person-form').style.display = 'none';
-      loadChanPeople();
+      if (!id && savedPersonId) {
+        overlay.querySelector('#chan-person-id').value = String(savedPersonId);
+        await loadChanVhsPhotos(savedPersonId);
+        loadChanPeople();
+      } else {
+        overlay.querySelector('#chan-person-form').style.display = 'none';
+        loadChanPeople();
+      }
     } catch (err) {
       toast(err.message, 'error');
     }
@@ -2032,8 +2277,12 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
       placeholder.style.display = 'flex';
     }
     
+    _chanVhsLocalDraft = [];
     overlay.querySelector('#chan-person-form').style.display = 'block';
-    overlay.querySelector('#chan-person-form').scrollIntoView({ behavior: 'smooth' });
+    loadChanVhsPhotos(p.id);
+    setTimeout(() => {
+      overlay.querySelector('#chan-person-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   window.deleteChanPerson = async function(id, name) {

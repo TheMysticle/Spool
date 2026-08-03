@@ -473,6 +473,19 @@ function initDatabase() {
   }
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS person_vhs_photos (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      person_id       INTEGER NOT NULL,
+      image_path      TEXT    NOT NULL,
+      effective_date  TEXT,
+      label           TEXT    NOT NULL DEFAULT '',
+      created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY(person_id) REFERENCES people(id) ON DELETE CASCADE
+    )
+  `);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_person_vhs_photos_person ON person_vhs_photos(person_id)`);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS video_people_auto (
       video_id   INTEGER NOT NULL,
       person_id  INTEGER NOT NULL,
@@ -1383,7 +1396,10 @@ const updatePerson = (id, fields) => {
   return db.prepare(`UPDATE people SET ${sets.join(', ')} WHERE id = ?`).run(...vals, id);
 };
 
-const deletePerson = (id) => db.prepare('DELETE FROM people WHERE id = ?').run(id);
+const deletePerson = (id) => {
+  db.prepare('DELETE FROM person_vhs_photos WHERE person_id = ?').run(id);
+  return db.prepare('DELETE FROM people WHERE id = ?').run(id);
+};
 
 const getAllPeople = ({ userId = null, isAdmin = true } = {}) =>
   db
@@ -1458,8 +1474,121 @@ const syncAutoTaggedPeopleForPerson = (personId) => {
 };
 
 // ── Video people queries ──────────────────────────────────────────────────────
-const getVideoPeople = (videoId) =>
+// ── Person VHS era photos ─────────────────────────────────────────────────────
+/** Convert YYYY / YYYY-MM / YYYY-MM-DD / ISO into sortable YYYYMMDD number, or null. */
+function dateToSortKey(val) {
+  if (val == null || val === '') return null;
+  if (typeof val === 'number' && Number.isFinite(val)) {
+    if (val >= 1900 && val <= 2100 && Number.isInteger(val)) return val * 10000 + 101; // mid-ish year Jan 1
+    return null;
+  }
+  const s = String(val).trim();
+  if (/^\d{4}$/.test(s)) {
+    const y = Number(s);
+    if (y < 1900 || y > 2100) return null;
+    return y * 10000 + 701; // mid-year for year-only
+  }
+  const m = s.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = m[3] ? Number(m[3]) : 15;
+  if (y < 1900 || y > 2100 || mo < 1 || mo > 12) return null;
+  return y * 10000 + mo * 100 + Math.min(Math.max(d, 1), 28);
+}
+
+function resolveVideoEraSortKey(video) {
+  if (!video) return null;
+  const startKey = dateToSortKey(video.vhs_start_date);
+  const endKey = dateToSortKey(video.vhs_end_date);
+  if (startKey && endKey) return Math.floor((startKey + endKey) / 2);
+  if (startKey) return startKey;
+  if (endKey) return endKey;
+  const contentKey = dateToSortKey(video.content_date);
+  if (contentKey) return contentKey;
+  return dateToSortKey(video.file_created_at || video.scanned_at);
+}
+
+const getPersonVhsPhotos = (personId) =>
   db
+    .prepare(
+      `SELECT id, person_id, image_path, effective_date, label, created_at
+       FROM person_vhs_photos
+       WHERE person_id = ?
+       ORDER BY
+         CASE WHEN effective_date IS NULL OR effective_date = '' THEN 1 ELSE 0 END,
+         effective_date ASC,
+         id ASC`
+    )
+    .all(personId);
+
+const getPersonVhsPhotoById = (photoId) =>
+  db.prepare('SELECT * FROM person_vhs_photos WHERE id = ?').get(photoId);
+
+const addPersonVhsPhoto = (personId, imagePath, effectiveDate = null, label = '') => {
+  const result = db
+    .prepare(
+      `INSERT INTO person_vhs_photos (person_id, image_path, effective_date, label)
+       VALUES (?, ?, ?, ?)`
+    )
+    .run(personId, imagePath, effectiveDate || null, label || '');
+  return getPersonVhsPhotoById(result.lastInsertRowid);
+};
+
+const updatePersonVhsPhoto = (photoId, fields = {}) => {
+  const allowed = ['effective_date', 'label', 'image_path'];
+  const sets = [];
+  const vals = [];
+  for (const k of allowed) {
+    if (k in fields) {
+      sets.push(`${k} = ?`);
+      vals.push(fields[k]);
+    }
+  }
+  if (!sets.length) return getPersonVhsPhotoById(photoId);
+  vals.push(photoId);
+  db.prepare(`UPDATE person_vhs_photos SET ${sets.join(', ')} WHERE id = ?`).run(...vals);
+  return getPersonVhsPhotoById(photoId);
+};
+
+const deletePersonVhsPhoto = (photoId) =>
+  db.prepare('DELETE FROM person_vhs_photos WHERE id = ?').run(photoId);
+
+const deletePersonVhsPhotosForPerson = (personId) =>
+  db.prepare('DELETE FROM person_vhs_photos WHERE person_id = ?').run(personId);
+
+/**
+ * Pick the best VHS era photo for a person at a given video era date.
+ * Prefers the latest photo with effective_date <= video date; otherwise undated
+ * fallback photos; otherwise the closest dated photo.
+ */
+function pickBestVhsPhoto(photos, videoSortKey) {
+  if (!photos || !photos.length) return null;
+  if (!videoSortKey) {
+    // Prefer undated default, else first
+    return photos.find((p) => !p.effective_date) || photos[0];
+  }
+
+  const dated = [];
+  const undated = [];
+  for (const p of photos) {
+    const key = dateToSortKey(p.effective_date);
+    if (key == null) undated.push(p);
+    else dated.push({ photo: p, key });
+  }
+
+  const beforeOrOn = dated.filter((d) => d.key <= videoSortKey).sort((a, b) => b.key - a.key);
+  if (beforeOrOn.length) return beforeOrOn[0].photo;
+  if (undated.length) return undated[0];
+  if (dated.length) {
+    dated.sort((a, b) => Math.abs(a.key - videoSortKey) - Math.abs(b.key - videoSortKey));
+    return dated[0].photo;
+  }
+  return null;
+}
+
+const getVideoPeople = (videoId) => {
+  const rows = db
     .prepare(
       `SELECT DISTINCT p.id, p.name, p.second_name, p.surname, p.bio, p.title_tags, p.image_path, p.user_id,
               u.username, u.display_name AS linked_display_name
@@ -1477,6 +1606,23 @@ const getVideoPeople = (videoId) =>
        ORDER BY p.name ASC`
     )
     .all(videoId, videoId);
+
+  const video = getVideoById(videoId);
+  if (!video || !video.is_vhs) return rows;
+
+  const eraKey = resolveVideoEraSortKey(video);
+  return rows.map((person) => {
+    const photos = getPersonVhsPhotos(person.id);
+    const best = pickBestVhsPhoto(photos, eraKey);
+    if (!best) return person;
+    return {
+      ...person,
+      vhs_photo_id: best.id,
+      vhs_photo_date: best.effective_date || null,
+    };
+  });
+};
+
 
 const setVideoPeople = (videoId, personIds) => {
   const tx = db.transaction(() => {
@@ -2036,6 +2182,12 @@ module.exports = {
   getPersonById,
   setPersonImage,
   setPersonUserLink,
+  getPersonVhsPhotos,
+  getPersonVhsPhotoById,
+  addPersonVhsPhoto,
+  updatePersonVhsPhoto,
+  deletePersonVhsPhoto,
+  deletePersonVhsPhotosForPerson,
   // video people
   getVideoPeople,
   setVideoPeople,
