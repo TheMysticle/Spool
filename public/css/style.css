@@ -17,6 +17,7 @@
   --text-secondary:#aaaaaa;
   --text-muted:    #71717a;
   --danger:        #ff4e45;
+  --danger-dim:    rgba(255, 78, 69, 0.15);
   --success:       #22c55e;
   --radius:        12px;
   --radius-sm:     8px;
@@ -673,7 +674,7 @@ h3 { font-size: 1rem; }
 
 @keyframes confettiPop {
   0% { box-shadow: 0 0 0 0 var(--danger); opacity: 1; }
-  100% { box-shadow: 0 -15px 0 -2px var(--danger), 15px -15px 0 -2px #ffeb3b, -15px -15px 0 -2px #03a9f4, 20px 0 0 -2px #4caf50, -20px 0 0 -2px #ff9800; opacity: 0; }
+  100% { box-shadow: 0 -25px 0 0 var(--danger), 20px -20px 0 0 #ffeb3b, -20px -20px 0 0 #03a9f4, 25px 0 0 0 #4caf50, -25px 0 0 0 #ff9800; opacity: 0; }
 }
 
 .card-favorite-btn.animate-pop svg, .btn-action.animate-pop svg {
