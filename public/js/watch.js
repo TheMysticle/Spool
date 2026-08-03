@@ -2349,14 +2349,14 @@ window.navigateToVideo = navigateToVideo;
           ${sizeTag}
         </div>
         ${descHtml}
+        ${video.location ? `
+        <div class="video-location-container">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-pin-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span class="video-location-text">${escHtml(video.location)}</span>
+        </div>` : ''}
       </div>
 
       <div id="video-people-tags" class="video-people-tags"></div>
-      ${video.location ? `
-      <div class="video-location-container">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-pin-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        <span class="video-location-text">${escHtml(video.location)}</span>
-      </div>` : ''}
     `;
 
     document.getElementById('watch-favorite-btn')?.addEventListener('click', async () => {
