@@ -364,7 +364,16 @@ function handlePartyJoin(ws, msg) {
     return;
   }
 
-  if (party.members.size >= MAX_PARTY_SIZE) {
+  const alreadyMember = party.members.has(ws.userId);
+  if (!alreadyMember && party.hostId !== ws.userId) {
+    const friends = getFriends(party.hostId);
+    if (!friends.some(f => f.id === ws.userId)) {
+      safeSend(ws, JSON.stringify({ type: 'party:error', error: 'You are not authorized to join this party.' }));
+      return;
+    }
+  }
+
+  if (party.members.size >= MAX_PARTY_SIZE && !alreadyMember) {
     safeSend(ws, JSON.stringify({ type: 'party:error', error: 'Party is full.' }));
     return;
   }
@@ -690,13 +699,15 @@ function handlePartySuggestVideo(ws, msg) {
   const hostWs = party.members.get(party.hostId)?.ws;
   if (!hostWs) return;
 
+  const title = (msg.videoTitle || '').trim().substring(0, 500);
+
   // Send the suggestion ONLY to the host
   safeSend(hostWs, JSON.stringify({
     type: 'party:suggest_video',
     userId: ws.userId,
     displayName: ws.displayName,
     videoId: msg.videoId,
-    videoTitle: msg.videoTitle,
+    videoTitle: title,
   }));
 }
 
@@ -717,9 +728,9 @@ function handlePartyVideoChange(ws, msg) {
   party.syncTime = msg.currentTime || 0;
   party.videoSyncMode = true;
 
-  // Mark ALL members as buffering — everyone needs to load the new video
+  // Mark non-browsing members as buffering — they need to load the new video
   for (const [uid, m] of party.members) {
-    m.buffering = true;
+    if (!m.browsing) m.buffering = true;
   }
 
   // Tell other members to navigate to the new video

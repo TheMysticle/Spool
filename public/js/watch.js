@@ -1507,6 +1507,7 @@ function setupWatchPartyHooks() {
   });
 
   window.addEventListener('party:waiting', (e) => {
+    if (window.WatchParty && WatchParty.isBrowsing()) return;
     const msg = e.detail;
     const overlay = document.getElementById('watch-party-overlay');
     const textEl = document.getElementById('wp-waiting-text');

@@ -312,10 +312,10 @@
     el.className = 'wp-invite-toast';
     el.innerHTML = `
       <div class="wp-invite-header">
-        <strong>${msg.displayName}</strong> suggests a video:
+        <strong>${escHtml(msg.displayName)}</strong> suggests a video:
       </div>
       <div class="wp-invite-info" style="margin-bottom: 12px; margin-top: 12px;">
-        <div class="wp-invite-title" style="font-size: 0.95rem;">${msg.videoTitle}</div>
+        <div class="wp-invite-title" style="font-size: 0.95rem;">${escHtml(msg.videoTitle)}</div>
       </div>
       <div class="wp-invite-actions">
         <button class="btn btn-primary" id="wp-suggest-approve">Approve Swap</button>
