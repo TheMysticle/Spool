@@ -27,7 +27,8 @@ const app = express();
 
 const tp = process.env.TRUST_PROXY;
 if (tp === 'true') app.set('trust proxy', 1);
-else if (tp === 'false' || !tp) app.set('trust proxy', false);
+else if (tp === 'false') app.set('trust proxy', false);
+else if (!tp) app.set('trust proxy', 1);
 else app.set('trust proxy', tp);
 const PORT = process.env.PORT || 443;
 const ENABLE_CSP = process.env.ENABLE_CSP !== 'false'; // CSP on by default

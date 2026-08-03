@@ -662,8 +662,11 @@ function handlePartyChat(ws, msg) {
     timestamp: Date.now(),
   };
 
-  party.messages.push(chatMsg);
-  if (party.messages.length > 100) party.messages.shift();
+  const party = watchParties.get(partyId);
+  if (party) {
+    party.messages.push(chatMsg);
+    if (party.messages.length > 100) party.messages.shift();
+  }
 
   broadcastToParty(partyId, chatMsg);
 }
