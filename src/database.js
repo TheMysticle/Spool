@@ -1005,7 +1005,7 @@ const upsertVideo = (data) => {
   return result;
 };
 
-const updateVideoMeta = (id, { title, description, category, is_vhs }) => {
+const updateVideoMeta = (id, { title, description, category, is_vhs, content_date }) => {
   const current = getVideoById(id);
   if (!current) return null;
 
@@ -1015,15 +1015,24 @@ const updateVideoMeta = (id, { title, description, category, is_vhs }) => {
   if (title !== undefined && title !== null) {
     sets.push('title = ?');
     vals.push(String(title).trim());
-    const parsed = parseEmbeddedVideoDateAndTitle(title, current?.file_created_at || current?.scanned_at);
-    if (parsed.contentDateIso) {
-      sets.push('content_date = ?');
-      vals.push(parsed.contentDateIso);
+    
+    // Only auto-parse date from title if content_date was NOT explicitly provided
+    if (content_date === undefined) {
+      const parsed = parseEmbeddedVideoDateAndTitle(title, current?.file_created_at || current?.scanned_at);
+      if (parsed.contentDateIso) {
+        sets.push('content_date = ?');
+        vals.push(parsed.contentDateIso);
+      }
+      if (parsed.title && parsed.title !== title) {
+        sets.push('original_title = ?');
+        vals.push(parsed.title);
+      }
     }
-    if (parsed.title && parsed.title !== title) {
-      sets.push('original_title = ?');
-      vals.push(parsed.title);
-    }
+  }
+
+  if (content_date !== undefined) {
+    sets.push('content_date = ?');
+    vals.push(content_date ? String(content_date).trim() : null);
   }
 
   if (description !== undefined && description !== null) {

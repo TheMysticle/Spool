@@ -294,11 +294,11 @@
       let failed = 0;
       for (const videoId of selectedVideoIds) {
         try {
-          const current = await api(`/api/admin/videos/${videoId}/people`);
+          const current = await api(`/api/videos/${videoId}/people`);
           const merged = Array.from(
             new Set([...(current || []).map((p) => Number(p.id)).filter((id) => Number.isInteger(id) && id > 0), ...selectedPeopleIds])
           );
-          await api(`/api/admin/videos/${videoId}/people`, {
+          await api(`/api/videos/${videoId}/people`, {
             method: 'PUT',
             body: JSON.stringify({ person_ids: merged }),
           });
@@ -322,13 +322,13 @@
     for (const videoId of selectedVideoIds) {
       try {
         if (mode === 'everyone') {
-          await api(`/api/admin/videos/${videoId}/access`, {
+          await api(`/api/videos/${videoId}/access`, {
             method: 'PUT',
             body: JSON.stringify({ all_users: true, user_ids: [] }),
           });
           changed++;
         } else {
-          const current = await api(`/api/admin/videos/${videoId}/access`);
+          const current = await api(`/api/videos/${videoId}/access`);
           if (current.all_users) {
             skipped++;
             continue;
@@ -340,7 +340,7 @@
             skipped++;
             continue;
           }
-          await api(`/api/admin/videos/${videoId}/access`, {
+          await api(`/api/videos/${videoId}/access`, {
             method: 'PUT',
             body: JSON.stringify({ all_users: false, user_ids: merged }),
           });

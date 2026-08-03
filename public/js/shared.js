@@ -325,7 +325,7 @@ function closeModal(id) {
         userIds.push(parseInt(cb.value, 10));
       });
       try {
-        await api(`/api/admin/videos/${_vapVideoId}/access`, {
+        await api(`/api/videos/${_vapVideoId}/access`, {
           method: 'PUT',
           body: JSON.stringify({ all_users: allUsers, user_ids: userIds }),
         });
@@ -341,7 +341,7 @@ function closeModal(id) {
 
   async function saveVideoPeople() {
     try {
-      await api(`/api/admin/videos/${_vapVideoId}/people`, {
+      await api(`/api/videos/${_vapVideoId}/people`, {
         method: 'PUT',
         body: JSON.stringify({ person_ids: _vapCurrentPeopleIds }),
       });
@@ -358,7 +358,7 @@ function closeModal(id) {
     const listEl = document.getElementById('vap-people-list');
     const token = getToken();
     try {
-      const people = await api(`/api/admin/videos/${_vapVideoId}/people`);
+      const people = await api(`/api/videos/${_vapVideoId}/people`);
       _vapCurrentPeopleIds = people.map((p) => p.id);
       listEl.innerHTML = people.length
         ? people.map((p) => {
@@ -412,7 +412,7 @@ function closeModal(id) {
 
     try {
       const [access, allUsers] = await Promise.all([
-        api(`/api/admin/videos/${videoId}/access`),
+        api(`/api/videos/${videoId}/access`),
         api('/api/admin/users'),
       ]);
 

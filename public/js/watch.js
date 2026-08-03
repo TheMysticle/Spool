@@ -3219,6 +3219,10 @@ window.navigateToVideo = navigateToVideo;
             <input class="form-input" id="watch-edit-title" type="text" />
           </div>
           <div class="form-group">
+            <label class="form-label" for="watch-edit-date">Date</label>
+            <input class="form-input" id="watch-edit-date" type="date" />
+          </div>
+          <div class="form-group">
             <label class="form-label" for="watch-edit-category">Category</label>
             <select class="form-input" id="watch-edit-category">
               <option value="video">Video</option>
@@ -3248,6 +3252,12 @@ window.navigateToVideo = navigateToVideo;
     if (isVhsCheckbox && currentVideo.is_vhs) {
       isVhsCheckbox.checked = true;
     }
+    
+    // Pre-fill the date picker
+    const dateInput = document.getElementById('watch-edit-date');
+    if (dateInput && currentVideo.content_date) {
+      dateInput.value = currentVideo.content_date.split('T')[0];
+    }
 
     document.getElementById('watch-edit-close')?.addEventListener('click', () => closeModal('watch-edit-modal'));
     document.getElementById('watch-edit-cancel')?.addEventListener('click', () => closeModal('watch-edit-modal'));
@@ -3263,10 +3273,12 @@ window.navigateToVideo = navigateToVideo;
       saveBtn.disabled = true;
       errorEl.textContent = '';
       try {
+        const dateValue = document.getElementById('watch-edit-date').value;
         const updated = await api(`/api/videos/${videoId}`, {
           method: 'PUT',
           body: JSON.stringify({
             title: document.getElementById('watch-edit-title').value.trim(),
+            content_date: dateValue ? new Date(dateValue).toISOString() : null,
             category: document.getElementById('watch-edit-category').value,
             description: document.getElementById('watch-edit-desc').value.trim(),
             is_vhs: document.getElementById('watch-edit-is-vhs').checked ? 1 : 0,

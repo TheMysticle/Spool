@@ -407,29 +407,6 @@ router.post('/people/:id/image', (req, res) => {
   res.json({ message: 'Image saved.', path: `/api/people/${id}/image` });
 });
 
-// ── Video access management ───────────────────────────────────────────────────
-router.get('/videos/:id/access', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
-  const video = getVideoById(id);
-  if (!video) return res.status(404).json({ error: 'Video not found.' });
-  res.json(getVideoAccess(id));
-});
-
-router.put('/videos/:id/access', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
-  const video = getVideoById(id);
-  if (!video) return res.status(404).json({ error: 'Video not found.' });
-
-  const { all_users, user_ids = [] } = req.body;
-  setVideoAccess(id, {
-    all_users: Boolean(all_users),
-    user_ids: Array.isArray(user_ids) ? user_ids.map(Number).filter((n) => !isNaN(n)) : [],
-  });
-
-  res.json({ message: 'Access updated.', access: getVideoAccess(id) });
-});
 
 // ── Series management ───────────────────────────────────────────────────────
 router.get('/series', (req, res) => {

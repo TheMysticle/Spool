@@ -29,6 +29,10 @@ const {
   createVideoShare,
   getVideoShareToken,
   deleteVideoShare,
+  getChannelById,
+  setVideoAccess,
+  getVideoAccess,
+  setVideoPeople,
   getSetting,
 } = require('../database');
 const { authenticate, requireAdmin, authOrShareToken } = require('../middleware/auth');
@@ -545,15 +549,22 @@ router.get('/:id/people', authOrShareToken, (req, res) => {
   res.json(getVideoPeople(id));
 });
 
-// ── PUT /api/videos/:id — update metadata (admin only) ───────────────────────
-router.put('/:id', authenticate, requireAdmin, (req, res) => {
+// ── PUT /api/videos/:id — update metadata (admin/owner) ───────────────────────
+router.put('/:id', authenticate, (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
 
   const video = getVideoById(id);
   if (!video) return res.status(404).json({ error: 'Video not found.' });
 
-  const { title, description, category, is_vhs } = req.body;
+  let canEdit = req.user.role === 'admin';
+  if (!canEdit && video.channel_id) {
+    const channel = getChannelById(video.channel_id);
+    if (channel && channel.user_id === req.user.id) canEdit = true;
+  }
+  if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
+
+  const { title, description, category, is_vhs, content_date } = req.body;
 
   if (title !== undefined && (typeof title !== 'string' || title.trim().length === 0)) {
     return res.status(400).json({ error: 'Title must be a non-empty string.' });
@@ -573,9 +584,82 @@ router.put('/:id', authenticate, requireAdmin, (req, res) => {
     description: description !== undefined ? description.slice(0, 5000) : undefined,
     category,
     is_vhs: is_vhs !== undefined ? is_vhs : undefined,
+    content_date: content_date !== undefined ? content_date : undefined,
   });
 
+  if (is_vhs === 1) {
+    const access = getVideoAccess(id);
+    if (access.all_users) {
+      setVideoAccess(id, { all_users: false, user_ids: access.user_ids });
+    }
+  }
+
   res.json({ message: 'Video updated.', video: getVideoById(id) });
+});
+
+// ── GET /api/videos/:id/access ────────────────────────────────────────────────
+router.get('/:id/access', authenticate, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
+  const video = getVideoById(id);
+  if (!video) return res.status(404).json({ error: 'Video not found.' });
+
+  let canEdit = req.user.role === 'admin';
+  if (!canEdit && video.channel_id) {
+    const channel = getChannelById(video.channel_id);
+    if (channel && channel.user_id === req.user.id) canEdit = true;
+  }
+  if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
+
+  res.json(getVideoAccess(id));
+});
+
+// ── PUT /api/videos/:id/access ────────────────────────────────────────────────
+router.put('/:id/access', authenticate, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
+  const video = getVideoById(id);
+  if (!video) return res.status(404).json({ error: 'Video not found.' });
+
+  let canEdit = req.user.role === 'admin';
+  if (!canEdit && video.channel_id) {
+    const channel = getChannelById(video.channel_id);
+    if (channel && channel.user_id === req.user.id) canEdit = true;
+  }
+  if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
+
+  const { all_users, user_ids = [] } = req.body;
+  let finalAllUsers = Boolean(all_users);
+  
+  if (finalAllUsers && video.is_vhs) {
+    finalAllUsers = false; // VHS videos cannot have public access
+  }
+
+  setVideoAccess(id, {
+    all_users: finalAllUsers,
+    user_ids: Array.isArray(user_ids) ? user_ids.map(Number).filter((n) => !isNaN(n)) : [],
+  });
+
+  res.json({ message: 'Access updated.', access: getVideoAccess(id) });
+});
+
+// ── PUT /api/videos/:id/people ────────────────────────────────────────────────
+router.put('/:id/people', authenticate, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
+  const video = getVideoById(id);
+  if (!video) return res.status(404).json({ error: 'Video not found.' });
+
+  let canEdit = req.user.role === 'admin';
+  if (!canEdit && video.channel_id) {
+    const channel = getChannelById(video.channel_id);
+    if (channel && channel.user_id === req.user.id) canEdit = true;
+  }
+  if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
+
+  const { person_ids = [] } = req.body;
+  setVideoPeople(id, Array.isArray(person_ids) ? person_ids.map(Number).filter((n) => !isNaN(n)) : []);
+  res.json({ message: 'People tags updated.', people: getVideoPeople(id) });
 });
 
 // ── Streaming transcode: real-time MP4 encoding ──────────────────────────────
