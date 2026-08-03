@@ -1542,6 +1542,7 @@ window.openAvatarCropper = function(file, onCropComplete) {
   }
 
 window.openChannelEditor = function(channelId, currentName, currentAvatar, currentBanner, onSaveComplete) {
+  let _chanPersonImgBase64 = null;
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.style.zIndex = '10000';
@@ -1609,19 +1610,33 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
           </div>
           <div id="chan-person-form" style="display: none; background: var(--bg-hover); padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <input type="hidden" id="chan-person-id">
-            <div style="margin-bottom: 12px;">
-              <label class="vap-label">Name</label>
-              <input type="text" id="chan-person-name" class="vap-input" placeholder="Actor Name">
+            
+            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+              <div class="vap-avatar-preview" id="chan-person-avatar-preview" style="width: 80px; height: 80px; border-radius: 50%; background: var(--bg-surface); overflow: hidden; position: relative; cursor: pointer; flex-shrink: 0; border: 1px solid var(--border);">
+                <img id="chan-person-avatar-img" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); color: #fff; font-size: 0.75rem; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">Upload</div>
+                <div id="chan-person-avatar-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+              </div>
+              <div style="flex: 1;">
+                <div class="form-group">
+                  <label class="form-label">Name</label>
+                  <input type="text" id="chan-person-name" class="form-input" placeholder="Actor Name">
+                </div>
+              </div>
             </div>
-            <div style="margin-bottom: 12px;">
-              <label class="vap-label">Biography</label>
-              <textarea id="chan-person-bio" class="vap-input" rows="3" placeholder="Brief biography"></textarea>
+            
+            <div class="form-group">
+              <label class="form-label">Biography</label>
+              <textarea id="chan-person-bio" class="form-input" rows="3" placeholder="Brief biography" style="resize: none;"></textarea>
             </div>
-            <div style="margin-bottom: 12px;">
-              <label class="vap-label">Title Tags (comma separated)</label>
-              <input type="text" id="chan-person-tags" class="vap-input" placeholder="e.g. Actor, Director">
+            <div class="form-group">
+              <label class="form-label">Title Tags (comma separated)</label>
+              <p class="vap-hint" style="margin-bottom: 6px;">Title Tags automatically assign this person to videos containing these words in the title.</p>
+              <input type="text" id="chan-person-tags" class="form-input" placeholder="e.g. Actor, Director">
             </div>
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
               <button class="btn btn-ghost btn-sm" id="chan-person-cancel">Cancel</button>
               <button class="btn btn-primary btn-sm" id="chan-person-save">Save</button>
             </div>
@@ -1757,11 +1772,31 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     }
   }
 
+  overlay.querySelector('#chan-person-avatar-preview').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      window.openAvatarCropper(file, (croppedBase64) => {
+        _chanPersonImgBase64 = croppedBase64;
+        overlay.querySelector('#chan-person-avatar-img').src = croppedBase64;
+        overlay.querySelector('#chan-person-avatar-img').style.display = 'block';
+        overlay.querySelector('#chan-person-avatar-placeholder').style.display = 'none';
+      });
+    };
+    input.click();
+  });
+
   overlay.querySelector('#chan-add-person-btn').addEventListener('click', () => {
     overlay.querySelector('#chan-person-id').value = '';
     overlay.querySelector('#chan-person-name').value = '';
     overlay.querySelector('#chan-person-bio').value = '';
     overlay.querySelector('#chan-person-tags').value = '';
+    _chanPersonImgBase64 = null;
+    overlay.querySelector('#chan-person-avatar-img').style.display = 'none';
+    overlay.querySelector('#chan-person-avatar-placeholder').style.display = 'flex';
     overlay.querySelector('#chan-person-form').style.display = 'block';
   });
 
@@ -1778,11 +1813,21 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     if (!name) return toast('Name is required', 'error');
 
     try {
+      let savedPersonId = id;
       if (id) {
         await api('/api/people/' + id, { method: 'PUT', body: JSON.stringify({ name, bio, title_tags: tags }) });
       } else {
-        await api('/api/people', { method: 'POST', body: JSON.stringify({ name, bio, title_tags: tags }) });
+        const res = await api('/api/people', { method: 'POST', body: JSON.stringify({ name, bio, title_tags: tags }) });
+        savedPersonId = res.id;
       }
+      
+      if (_chanPersonImgBase64 && savedPersonId) {
+        await api(`/api/people/${savedPersonId}/image`, {
+          method: 'POST',
+          body: JSON.stringify({ imageBase64: _chanPersonImgBase64 }),
+        });
+      }
+
       toast('Person saved.');
       overlay.querySelector('#chan-person-form').style.display = 'none';
       loadChanPeople();
@@ -1798,6 +1843,19 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     overlay.querySelector('#chan-person-name').value = p.name || '';
     overlay.querySelector('#chan-person-bio').value = p.bio || '';
     overlay.querySelector('#chan-person-tags').value = p.title_tags || '';
+    
+    _chanPersonImgBase64 = null;
+    const imgEl = overlay.querySelector('#chan-person-avatar-img');
+    const placeholder = overlay.querySelector('#chan-person-avatar-placeholder');
+    if (p.image_path) {
+      imgEl.src = `/api/people/${p.id}/image?token=${encodeURIComponent(getToken() || '')}&t=${Date.now()}`;
+      imgEl.style.display = 'block';
+      placeholder.style.display = 'none';
+    } else {
+      imgEl.style.display = 'none';
+      placeholder.style.display = 'flex';
+    }
+    
     overlay.querySelector('#chan-person-form').style.display = 'block';
     overlay.querySelector('#chan-person-form').scrollIntoView({ behavior: 'smooth' });
   };
