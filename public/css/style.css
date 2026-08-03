@@ -4964,3 +4964,93 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 /* Notifications integration */
 .notif-type.friend-req { color: var(--accent); background: rgba(var(--accent-rgb), 0.1); }
 .notif-fr-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* Floating Livechat */
+.floating-livechat {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 320px;
+  height: 400px;
+  max-height: 50vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+}
+
+.floating-livechat.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+
+.fl-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+.fl-messages::-webkit-scrollbar { width: 6px; }
+.fl-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+.fl-msg {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  word-wrap: break-word;
+  animation: fade-in 0.2s ease-out;
+}
+
+.fl-msg strong {
+  color: var(--accent);
+  margin-right: 4px;
+}
+
+.fl-input-container {
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fl-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.fl-input:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--accent);
+}
+
+/* VideoJS Toggle Button Icon */
+.vjs-livechat-toggle .vjs-icon-placeholder::before {
+  content: "";
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>') no-repeat center center;
+  background-size: 20px;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.vjs-livechat-toggle.active .vjs-icon-placeholder::before {
+  stroke: %238b5cf6; /* accent color */
+}

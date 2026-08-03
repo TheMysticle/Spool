@@ -127,6 +127,13 @@
             <div class="player-container" id="player-container" style="position: relative;">
               <video id="video-player" class="video-js vjs-big-play-centered" controls preload="metadata" playsinline></video>
 
+              <div id="floating-livechat" class="floating-livechat hidden">
+                <div class="fl-messages" id="fl-messages"></div>
+                <div class="fl-input-container">
+                  <input type="text" id="fl-input" class="fl-input" placeholder="Say something..." autocomplete="off">
+                </div>
+              </div>
+
               <div id="video-ui-overlay" class="video-ui-overlay">
                 <div class="video-overlay-header">
                   <h2 id="overlay-video-title" class="overlay-title"></h2>

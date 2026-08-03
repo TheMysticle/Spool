@@ -235,6 +235,7 @@ function handlePartyCreate(ws, msg) {
     videoId: msg.videoId || null,
     videoTitle: msg.videoTitle || '',
     members: new Map(),
+    messages: [], // Store chat history
     createdAt: Date.now(),
   };
 
@@ -349,6 +350,7 @@ function handlePartyRejoin(ws, msg) {
       videoId: party.videoId,
       videoTitle: party.videoTitle,
       members: membersList,
+      messages: party.messages,
     }));
   } else {
     // Not in the party anymore, try to join
@@ -414,6 +416,7 @@ function handlePartyJoin(ws, msg) {
     videoId: party.videoId,
     videoTitle: party.videoTitle,
     members: membersList,
+    messages: party.messages,
     justJoined: true,
   }));
 
@@ -650,14 +653,19 @@ function handlePartyChat(ws, msg) {
   const text = (msg.text || '').trim().substring(0, 500);
   if (!text) return;
 
-  broadcastToParty(partyId, {
+  const chatMsg = {
     type: 'party:chat',
     userId: ws.userId,
     displayName: ws.displayName,
     avatarPath: ws.avatarPath,
     text,
     timestamp: Date.now(),
-  });
+  };
+
+  party.messages.push(chatMsg);
+  if (party.messages.length > 100) party.messages.shift();
+
+  broadcastToParty(partyId, chatMsg);
 }
 
 function handlePartyRequestSync(ws, msg) {

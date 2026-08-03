@@ -1240,6 +1240,37 @@ function initPlayer(videoData, { autoStart = true } = {}) {
     player.ready(() => {
       const playerEl = player.el();
 
+      // Livechat Toggle Button
+      const Button = videojs.getComponent('Button');
+      const LivechatToggle = videojs.extend(Button, {
+        constructor: function() {
+          Button.apply(this, arguments);
+          this.controlText('Toggle Livechat');
+          this.addClass('vjs-livechat-toggle');
+          this.hide(); // Hidden by default, shown if in a party
+        },
+        handleClick: function() {
+          const fl = document.getElementById('floating-livechat');
+          if (fl) {
+            fl.classList.toggle('hidden');
+            if (!fl.classList.contains('hidden')) {
+              this.addClass('active');
+              const input = document.getElementById('fl-input');
+              if (input) input.focus();
+            } else {
+              this.removeClass('active');
+            }
+          }
+        }
+      });
+      videojs.registerComponent('LivechatToggle', LivechatToggle);
+      
+      // Add it before fullscreen toggle
+      const controlBar = player.getChild('controlBar');
+      if (controlBar) {
+        controlBar.addChild('LivechatToggle', {}, controlBar.children().length - 1);
+      }
+
 // ─── STRICT ACTIVITY TRACKING ───
       // Override userActive to prevent UI wake-up during double-taps
       const originalUserActive = player.userActive.bind(player);

@@ -586,8 +586,16 @@
   window.addEventListener('party:created', () => {
     if (friendsPanelOpen) renderActiveTab();
   });
-  window.addEventListener('party:joined', () => {
+  window.addEventListener('party:joined', (e) => {
     activeTab = 'party';
+    
+    // Load persisted chat history from server
+    if (e.detail && Array.isArray(e.detail.messages)) {
+      chatMessages = [...e.detail.messages];
+    } else {
+      chatMessages = [];
+    }
+
     if (friendsPanelOpen) {
       const partyTabEl = document.querySelector('.fp-tab[data-tab="party"]');
       if (partyTabEl) {
@@ -597,6 +605,17 @@
       renderActiveTab();
     }
   });
+  
+  window.addEventListener('party:state', (e) => {
+    // Load persisted chat history from server when state is refreshed
+    if (e.detail && Array.isArray(e.detail.messages)) {
+      chatMessages = [...e.detail.messages];
+    } else {
+      chatMessages = [];
+    }
+    if (friendsPanelOpen && activeTab === 'party') renderActiveTab();
+  });
+
   window.addEventListener('party:member_changed', () => {
     if (friendsPanelOpen && activeTab === 'party') renderActiveTab();
   });
