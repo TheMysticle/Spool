@@ -1461,14 +1461,14 @@ const syncAutoTaggedPeopleForPerson = (personId) => {
 const getVideoPeople = (videoId) =>
   db
     .prepare(
-      `SELECT DISTINCT p.id, p.name, p.bio, p.title_tags, p.image_path, p.user_id,
+      `SELECT DISTINCT p.id, p.name, p.second_name, p.surname, p.bio, p.title_tags, p.image_path, p.user_id,
               u.username, u.display_name AS linked_display_name
        FROM video_people vp
        JOIN people p ON p.id = vp.person_id
        LEFT JOIN users u ON u.id = p.user_id
        WHERE vp.video_id = ?
        UNION
-       SELECT DISTINCT p.id, p.name, p.bio, p.title_tags, p.image_path, p.user_id,
+       SELECT DISTINCT p.id, p.name, p.second_name, p.surname, p.bio, p.title_tags, p.image_path, p.user_id,
               u.username, u.display_name AS linked_display_name
        FROM video_people_auto vpa
        JOIN people p ON p.id = vpa.person_id

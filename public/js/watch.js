@@ -2457,13 +2457,18 @@ window.navigateToVideo = navigateToVideo;
       const listEl = document.getElementById('people-tags-list');
       const spotlightEl = document.getElementById('person-spotlight');
 
+      const personFullName = (p) =>
+        `${p?.name || ''} ${p?.second_name || ''} ${p?.surname || ''}`.replace(/\s+/g, ' ').trim() || 'Unknown';
+
       listEl.innerHTML = people.map((p) => {
+        const firstName = (p.name || '').trim() || 'Unknown';
+        const fullName = personFullName(p);
         const avatarInner = p.image_path
-          ? `<img src="/api/people/${p.id}/image?${getAuthQueryString()}" alt="${escHtml(p.name)}" />`
-          : escHtml((p.name || '?')[0].toUpperCase());
-        return `<div class="person-tag-chip" data-person-id="${p.id}" role="button" tabindex="0" aria-label="View details for ${escHtml(p.name)}">
+          ? `<img src="/api/people/${p.id}/image?${getAuthQueryString()}" alt="${escHtml(firstName)}" />`
+          : escHtml((firstName || '?')[0].toUpperCase());
+        return `<div class="person-tag-chip" data-person-id="${p.id}" role="button" tabindex="0" aria-label="View details for ${escHtml(fullName)}">
           <div class="chip-avatar">${avatarInner}</div>
-          <span class="chip-name">${escHtml(p.name)}</span>
+          <span class="chip-name">${escHtml(firstName)}</span>
         </div>`;
       }).join('');
 
@@ -2488,11 +2493,11 @@ window.navigateToVideo = navigateToVideo;
           allChips.forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
 
+          const fullName = personFullName(person);
           const avatarInner = person.image_path
-            ? `<img src="/api/people/${person.id}/image?${getAuthQueryString()}" alt="${escHtml(person.name)}" />`
+            ? `<img src="/api/people/${person.id}/image?${getAuthQueryString()}" alt="${escHtml(fullName)}" />`
             : escHtml((person.name || '?')[0].toUpperCase());
 
-          const fullName = `${person.name} ${person.second_name || ''} ${person.surname || ''}`.trim();
           spotlightEl.innerHTML = `
             <div class="spotlight-avatar">${avatarInner}</div>
             <div class="spotlight-info">
@@ -2500,13 +2505,13 @@ window.navigateToVideo = navigateToVideo;
               <div class="spotlight-bio">${escHtml(person.bio || 'No biography available.')}</div>
               <div class="spotlight-actions">
                 <button class="btn btn-primary btn-sm" id="spotlight-view-btn" type="button">
-                  More with ${escHtml(person.name)}
+                  More with ${escHtml((person.name || '').trim() || fullName)}
                 </button>
               </div>
             </div>`;
 
           document.getElementById('spotlight-view-btn')?.addEventListener('click', () => {
-            const personNameQuery = encodeURIComponent(String(person.name || '').trim());
+            const personNameQuery = encodeURIComponent(fullName);
             window.location.href = `/index.html?personId=${encodeURIComponent(String(person.id))}&person_name=${personNameQuery}&from=people`;
           });
 
