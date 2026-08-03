@@ -1388,7 +1388,7 @@ const deletePerson = (id) => db.prepare('DELETE FROM people WHERE id = ?').run(i
 const getAllPeople = ({ userId = null, isAdmin = true } = {}) =>
   db
     .prepare(
-      `SELECT p.id, p.name, p.bio, p.title_tags, p.image_path, p.user_id, p.channel_id, p.created_at,
+      `SELECT p.id, p.name, p.second_name, p.surname, p.bio, p.title_tags, p.image_path, p.user_id, p.channel_id, p.created_at,
               u.username, u.display_name AS linked_display_name,
               COALESCE((
                 SELECT COUNT(*)

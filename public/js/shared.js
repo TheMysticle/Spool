@@ -249,6 +249,45 @@ function closeModal(id) {
   let _vapCurrentPeopleIds = [];
   let _vapVideoData = null;
 
+  window.updateVhsDateUI = function updateVhsDateUI() {
+    const isVhsEl = document.getElementById('vap-edit-is-vhs');
+    const rangeEl = document.getElementById('vap-edit-vhs-range');
+    const rangeRow = document.getElementById('vap-vhs-range-row');
+    const singleWrap = document.getElementById('vap-date-single-wrap');
+    const rangeWrap = document.getElementById('vap-date-range-wrap');
+    if (!isVhsEl || !rangeEl || !rangeRow || !singleWrap || !rangeWrap) return;
+    const isVhs = isVhsEl.checked;
+    const rangeOn = rangeEl.checked;
+    rangeRow.style.display = isVhs ? 'flex' : 'none';
+    if (!isVhs) {
+      rangeEl.checked = false;
+      rangeWrap.style.display = 'none';
+      singleWrap.style.display = '';
+      const startEl = document.getElementById('vap-edit-vhs-start');
+      const endEl = document.getElementById('vap-edit-vhs-end');
+      if (startEl) startEl.value = '';
+      if (endEl) endEl.value = '';
+      return;
+    }
+    if (rangeOn) {
+      singleWrap.style.display = 'none';
+      rangeWrap.style.display = '';
+      const singleVal = (document.getElementById('vap-edit-date')?.value || '').trim();
+      const startEl = document.getElementById('vap-edit-vhs-start');
+      if (startEl && singleVal && !startEl.value.trim()) startEl.value = singleVal;
+    } else {
+      rangeWrap.style.display = 'none';
+      singleWrap.style.display = '';
+      const startVal = (document.getElementById('vap-edit-vhs-start')?.value || '').trim();
+      const dateEl = document.getElementById('vap-edit-date');
+      if (dateEl && startVal && !dateEl.value.trim()) dateEl.value = startVal;
+      const startEl = document.getElementById('vap-edit-vhs-start');
+      const endEl = document.getElementById('vap-edit-vhs-end');
+      if (startEl) startEl.value = '';
+      if (endEl) endEl.value = '';
+    }
+  };
+
   function ensureVideoSettingsModal() {
     if (document.getElementById('video-settings-popup')) return;
     const html = `
@@ -282,9 +321,21 @@ function closeModal(id) {
                   <label class="form-label" for="vap-edit-title">Title</label>
                   <input class="form-input" id="vap-edit-title" type="text" />
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="vap-date-single-wrap">
                   <label class="form-label" for="vap-edit-date">Date (Optional day/month)</label>
                   <input class="form-input" id="vap-edit-date" type="text" placeholder="YYYY-MM-DD or YYYY" />
+                </div>
+                <div id="vap-date-range-wrap" style="display: none;">
+                  <div style="display: flex; gap: 12px;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 16px;">
+                      <label class="form-label" for="vap-edit-vhs-start">Start Date</label>
+                      <input class="form-input" id="vap-edit-vhs-start" type="text" placeholder="YYYY-MM-DD or YYYY" />
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 16px;">
+                      <label class="form-label" for="vap-edit-vhs-end">End Date</label>
+                      <input class="form-input" id="vap-edit-vhs-end" type="text" placeholder="YYYY-MM-DD or YYYY" />
+                    </div>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="vap-edit-category">Category</label>
@@ -307,17 +358,15 @@ function closeModal(id) {
                     <span class="slider"></span>
                   </label>
                 </div>
-              </div>
-              <div class="vap-form-group" id="vap-vhs-dates-group" style="display: none; margin-top: 12px;">
-                <div style="display: flex; gap: 12px;">
-                  <div style="flex:1;">
-                    <label class="vap-label" for="vap-edit-vhs-start">VHS Start Date</label>
-                    <input type="text" id="vap-edit-vhs-start" class="vap-input" placeholder="YYYY-MM-DD or YYYY" />
+                <div class="vap-section-header-row" id="vap-vhs-range-row" style="display: none; margin-top: 8px;">
+                  <div>
+                    <h4 class="vap-section-title" style="font-size: 0.95rem;">Date range</h4>
+                    <p class="vap-hint">Use start and end dates instead of a single date.</p>
                   </div>
-                  <div style="flex:1;">
-                    <label class="vap-label" for="vap-edit-vhs-end">VHS End Date</label>
-                    <input type="text" id="vap-edit-vhs-end" class="vap-input" placeholder="YYYY-MM-DD or YYYY" />
-                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="vap-edit-vhs-range" />
+                    <span class="slider"></span>
+                  </label>
                 </div>
               </div>
               <div class="vap-section-header-row" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
@@ -418,14 +467,8 @@ function closeModal(id) {
       }
     });
 
-    document.getElementById('vap-edit-is-vhs').addEventListener('change', (e) => {
-      const isChecked = e.target.checked;
-      document.getElementById('vap-vhs-dates-group').style.display = isChecked ? 'block' : 'none';
-      if (!isChecked) {
-        document.getElementById('vap-edit-vhs-start').value = '';
-        document.getElementById('vap-edit-vhs-end').value = '';
-      }
-    });
+    document.getElementById('vap-edit-is-vhs').addEventListener('change', window.updateVhsDateUI);
+    document.getElementById('vap-edit-vhs-range').addEventListener('change', window.updateVhsDateUI);
 
     document.getElementById('vap-save').addEventListener('click', async () => {
       const errEl = document.getElementById('vap-error');
@@ -436,21 +479,49 @@ function closeModal(id) {
       try {
         // Save details
         const parseDate = (val) => {
-          if (!val) return null;
-          if (/^\d{4}$/.test(val)) return val;
-          return new Date(val).toISOString();
+          if (val == null) return null;
+          const v = String(val).trim();
+          if (!v) return null;
+          // Year only — store as YYYY (never coerce via Date, which can become 1970)
+          if (/^\d{4}$/.test(v)) return v;
+          // Year-month → first day of month as calendar string
+          if (/^\d{4}-\d{2}$/.test(v)) {
+            const [y, m] = v.split('-').map(Number);
+            if (m < 1 || m > 12) return null;
+            return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-01`;
+          }
+          // Full calendar date YYYY-MM-DD — keep as-is (noon UTC only for validation)
+          if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+            const d = new Date(v + 'T12:00:00Z');
+            if (Number.isNaN(d.getTime()) || d.getUTCFullYear() < 1900) return null;
+            return v;
+          }
+          // Fallback parse
+          const d = new Date(v);
+          if (Number.isNaN(d.getTime()) || d.getFullYear() < 1900) return null;
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
         };
+        const isVhs = document.getElementById('vap-edit-is-vhs').checked;
+        const rangeOn = isVhs && document.getElementById('vap-edit-vhs-range').checked;
         const dateValue = document.getElementById('vap-edit-date').value.trim();
+        const startRaw = document.getElementById('vap-edit-vhs-start').value.trim();
+        const endRaw = document.getElementById('vap-edit-vhs-end').value.trim();
+        const contentDate = rangeOn
+          ? (parseDate(startRaw) || parseDate(dateValue))
+          : parseDate(dateValue);
         await api(`/api/videos/${_vapVideoId}`, {
           method: 'PUT',
           body: JSON.stringify({
             title: document.getElementById('vap-edit-title').value.trim(),
-            content_date: parseDate(dateValue),
+            content_date: contentDate,
             category: document.getElementById('vap-edit-category').value,
             description: document.getElementById('vap-edit-desc').value.trim(),
-            is_vhs: document.getElementById('vap-edit-is-vhs').checked ? 1 : 0,
-            vhs_start_date: parseDate(document.getElementById('vap-edit-vhs-start').value.trim()),
-            vhs_end_date: parseDate(document.getElementById('vap-edit-vhs-end').value.trim()),
+            is_vhs: isVhs ? 1 : 0,
+            vhs_start_date: rangeOn ? parseDate(startRaw) : null,
+            vhs_end_date: rangeOn ? parseDate(endRaw) : null,
             has_chapters: document.getElementById('vap-edit-has-chapters').checked ? 1 : 0,
             chapters_json: JSON.stringify(getChaptersPayload()),
           }),
@@ -567,9 +638,10 @@ function closeModal(id) {
     document.getElementById('vap-edit-category').value = 'video';
     document.getElementById('vap-edit-desc').value = '';
     document.getElementById('vap-edit-is-vhs').checked = false;
+    document.getElementById('vap-edit-vhs-range').checked = false;
     document.getElementById('vap-edit-vhs-start').value = '';
     document.getElementById('vap-edit-vhs-end').value = '';
-    document.getElementById('vap-vhs-dates-group').style.display = 'none';
+    if (typeof window.updateVhsDateUI === 'function') window.updateVhsDateUI();
     // Reset to first tab
     document.querySelectorAll('.vap-tab-btn').forEach((b) => b.classList.remove('active'));
     document.querySelectorAll('.vap-tab-panel').forEach((p) => p.classList.remove('active'));
@@ -590,20 +662,22 @@ function closeModal(id) {
       // Fill in details tab
       _vapVideoData = videoData;
       document.getElementById('vap-edit-title').value = videoData.title || '';
-      if (videoData.content_date) {
-        document.getElementById('vap-edit-date').value = String(videoData.content_date).split('T')[0];
-      }
+      const toDateInput = (raw) => {
+        if (!raw) return '';
+        const s = String(raw).trim();
+        if (/^\d{4}$/.test(s)) return s;
+        return s.split('T')[0];
+      };
+      document.getElementById('vap-edit-date').value = toDateInput(videoData.content_date);
       document.getElementById('vap-edit-category').value = videoData.category || 'video';
       document.getElementById('vap-edit-desc').value = videoData.description || '';
       const isVhs = !!videoData.is_vhs;
       document.getElementById('vap-edit-is-vhs').checked = isVhs;
-      document.getElementById('vap-vhs-dates-group').style.display = isVhs ? 'block' : 'none';
-      if (videoData.vhs_start_date) {
-        document.getElementById('vap-edit-vhs-start').value = String(videoData.vhs_start_date).split('T')[0];
-      }
-      if (videoData.vhs_end_date) {
-        document.getElementById('vap-edit-vhs-end').value = String(videoData.vhs_end_date).split('T')[0];
-      }
+      const hasRange = !!(videoData.vhs_start_date || videoData.vhs_end_date);
+      document.getElementById('vap-edit-vhs-range').checked = isVhs && hasRange;
+      document.getElementById('vap-edit-vhs-start').value = toDateInput(videoData.vhs_start_date);
+      document.getElementById('vap-edit-vhs-end').value = toDateInput(videoData.vhs_end_date);
+      window.updateVhsDateUI();
 
       // Fill in Chapters
       const hasChapters = !!videoData.has_chapters;
