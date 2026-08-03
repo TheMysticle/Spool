@@ -954,9 +954,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const authorInitial = (author[0] || '?').toUpperCase();
         const fallbackExpr = JSON.stringify(authorInitial);
         const token = getToken();
-        const avatarUrl = n.user_id && n.avatar_path && token
-          ? `/api/users/avatar/${Number(n.user_id)}?token=${encodeURIComponent(token)}&t=${Date.now()}`
-          : null;
+        let avatarUrl = null;
+        if (n.type === 'channel_upload') {
+          avatarUrl = n.avatar_path ? `${n.avatar_path}?t=${Date.now()}` : null;
+        } else if (n.user_id && n.avatar_path && token) {
+          avatarUrl = `/api/users/avatar/${Number(n.user_id)}?token=${encodeURIComponent(token)}&t=${Date.now()}`;
+        }
         const videoTitle = String(n.video_title || 'a video');
         const isRead = Number(n.is_read) === 1;
         const isReplyToMe = Number(n.is_reply_to_me) === 1;
