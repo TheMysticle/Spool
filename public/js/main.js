@@ -1816,8 +1816,11 @@
       const token = getToken();
       
       const avatarUrl = ch.avatar_path ? `${ch.avatar_path}?t=${Date.now()}&token=${encodeURIComponent(token || '')}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%232c2c2c"/><text x="50" y="55" font-family="sans-serif" font-size="40" fill="%238b5cf6" text-anchor="middle">${ch.name.charAt(0).toUpperCase()}</text></svg>';
+      
       const bannerUrl = ch.banner_path ? `${ch.banner_path}?t=${Date.now()}&token=${encodeURIComponent(token || '')}` : '';
       
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialTab = urlParams.get('tab') || 'videos';
       const user = getUser();
       const isOwner = user && user.id === ch.user_id;
       const isAdmin = user && user.role === 'admin';
@@ -1837,108 +1840,53 @@
             </div>
             <div class="channel-page-details">
               <h1 class="channel-page-title">${escHtml(ch.name)}</h1>
-                <div class="channel-page-meta">
-                  <div class="channel-page-handle">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</div>
-                  <div class="channel-page-stats">
-                    <span>${ch.subscriber_count || 0} subscribers</span>
-                    <span>&bull;</span>
-                    <span>${ch.video_count || 0} videos</span>
-                  </div>
+              <div class="channel-page-meta">
+                <div class="channel-page-handle">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</div>
+                <div class="channel-page-stats">
+                  <span>${ch.subscriber_count || 0} subscribers</span>
+                  <span>&bull;</span>
+                  <span>${ch.video_count || 0} videos</span>
                 </div>
               </div>
-              <div class="channel-page-actions">
+            </div>
+            <div class="channel-page-actions">
               <button class="btn ${subButtonClass}" onclick="toggleChannelSubscription('${id}', this)">${subButtonText}</button>
               ${canEdit ? `<button class="vhs-settings-btn" onclick="setupVhsPassword('${id}')" title="VHS Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>` : ''}
             </div>
           </div>
+          
           <div class="channel-page-nav">
             <div class="channel-page-tabs">
-              <button class="channel-page-tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</button>
-              <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'livestreams')">Livestreams</button>
-              <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'community')">Posts</button>
-              <button class="channel-page-tab" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>
+              <button class="channel-page-tab ${initialTab === 'videos' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'videos', 'newest')">Videos</button>
+              <button class="channel-page-tab ${initialTab === 'livestreams' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'livestreams', 'newest')">Live Streams</button>
+              ${isMain ? '' : `<button class="channel-page-tab ${initialTab === 'vhs' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'vhs', 'newest')">VHS</button>`}
+              <button class="channel-page-tab ${initialTab === 'community' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'community')">Community</button>
+              <button class="channel-page-tab ${initialTab === 'about' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'about')">About</button>
             </div>
-            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display:none; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: -16px;">
+            <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display: ${['videos', 'livestreams', 'vhs'].includes(initialTab) ? 'flex' : 'none'}; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: -16px;">
               <div style="position:relative; flex: 1; min-width: 140px;">
-                <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;">
+                <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;" onkeypress="if(event.key==='Enter') switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), document.getElementById('channel-sort-select').value, this.value)">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
-              <div id="channel-sort-menu-container" class="sort-menu-container">
-                <button class="sort-btn" id="channel-sort-trigger" aria-expanded="false">
-                  <span id="channel-sort-current">Sort by: Newest</span>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-                <div class="sort-menu" id="channel-sort-menu">
-                  <button class="sort-option active" data-sort="newest">Newest First</button>
-                  <button class="sort-option" data-sort="oldest">Oldest First</button>
-                  <button class="sort-option" data-sort="title_asc">Name: A to Z</button>
-                  <button class="sort-option" data-sort="title_desc">Name: Z to A</button>
-                </div>
+              <div class="sort-menu-container">
+                <select id="channel-sort-select" class="input-modern" style="border: 1px solid var(--border); border-radius: 20px; padding: 8px 12px; background: var(--bg-main); color: var(--text-primary);" onchange="switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), this.value, document.getElementById('channel-search-input').value)">
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="title_asc">Name: A-Z</option>
+                  <option value="title_desc">Name: Z-A</option>
+                </select>
               </div>
             </div>
           </div>
+          
         </div>
-        <div id="channel-page-content">
-          <div class="state-loading"><div class="spinner"></div></div>
-        </div>
+        <div class="channel-tab-content" id="channel-tab-content" style="padding: 0 40px 40px;"></div>
       `;
       
-      const searchInput = document.getElementById('channel-search-input');
-      const sortTrigger = document.getElementById('channel-sort-trigger');
-      const sortMenu = document.getElementById('channel-sort-menu');
-      const sortCurrent = document.getElementById('channel-sort-current');
-      let currentSort = 'newest';
+      switchChannelTab(id, initialTab);
 
-      const sortLabels = {
-        'newest': 'Newest First',
-        'oldest': 'Oldest First',
-        'title_asc': 'Name: A to Z',
-        'title_desc': 'Name: Z to A'
-      };
-
-      if (sortTrigger && sortMenu) {
-        sortTrigger.addEventListener('click', (e) => {
-          e.stopPropagation();
-          sortMenu.classList.toggle('show');
-          sortTrigger.setAttribute('aria-expanded', String(sortMenu.classList.contains('show')));
-        });
-
-        document.addEventListener('click', (e) => {
-          if (!sortTrigger.contains(e.target) && !sortMenu.contains(e.target)) {
-            sortMenu.classList.remove('show');
-            sortTrigger.setAttribute('aria-expanded', 'false');
-          }
-        });
-
-        document.querySelectorAll('#channel-sort-menu .sort-option').forEach(opt => {
-          opt.addEventListener('click', () => {
-            document.querySelectorAll('#channel-sort-menu .sort-option').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            
-            currentSort = opt.dataset.sort;
-            sortCurrent.textContent = `Sort by: ${sortLabels[currentSort]}`;
-            sortMenu.classList.remove('show');
-            sortTrigger.setAttribute('aria-expanded', 'false');
-            
-            const activeTab = document.querySelector('.channel-page-tab.active').textContent.toLowerCase();
-            switchChannelTab(id, activeTab, searchInput.value, currentSort);
-          });
-        });
-      }
-      
-      let searchTimeout;
-      searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          const activeTab = document.querySelector('.channel-page-tab.active').textContent.toLowerCase();
-          switchChannelTab(id, activeTab, searchInput.value, currentSort);
-        }, 500);
-      });
-      
-      switchChannelTab(id, 'videos');
-      
-    } catch (err) {
-      container.innerHTML = `<div class="state-empty"><p style="color:var(--danger)">Failed to load channel: ${escHtml(err.message)}</p></div>`;
+    } catch (e) {
+      container.innerHTML = '<div class="state-empty"><p>Error loading channel profile.</p></div>';
     }
   }
   
@@ -1971,8 +1919,22 @@
   };
   
   window.switchChannelTab = async function(id, tab, search = '', sort = 'newest') {
+    // Update URL to match tab
+    const url = new URL(window.location.origin + '/');
+    if (String(id).startsWith('@')) {
+      url.searchParams.set('channel', id);
+    } else {
+      url.searchParams.set('channelId', id);
+    }
+    url.searchParams.set('tab', tab);
+    if (window.location.search !== url.search) {
+      window.history.pushState(state, '', url);
+    }
+
     document.querySelectorAll('.channel-page-tab').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.channel-page-tab[onclick="switchChannelTab('${id}', '${tab}')"]`).classList.add('active');
+    // Try to find the exact tab, or fall back if not found (e.g. videos tab has extra args)
+    const activeBtn = document.querySelector(`.channel-page-tab[onclick*="'${tab}'"]`);
+    if (activeBtn) activeBtn.classList.add('active');
     
     const content = document.getElementById('channel-page-content');
     const toolbar = document.getElementById('channel-page-toolbar');
@@ -2593,6 +2555,11 @@
   const incomingPersonId = Number.parseInt(String(incomingPersonRaw || ''), 10);
   const incomingChannelId = incomingParams.get('channelId') || incomingParams.get('channel');
   const incomingMode = incomingParams.get('mode');
+  const incomingCategory = incomingParams.get('category');
+  const incomingChip = incomingParams.get('chip');
+
+  if (incomingCategory) state.category = incomingCategory;
+  if (incomingChip) state.specialChip = incomingChip;
 
   if (Number.isInteger(incomingPersonId) && incomingPersonId > 0) {
     state.mode = 'browse';
@@ -2629,6 +2596,8 @@
       } else {
         state.mode = 'browse';
         state.personId = params.get('person') || null;
+        state.category = params.get('category') || 'all';
+        state.specialChip = params.get('chip') || null;
       }
     }
     
