@@ -5358,30 +5358,23 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .video-location-container {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 8px 14px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  gap: 6px;
+  margin: 6px 0;
   width: fit-content;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  transition: var(--transition);
+  color: #ffffff;
+  font-size: 0.95rem;
 }
 
 .video-location-container:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  border-color: var(--accent);
+  opacity: 0.8;
 }
 
 .location-pin-icon {
-  color: var(--accent);
+  color: #ffffff;
   flex-shrink: 0;
 }
 
 .video-location-text {
   font-weight: 500;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
 }
