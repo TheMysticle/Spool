@@ -2557,7 +2557,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 }
 
 /* ── Video Settings Popup (unified tabbed modal) ──────────────────────────────── */
-.vap-modal { max-width: 540px; }
+.vap-modal { max-width: 540px; width: 90%; max-height: 90vh; overflow-y: auto; }
 
 /* Tab navigation */
 .vap-tabs {

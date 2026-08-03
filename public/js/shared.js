@@ -318,20 +318,20 @@ function closeModal(id) {
                     <input type="date" id="vap-edit-vhs-end" class="vap-input" />
                   </div>
                 </div>
-                <div class="vap-section-header-row" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
-                  <div>
-                    <h4 class="vap-section-title" style="font-size: 0.95rem;">Video Chapters</h4>
-                    <p class="vap-hint">Enable timeline chapters.</p>
-                  </div>
-                  <label class="switch">
-                    <input type="checkbox" id="vap-edit-has-chapters" />
-                    <span class="slider"></span>
-                  </label>
+              </div>
+              <div class="vap-section-header-row" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                <div>
+                  <h4 class="vap-section-title" style="font-size: 0.95rem;">Video Chapters</h4>
+                  <p class="vap-hint">Enable timeline chapters.</p>
                 </div>
-                <div id="vap-chapters-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 12px; background: var(--bg); padding: 12px; border-radius: 8px;">
-                  <div id="vap-chapters-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                  <button type="button" class="btn btn-secondary btn-sm" id="vap-add-chapter-btn" style="align-self: flex-start; margin-top: 8px;">Add Chapter</button>
-                </div>
+                <label class="switch">
+                  <input type="checkbox" id="vap-edit-has-chapters" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div id="vap-chapters-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 12px; background: var(--bg); padding: 12px; border-radius: 8px;">
+                <div id="vap-chapters-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <button type="button" class="btn btn-secondary btn-sm" id="vap-add-chapter-btn" style="align-self: flex-start; margin-top: 8px;">Add Chapter</button>
               </div>
             </div>
             <!-- Access Tab -->
@@ -1509,10 +1509,17 @@ window.openAvatarCropper = function(file, onCropComplete) {
       const row = document.createElement('div');
       row.style.display = 'flex';
       row.style.gap = '8px';
+      row.style.alignItems = 'center';
       row.innerHTML = `
-        <input type="text" class="form-input" value="${escHtml(ch.timeStr || '')}" placeholder="0:00" style="width: 80px;" onchange="updateChapterTime(${idx}, this.value)" ${idx === 0 ? 'readonly' : ''} />
-        <input type="text" class="form-input" value="${escHtml(ch.title || '')}" placeholder="Chapter Title" style="flex:1;" onchange="updateChapterTitle(${idx}, this.value)" />
-        ${idx !== 0 ? `<button type="button" class="btn btn-ghost" onclick="removeChapter(${idx})" style="color:var(--danger); padding:0 8px;">Del</button>` : `<div style="width: 48px;"></div>`}
+        <div style="width: 80px;">
+          <input type="text" class="form-input" value="${escHtml(ch.timeStr || '')}" placeholder="0:00" style="text-align: center;" onchange="updateChapterTime(${idx}, this.value)" ${idx === 0 ? 'readonly' : ''} />
+        </div>
+        <div style="flex:1;">
+          <input type="text" class="form-input" value="${escHtml(ch.title || '')}" placeholder="Chapter Title" onchange="updateChapterTitle(${idx}, this.value)" />
+        </div>
+        ${idx !== 0 ? `<button type="button" class="btn btn-ghost" onclick="removeChapter(${idx})" style="color:var(--danger); padding:0 8px;" title="Remove chapter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>` : `<div style="width: 34px;"></div>`}
       `;
       container.appendChild(row);
     });
@@ -1622,7 +1629,7 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
               <div style="flex: 1;">
                 <div class="form-group">
                   <label class="form-label">Name</label>
-                  <input type="text" id="chan-person-name" class="form-input" placeholder="Actor Name">
+                  <input type="text" id="chan-person-name" class="form-input" placeholder="Person Name">
                 </div>
               </div>
             </div>
@@ -1634,7 +1641,7 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
             <div class="form-group">
               <label class="form-label">Title Tags (comma separated)</label>
               <p class="vap-hint" style="margin-bottom: 6px;">Title Tags automatically assign this person to videos containing these words in the title.</p>
-              <input type="text" id="chan-person-tags" class="form-input" placeholder="e.g. Actor, Director">
+              <input type="text" id="chan-person-tags" class="form-input" placeholder="e.g. Presenter, Editor">
             </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
               <button class="btn btn-ghost btn-sm" id="chan-person-cancel">Cancel</button>
