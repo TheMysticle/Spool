@@ -784,6 +784,9 @@ function closeModal(id) {
           });
           toast('Custom thumbnail updated.');
           thumbPreview.src = `${res.path}?token=${encodeURIComponent(getToken() || '')}&t=${Date.now()}`;
+          if (typeof reloadVideoInfo === 'function') reloadVideoInfo();
+          if (typeof loadVideos === 'function') loadVideos();
+          
           thumbScrubberWrap.style.display = 'none';
           if (thumbVideo.src) {
             thumbVideo.pause();

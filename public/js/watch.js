@@ -317,7 +317,7 @@ function linkifyTimestamps(text) {
 
     const token = getToken();
     const thumbUrl = next.thumbnail_path
-      ? `/api/videos/${next.id}/thumbnail?${getAuthQueryString()}`
+      ? `/api/videos/${next.id}/thumbnail?${getAuthQueryString()}${next.updated_at ? `&t=${encodeURIComponent(next.updated_at)}` : ''}`
       : '';
 
     overlay.innerHTML = `

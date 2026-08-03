@@ -956,9 +956,12 @@
 
   function thumbUrl(video) {
     const token = getToken();
-    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+    const tokenParam = token ? `token=${encodeURIComponent(token)}` : '';
+    const tsParam = video.updated_at ? `t=${encodeURIComponent(video.updated_at)}` : '';
+    const params = [tokenParam, tsParam].filter(Boolean).join('&');
+    const query = params ? `?${params}` : '';
     return video.thumbnail_path
-      ? `/api/videos/${video.id}/thumbnail${tokenParam}`
+      ? `/api/videos/${video.id}/thumbnail${query}`
       : null;
   }
 
