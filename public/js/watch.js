@@ -1557,6 +1557,9 @@ function setupWatchPartyHooks() {
     } else if (msg.videoId && msg.videoId === currentVideoId) {
       if (window.WatchParty && WatchParty.isInParty()) {
         WatchParty.setBrowsingStatus(false);
+        if (typeof msg.currentTime === 'number') {
+          player.currentTime(msg.currentTime); // move them to the start along with everyone else
+        }
         if (player.readyState() >= 3) {
           WatchParty.sendReady();
         }
@@ -1686,7 +1689,7 @@ async function navigateToVideo(newId, isPopState = false, fromServerSync = false
 
     // Notify watch party instantly before loading src to prevent overlay flashing
     if (window.WatchParty && WatchParty.isInParty()) {
-      if (WatchParty.isHost()) {
+      if (WatchParty.isPartyHost()) {
         if (!fromServerSync) WatchParty.changeVideo(newId, data.title, 0);
       } else if (!fromServerSync) {
         WatchParty.setBrowsingStatus(true);

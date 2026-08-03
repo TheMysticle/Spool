@@ -492,6 +492,10 @@ function handlePartySync(ws, msg) {
   const partyId = userPartyMap.get(ws.userId);
   if (!partyId) return;
 
+  const party = watchParties.get(partyId);
+  const member = party?.members.get(ws.userId);
+  if (member?.browsing) return; // browsing members shouldn't drive party playback
+
   // Relay the sync event to all other party members
   broadcastToParty(partyId, {
     type: 'party:sync',
@@ -522,13 +526,14 @@ function handlePartyBuffering(ws, isBuffering) {
   }
 
   if (isBuffering) {
-    // Tell everyone to pause and show "Waiting for..."
-    broadcastToParty(partyId, {
-      type: 'party:waiting',
-      userId: ws.userId,
-      displayName: ws.displayName,
-      waiting: true,
-    });
+    if (!member?.browsing) {
+      broadcastToParty(partyId, {
+        type: 'party:waiting',
+        userId: ws.userId,
+        displayName: ws.displayName,
+        waiting: true,
+      });
+    }
   } else {
     // Check if all members are ready
     checkBufferingState(partyId);
@@ -722,6 +727,7 @@ function handlePartyVideoChange(ws, msg) {
     type: 'party:video_change',
     videoId: msg.videoId,
     videoTitle: msg.videoTitle,
+    currentTime: party.syncTime,
     fromUserId: ws.userId,
     fromUsername: ws.displayName,
   }, ws.userId);

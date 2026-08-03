@@ -499,7 +499,7 @@
 
     // Sync actions (called by video player)
     sendSync: (action, currentTime) => {
-      if (!isInParty) return;
+      if (!isInParty || isBrowsing) return;
       send({ type: 'party:sync', action, currentTime });
     },
     sendBuffering: () => { if (isInParty) send({ type: 'party:buffering' }); },
