@@ -8,6 +8,26 @@ function getResolutionLabel(height) {
   if (height >= 480) return '480p';
   return `${height}p`;
 }
+
+
+// Utility to parse timestamps (e.g. "1:30", "1:05:20") into seconds
+function parseTimestamp(tsStr) {
+  const parts = tsStr.split(':').map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return 0;
+}
+
+// Utility to find timestamps in text and wrap them in clickable spans
+function linkifyTimestamps(text) {
+  if (!text) return text;
+  const regex = /\b(?:[0-9]+:)?[0-5]?[0-9]:[0-5][0-9]\b/g;
+  return text.replace(regex, (match) => {
+    const seconds = parseTimestamp(match);
+    return `<a class="timestamp-link" data-time="${seconds}">${match}</a>`;
+  });
+}
+
 /* watch.js — video player page */
 'use strict';
 
@@ -2154,7 +2174,7 @@ window.navigateToVideo = navigateToVideo;
     const sizeTag = video.file_size ? `<span class="meta-tag">${formatFileSize(video.file_size)}</span>` : '';
     const durationTag = video.duration ? `<span class="meta-tag">${formatDuration(video.duration)}</span>` : '';
     const descHtml = video.description
-      ? `<div class="description-text">${escHtml(video.description)}</div>`
+      ? `<div class="description-text">${linkifyTimestamps(escHtml(video.description))}</div>`
       : '';
 
     infoEl.innerHTML = `
@@ -2913,7 +2933,7 @@ window.navigateToVideo = navigateToVideo;
     const avatarUrl = comment.user_id && token
       ? `/api/users/avatar/${comment.user_id}?${getAuthQueryString()}&t=${Date.now()}`
       : null;
-    const safeContent = escHtml(comment.content || '');
+    const safeContent = linkifyTimestamps(escHtml(comment.content || ''));
     const gifHtml = comment.gif_url
       ? `<div class="comment-gif-wrap"><img class="comment-gif" src="${escHtml(comment.gif_url)}" alt="Comment GIF" loading="lazy" decoding="async" /></div>`
       : '';
@@ -3248,6 +3268,22 @@ window.navigateToVideo = navigateToVideo;
       ripple.classList.add('animate');
     }
   }
+  // Timestamp click handling
+  document.addEventListener('click', (e) => {
+    const tsLink = e.target.closest('.timestamp-link');
+    if (tsLink && player) {
+      e.preventDefault();
+      const time = parseFloat(tsLink.dataset.time);
+      if (!isNaN(time)) {
+        player.currentTime(time);
+        player.play();
+        const videoContainer = document.querySelector('.video-container') || document.querySelector('#video-container');
+        if (videoContainer) {
+          videoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

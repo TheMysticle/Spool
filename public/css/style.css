@@ -5131,5 +5131,15 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   display: block;
 }
 .vjs-livechat-toggle.active .vjs-icon-placeholder::before {
-  stroke: %238b5cf6; /* accent color */
+}
+
+/* ── Timestamps ──────────────────────────────────────────────────────────── */
+.timestamp-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+.timestamp-link:hover {
+  text-decoration: underline;
 }
