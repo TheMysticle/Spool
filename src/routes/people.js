@@ -68,13 +68,13 @@ const checkPeoplePermission = (req, res, next) => {
 // ── POST /api/people ────────────────────────────────────────────────────────
 router.post('/', authenticate, checkPeoplePermission, (req, res) => {
   const { createPerson, syncAutoTaggedPeopleForPerson } = require('../database');
-  const { name, bio = '', title_tags = '' } = req.body;
+  const { name, second_name = '', surname = '', bio = '', title_tags = '' } = req.body;
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'Name is required.' });
   }
   
   const channelId = req.userChannel ? req.userChannel.id : null;
-  const result = createPerson(name.trim().slice(0, 100), String(bio).slice(0, 1000), String(title_tags).slice(0, 500), channelId);
+  const result = createPerson(name.trim().slice(0, 100), String(bio).slice(0, 1000), String(title_tags).slice(0, 500), channelId, String(second_name).trim().slice(0, 100), String(surname).trim().slice(0, 100));
   const personId = Number(result.lastInsertRowid);
   syncAutoTaggedPeopleForPerson(personId);
   res.status(201).json({ id: personId, name: name.trim() });
@@ -85,13 +85,15 @@ router.put('/:id', authenticate, checkPeoplePermission, (req, res) => {
   const { getPersonById, updatePerson, syncAutoTaggedPeopleForPerson, setPersonUserLink } = require('../database');
   const id = parseInt(req.params.id, 10);
   
-  const { name, bio, title_tags, user_id } = req.body;
+  const { name, second_name, surname, bio, title_tags, user_id } = req.body;
   if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
     return res.status(400).json({ error: 'Name must be a non-empty string.' });
   }
 
   const updates = {};
   if (name !== undefined) updates.name = name.trim().slice(0, 100);
+  if (second_name !== undefined) updates.second_name = String(second_name).trim().slice(0, 100);
+  if (surname !== undefined) updates.surname = String(surname).trim().slice(0, 100);
   if (bio !== undefined) updates.bio = String(bio).slice(0, 1000);
   if (title_tags !== undefined) updates.title_tags = String(title_tags).slice(0, 500);
   

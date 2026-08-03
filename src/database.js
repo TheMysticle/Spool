@@ -198,6 +198,8 @@ function initDatabase() {
     CREATE TABLE IF NOT EXISTS people (
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       name       TEXT    NOT NULL,
+      second_name TEXT   NOT NULL DEFAULT '',
+      surname    TEXT    NOT NULL DEFAULT '',
       bio        TEXT    NOT NULL DEFAULT '',
       title_tags TEXT    NOT NULL DEFAULT '',
       image_path TEXT,
@@ -460,6 +462,14 @@ function initDatabase() {
   const hasTitleTags = peopleColumns.some((col) => col.name === 'title_tags');
   if (!hasTitleTags) {
     db.exec("ALTER TABLE people ADD COLUMN title_tags TEXT NOT NULL DEFAULT ''");
+  }
+  const hasSecondName = peopleColumns.some((col) => col.name === 'second_name');
+  if (!hasSecondName) {
+    db.exec("ALTER TABLE people ADD COLUMN second_name TEXT NOT NULL DEFAULT ''");
+  }
+  const hasSurname = peopleColumns.some((col) => col.name === 'surname');
+  if (!hasSurname) {
+    db.exec("ALTER TABLE people ADD COLUMN surname TEXT NOT NULL DEFAULT ''");
   }
 
   db.exec(`
@@ -1362,11 +1372,11 @@ const getFavoriteVideoIds = (userId) =>
     .map((row) => row.video_id);
 
 // ── People queries ───────────────────────────────────────────────────────────
-const createPerson = (name, bio = '', titleTags = '', channel_id = null) =>
-  db.prepare('INSERT INTO people (name, bio, title_tags, channel_id) VALUES (?, ?, ?, ?)').run(name, bio, titleTags, channel_id);
+const createPerson = (name, bio = '', titleTags = '', channel_id = null, second_name = '', surname = '') =>
+  db.prepare('INSERT INTO people (name, bio, title_tags, channel_id, second_name, surname) VALUES (?, ?, ?, ?, ?, ?)').run(name, bio, titleTags, channel_id, second_name, surname);
 
 const updatePerson = (id, fields) => {
-  const allowed = ['name', 'bio', 'title_tags', 'channel_id'];
+  const allowed = ['name', 'bio', 'title_tags', 'channel_id', 'second_name', 'surname'];
   const sets = Object.keys(fields).filter((k) => allowed.includes(k)).map((k) => `${k} = ?`);
   if (!sets.length) return;
   const vals = Object.keys(fields).filter((k) => allowed.includes(k)).map((k) => fields[k]);

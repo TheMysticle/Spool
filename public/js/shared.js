@@ -1607,9 +1607,6 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
             <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Name</label>
             <input type="text" id="editor-name-input" value="${escHtml(currentName)}" class="form-input" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem;" placeholder="Enter channel name...">
           </div>
-          </div>
-        </div>
-
         <div id="panel-chan-people" class="chan-tab-panel" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h4 style="margin: 0; font-weight: 500;">Manage People</h4>
@@ -1628,9 +1625,19 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
               </div>
               <div style="flex: 1;">
                 <div class="form-group">
-                  <label class="form-label">Name</label>
-                  <input type="text" id="chan-person-name" class="form-input" placeholder="Person Name">
+                  <label class="form-label">First Name</label>
+                  <input type="text" id="chan-person-name" class="form-input" placeholder="First Name">
                 </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label">Second Name</label>
+                <input type="text" id="chan-person-second-name" class="form-input" placeholder="Second Name">
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label">Surname</label>
+                <input type="text" id="chan-person-surname" class="form-input" placeholder="Surname">
               </div>
             </div>
             
@@ -1799,6 +1806,8 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
   overlay.querySelector('#chan-add-person-btn').addEventListener('click', () => {
     overlay.querySelector('#chan-person-id').value = '';
     overlay.querySelector('#chan-person-name').value = '';
+    overlay.querySelector('#chan-person-second-name').value = '';
+    overlay.querySelector('#chan-person-surname').value = '';
     overlay.querySelector('#chan-person-bio').value = '';
     overlay.querySelector('#chan-person-tags').value = '';
     _chanPersonImgBase64 = null;
@@ -1814,6 +1823,8 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
   overlay.querySelector('#chan-person-save').addEventListener('click', async () => {
     const id = overlay.querySelector('#chan-person-id').value;
     const name = overlay.querySelector('#chan-person-name').value.trim();
+    const second_name = overlay.querySelector('#chan-person-second-name').value.trim();
+    const surname = overlay.querySelector('#chan-person-surname').value.trim();
     const bio = overlay.querySelector('#chan-person-bio').value.trim();
     const tags = overlay.querySelector('#chan-person-tags').value.trim();
     
@@ -1822,9 +1833,9 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     try {
       let savedPersonId = id;
       if (id) {
-        await api('/api/people/' + id, { method: 'PUT', body: JSON.stringify({ name, bio, title_tags: tags }) });
+        await api('/api/people/' + id, { method: 'PUT', body: JSON.stringify({ name, second_name, surname, bio, title_tags: tags }) });
       } else {
-        const res = await api('/api/people', { method: 'POST', body: JSON.stringify({ name, bio, title_tags: tags }) });
+        const res = await api('/api/people', { method: 'POST', body: JSON.stringify({ name, second_name, surname, bio, title_tags: tags }) });
         savedPersonId = res.id;
       }
       
@@ -1848,6 +1859,8 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     if (!p) return;
     overlay.querySelector('#chan-person-id').value = p.id;
     overlay.querySelector('#chan-person-name').value = p.name || '';
+    overlay.querySelector('#chan-person-second-name').value = p.second_name || '';
+    overlay.querySelector('#chan-person-surname').value = p.surname || '';
     overlay.querySelector('#chan-person-bio').value = p.bio || '';
     overlay.querySelector('#chan-person-tags').value = p.title_tags || '';
     

@@ -2497,10 +2497,11 @@ window.navigateToVideo = navigateToVideo;
             ? `<img src="/api/people/${person.id}/image?${getAuthQueryString()}" alt="${escHtml(person.name)}" />`
             : escHtml((person.name || '?')[0].toUpperCase());
 
+          const fullName = `${person.name} ${person.second_name || ''} ${person.surname || ''}`.trim();
           spotlightEl.innerHTML = `
             <div class="spotlight-avatar">${avatarInner}</div>
             <div class="spotlight-info">
-              <div class="spotlight-name">${escHtml(person.name)}</div>
+              <div class="spotlight-name">${escHtml(fullName)}</div>
               <div class="spotlight-bio">${escHtml(person.bio || 'No biography available.')}</div>
               <div class="spotlight-actions">
                 <button class="btn btn-primary btn-sm" id="spotlight-view-btn" type="button">
@@ -2592,7 +2593,8 @@ window.navigateToVideo = navigateToVideo;
       moreBtn.textContent = `More videos with ${name}`;
     }
 
-    nameEl.textContent = name;
+    const fullName = `${person?.name || 'Unknown'} ${person?.second_name || ''} ${person?.surname || ''}`.trim();
+    nameEl.textContent = fullName;
     bioEl.textContent = bio || 'No bio available.';
 
     if (person?.image_path) {

@@ -1127,7 +1127,7 @@
               </div>
             </div>
             <div class="person-card-body">
-              <h4 class="person-card-name">${escHtml(p.name)}</h4>
+              <h4 class="person-card-name">${escHtml(p.name)} ${escHtml(p.second_name || '')} ${escHtml(p.surname || '')}</h4>
               <div class="person-card-link">${linkedUser}</div>
               <p class="person-card-bio">${bio}</p>
             </div>
@@ -1159,6 +1159,8 @@
     document.getElementById('person-modal-title').textContent = 'Add Person';
     document.getElementById('person-modal-id').value = '';
     document.getElementById('person-name').value = '';
+    document.getElementById('person-second-name').value = '';
+    document.getElementById('person-surname').value = '';
     document.getElementById('person-bio').value = '';
     document.getElementById('person-title-tags').value = '';
     document.getElementById('person-modal-error').textContent = '';
@@ -1181,6 +1183,8 @@
       document.getElementById('person-modal-title').textContent = 'Edit Person';
       document.getElementById('person-modal-id').value = id;
       document.getElementById('person-name').value = p.name;
+      document.getElementById('person-second-name').value = p.second_name || '';
+      document.getElementById('person-surname').value = p.surname || '';
       document.getElementById('person-bio').value = p.bio || '';
       document.getElementById('person-title-tags').value = p.title_tags || '';
       document.getElementById('person-modal-error').textContent = '';
@@ -1273,6 +1277,8 @@
     const errEl = document.getElementById('person-modal-error');
     const id = document.getElementById('person-modal-id').value;
     const name = document.getElementById('person-name').value.trim();
+    const second_name = document.getElementById('person-second-name').value.trim();
+    const surname = document.getElementById('person-surname').value.trim();
     const bio = document.getElementById('person-bio').value.trim();
     const titleTags = document.getElementById('person-title-tags').value.trim();
     const userIdVal = document.getElementById('person-user-link').value;
@@ -1286,12 +1292,12 @@
       if (id) {
         await api(`/api/people/${id}`, {
           method: 'PUT',
-          body: JSON.stringify({ name, bio, title_tags: titleTags, user_id: userIdVal ? parseInt(userIdVal, 10) : null }),
+          body: JSON.stringify({ name, second_name, surname, bio, title_tags: titleTags, user_id: userIdVal ? parseInt(userIdVal, 10) : null }),
         });
       } else {
         const result = await api('/api/people', {
           method: 'POST',
-          body: JSON.stringify({ name, bio, title_tags: titleTags }),
+          body: JSON.stringify({ name, second_name, surname, bio, title_tags: titleTags }),
         });
         personId = result.id;
         // Set user link
