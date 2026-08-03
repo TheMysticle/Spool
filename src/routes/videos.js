@@ -565,7 +565,7 @@ router.put('/:id', authenticate, (req, res) => {
   }
   if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
 
-  const { title, description, category, is_vhs, vhs_start_date, vhs_end_date, content_date } = req.body;
+  const { title, description, category, is_vhs, vhs_start_date, vhs_end_date, content_date, has_chapters, chapters_json } = req.body;
 
   if (title !== undefined && (typeof title !== 'string' || title.trim().length === 0)) {
     return res.status(400).json({ error: 'Title must be a non-empty string.' });
@@ -587,6 +587,8 @@ router.put('/:id', authenticate, (req, res) => {
     is_vhs: is_vhs !== undefined ? is_vhs : undefined,
     vhs_start_date: vhs_start_date !== undefined ? vhs_start_date : undefined,
     vhs_end_date: vhs_end_date !== undefined ? vhs_end_date : undefined,
+    has_chapters: has_chapters !== undefined ? has_chapters : undefined,
+    chapters_json: chapters_json !== undefined ? chapters_json : undefined,
     content_date: content_date !== undefined ? content_date : undefined,
   });
 

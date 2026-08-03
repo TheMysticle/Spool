@@ -318,6 +318,20 @@ function closeModal(id) {
                     <input type="date" id="vap-edit-vhs-end" class="vap-input" />
                   </div>
                 </div>
+                <div class="vap-section-header-row" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+                  <div>
+                    <h4 class="vap-section-title" style="font-size: 0.95rem;">Video Chapters</h4>
+                    <p class="vap-hint">Enable timeline chapters.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="vap-edit-has-chapters" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div id="vap-chapters-container" style="display: none; flex-direction: column; gap: 8px; margin-top: 12px; background: var(--bg); padding: 12px; border-radius: 8px;">
+                  <div id="vap-chapters-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                  <button type="button" class="btn btn-secondary btn-sm" id="vap-add-chapter-btn" style="align-self: flex-start; margin-top: 8px;">Add Chapter</button>
+                </div>
               </div>
             </div>
             <!-- Access Tab -->
@@ -431,10 +445,11 @@ function closeModal(id) {
             is_vhs: document.getElementById('vap-edit-is-vhs').checked ? 1 : 0,
             vhs_start_date: document.getElementById('vap-edit-vhs-start').value ? new Date(document.getElementById('vap-edit-vhs-start').value).toISOString() : null,
             vhs_end_date: document.getElementById('vap-edit-vhs-end').value ? new Date(document.getElementById('vap-edit-vhs-end').value).toISOString() : null,
+            has_chapters: document.getElementById('vap-edit-has-chapters').checked ? 1 : 0,
+            chapters_json: JSON.stringify(getChaptersPayload()),
           }),
         });
 
-        // Save access
         const allUsers = document.getElementById('vap-all-users').checked;
         const userIds = [];
         document.querySelectorAll('.vap-user-cb:checked').forEach((cb) => {
@@ -458,6 +473,20 @@ function closeModal(id) {
       } finally {
         saveBtn.disabled = false;
       }
+    });
+
+    // Handle Chapters UI
+    document.getElementById('vap-edit-has-chapters').addEventListener('change', (e) => {
+      document.getElementById('vap-chapters-container').style.display = e.target.checked ? 'flex' : 'none';
+      if (e.target.checked && _vapChaptersList.length === 0) {
+        _vapChaptersList.push({ timeStr: '0:00', title: 'Intro' });
+        renderChaptersList();
+      }
+    });
+
+    document.getElementById('vap-add-chapter-btn').addEventListener('click', () => {
+      _vapChaptersList.push({ timeStr: '', title: '' });
+      renderChaptersList();
     });
   }
 
@@ -569,6 +598,15 @@ function closeModal(id) {
       if (videoData.vhs_end_date) {
         document.getElementById('vap-edit-vhs-end').value = videoData.vhs_end_date.split('T')[0];
       }
+
+      // Fill in Chapters
+      const hasChapters = !!videoData.has_chapters;
+      document.getElementById('vap-edit-has-chapters').checked = hasChapters;
+      document.getElementById('vap-chapters-container').style.display = hasChapters ? 'flex' : 'none';
+      try {
+        _vapChaptersList = videoData.chapters_json ? JSON.parse(videoData.chapters_json) : [];
+      } catch (e) { _vapChaptersList = []; }
+      renderChaptersList();
 
       // Render access tab
       const allCb = document.getElementById('vap-all-users');
@@ -1460,6 +1498,48 @@ window.openAvatarCropper = function(file, onCropComplete) {
   };
   reader.readAsDataURL(file);
 };
+
+  let _vapChaptersList = [];
+  
+  function renderChaptersList() {
+    const container = document.getElementById('vap-chapters-list');
+    if (!container) return;
+    container.innerHTML = '';
+    _vapChaptersList.forEach((ch, idx) => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.gap = '8px';
+      row.innerHTML = `
+        <input type="text" class="form-input" value="${escHtml(ch.timeStr || '')}" placeholder="0:00" style="width: 80px;" onchange="updateChapterTime(${idx}, this.value)" ${idx === 0 ? 'readonly' : ''} />
+        <input type="text" class="form-input" value="${escHtml(ch.title || '')}" placeholder="Chapter Title" style="flex:1;" onchange="updateChapterTitle(${idx}, this.value)" />
+        ${idx !== 0 ? `<button type="button" class="btn btn-ghost" onclick="removeChapter(${idx})" style="color:var(--danger); padding:0 8px;">Del</button>` : `<div style="width: 48px;"></div>`}
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  window.updateChapterTime = function(idx, val) {
+    if (_vapChaptersList[idx]) _vapChaptersList[idx].timeStr = val;
+  };
+  window.updateChapterTitle = function(idx, val) {
+    if (_vapChaptersList[idx]) _vapChaptersList[idx].title = val;
+  };
+  window.removeChapter = function(idx) {
+    _vapChaptersList.splice(idx, 1);
+    renderChaptersList();
+  };
+
+  function getChaptersPayload() {
+    return _vapChaptersList.map(ch => {
+      let time = 0;
+      if (ch.timeStr) {
+        const parts = ch.timeStr.split(':').map(Number);
+        if (parts.length === 2) time = parts[0] * 60 + parts[1];
+        if (parts.length === 3) time = parts[0] * 3600 + parts[1] * 60 + parts[2];
+      }
+      return { timeStr: ch.timeStr, time: time, title: ch.title };
+    }).sort((a, b) => a.time - b.time);
+  }
 
 window.openChannelEditor = function(channelId, currentName, currentAvatar, currentBanner, onSaveComplete) {
   const overlay = document.createElement('div');

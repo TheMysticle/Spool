@@ -28,30 +28,7 @@ function linkifyTimestamps(text) {
   });
 }
 
-// Utility to parse chapters from description text
-function parseChapters(text) {
-  if (!text) return null;
-  const lines = text.split('\n');
-  const chapters = [];
-  const regex = /^\s*((?:[0-9]+:)?[0-5]?[0-9]:[0-5][0-9])\s+(.+)$/;
-  
-  for (const line of lines) {
-    const match = line.match(regex);
-    if (match) {
-      chapters.push({
-        timeStr: match[1],
-        time: parseTimestamp(match[1]),
-        title: match[2].trim()
-      });
-    }
-  }
-  
-  // A valid chapter list must have at least 2 chapters and start with 0:00
-  if (chapters.length >= 2 && chapters[0].time === 0) {
-    return chapters.sort((a, b) => a.time - b.time);
-  }
-  return null;
-}
+// Utility to // parseChapters removed, reading from database schema instead
 
 /* watch.js — video player page */
 'use strict';
@@ -1135,7 +1112,7 @@ function parseChapters(text) {
       // Create Live Thumbnail Preview Elements
       const previewContainer = document.createElement('div');
       previewContainer.className = 'vjs-thumbnail-preview';
-      previewContainer.innerHTML = '<div class="vjs-thumbnail-chapter-title"></div><canvas class="vjs-thumbnail-canvas" width="160" height="90"></canvas><div class="vjs-thumbnail-time">0:00</div>';
+      previewContainer.innerHTML = '<canvas class="vjs-thumbnail-canvas" width="160" height="90"></canvas><div class="vjs-thumbnail-chapter-title"></div><div class="vjs-thumbnail-time">0:00</div>';
       progressControl.appendChild(previewContainer);
 
       const timeDisplay = previewContainer.querySelector('.vjs-thumbnail-time');
@@ -1186,10 +1163,18 @@ function parseChapters(text) {
             if (pct < 100) {
               const marker = document.createElement('div');
               marker.className = 'vjs-chapter-marker';
-              marker.style.left = pct + '%';
+              marker.style.left = `${pct}%`;
               holder.appendChild(marker);
             }
           });
+          
+          // Setup chapter hover highlight overlay
+          let highlightOverlay = holder.querySelector('.vjs-chapter-hover-highlight');
+          if (!highlightOverlay) {
+            highlightOverlay = document.createElement('div');
+            highlightOverlay.className = 'vjs-chapter-hover-highlight';
+            holder.insertBefore(highlightOverlay, holder.firstChild);
+          }
         }
 
         // Add current chapter title to control bar
@@ -1197,7 +1182,12 @@ function parseChapters(text) {
           const controlBar = player.controlBar.el();
           currentChapterTitleEl = document.createElement('div');
           currentChapterTitleEl.className = 'vjs-current-chapter-title';
-          controlBar.appendChild(currentChapterTitleEl);
+          const timeControl = controlBar.querySelector('.vjs-time-control') || controlBar.querySelector('.vjs-remaining-time');
+          if (timeControl) {
+            controlBar.insertBefore(currentChapterTitleEl, timeControl.nextSibling);
+          } else {
+            controlBar.appendChild(currentChapterTitleEl);
+          }
         }
       });
 
@@ -1238,11 +1228,13 @@ function parseChapters(text) {
         timeDisplay.textContent = formatTime(hoverTime);
 
         if (currentChapters && currentChapters.length > 0) {
-          let activeChapter = currentChapters[0];
-          for (const ch of currentChapters) {
-            if (ch.time <= hoverTime) activeChapter = ch;
-            else break;
+          let activeChapterIndex = 0;
+          for (let i = 0; i < currentChapters.length; i++) {
+            if (currentChapters[i].time <= hoverTime) activeChapterIndex = i;
           }
+          const activeChapter = currentChapters[activeChapterIndex];
+          const nextChapter = currentChapters[activeChapterIndex + 1];
+
           chapterTitleDisplay.textContent = activeChapter.title;
           chapterTitleDisplay.style.display = 'block';
         } else {
@@ -3525,7 +3517,13 @@ window.navigateToVideo = navigateToVideo;
       const progressData = currentUser ? await api(`/api/videos/${videoId}/progress`).catch(() => ({ position: 0 })) : { position: 0 };
 
       currentVideo = video;
-      currentChapters = parseChapters(video.description);
+      if (video.has_chapters) {
+        try {
+          currentChapters = video.chapters_json ? JSON.parse(video.chapters_json) : null;
+        } catch (e) { currentChapters = null; }
+      } else {
+        currentChapters = null;
+      }
 
       // Set quality list; auto-pick the highest available resolution.
       availableQualities = qualityData.qualities || [];
