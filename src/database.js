@@ -890,12 +890,35 @@ const getVideoByPath = (filepath) =>
     WHERE v.filepath = ?
   `).get(filepath);
 
-const getAllVideos = ({ category, search, page = 1, limit = 40, sort = 'title_asc', userId = null, isAdmin = false, personId = null, channelId = null, includeVhs = false } = {}) => {
+const getAllVideos = ({ category, search, page = 1, limit = 40, sort = 'title_asc', userId = null, isAdmin = false, personId = null, channelId = null, includeVhs = false, unlockedVhsChannels = [] } = {}) => {
   let where = [];
   let params = [];
 
   if (!includeVhs) {
     where.push('v.is_vhs = 0');
+  } else if (!isAdmin) {
+    if (unlockedVhsChannels && unlockedVhsChannels.length > 0) {
+      const numericIds = unlockedVhsChannels.filter(id => id !== 'main').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+      const hasMain = unlockedVhsChannels.includes('main');
+      
+      let vhsConds = [];
+      if (numericIds.length > 0) {
+         const qs = numericIds.map(() => '?').join(',');
+         vhsConds.push(`v.channel_id IN (${qs})`);
+         params.push(...numericIds);
+      }
+      if (hasMain) {
+         vhsConds.push('v.channel_id IS NULL');
+      }
+      
+      if (vhsConds.length > 0) {
+        where.push(`(v.is_vhs = 0 OR (v.is_vhs = 1 AND (${vhsConds.join(' OR ')})))`);
+      } else {
+        where.push('v.is_vhs = 0');
+      }
+    } else {
+      where.push('v.is_vhs = 0');
+    }
   }
 
   if (category && category !== 'all') {
@@ -1415,37 +1438,40 @@ const deletePerson = (id) => {
 const getAllPeople = ({ userId = null, isAdmin = true } = {}) =>
   db
     .prepare(
-      `SELECT p.id, p.name, p.second_name, p.surname, p.bio, p.title_tags, p.image_path, p.user_id, p.channel_id, p.created_at,
-              u.username, u.display_name AS linked_display_name,
-              COALESCE((
-                SELECT COUNT(*)
-                FROM (
-                  SELECT vp.video_id
-                  FROM video_people vp
-                  WHERE vp.person_id = p.id
-                  UNION
-                  SELECT vpa.video_id
-                  FROM video_people_auto vpa
-                  WHERE vpa.person_id = p.id
-                ) tagged_videos
-                JOIN videos v ON v.id = tagged_videos.video_id
-                  AND (
-                    ? = 1
-                    OR EXISTS (SELECT 1 FROM video_access_all vaa WHERE vaa.video_id = tagged_videos.video_id)
-                    OR EXISTS (SELECT 1 FROM video_access_users vau WHERE vau.video_id = tagged_videos.video_id AND vau.user_id = ?)
-                    OR EXISTS (
-                      SELECT 1
-                      FROM video_people vp2
-                      JOIN people p2 ON p2.id = vp2.person_id
-                      WHERE vp2.video_id = tagged_videos.video_id AND p2.user_id = ?
-                    )
-                  )
-              ), 0) AS video_count
-       FROM people p
-       LEFT JOIN users u ON u.id = p.user_id
-       ORDER BY p.name ASC`
+      `SELECT * FROM (
+        SELECT p.id, p.name, p.second_name, p.surname, p.bio, p.title_tags, p.image_path, p.user_id, p.channel_id, p.created_at,
+               u.username, u.display_name AS linked_display_name,
+               COALESCE((
+                 SELECT COUNT(*)
+                 FROM (
+                   SELECT vp.video_id
+                   FROM video_people vp
+                   WHERE vp.person_id = p.id
+                   UNION
+                   SELECT vpa.video_id
+                   FROM video_people_auto vpa
+                   WHERE vpa.person_id = p.id
+                 ) tagged_videos
+                 JOIN videos v ON v.id = tagged_videos.video_id
+                   AND (
+                     ? = 1
+                     OR EXISTS (SELECT 1 FROM video_access_all vaa WHERE vaa.video_id = tagged_videos.video_id)
+                     OR EXISTS (SELECT 1 FROM video_access_users vau WHERE vau.video_id = tagged_videos.video_id AND vau.user_id = ?)
+                     OR EXISTS (
+                       SELECT 1
+                       FROM video_people vp2
+                       JOIN people p2 ON p2.id = vp2.person_id
+                       WHERE vp2.video_id = tagged_videos.video_id AND p2.user_id = ?
+                     )
+                   )
+               ), 0) AS video_count
+        FROM people p
+        LEFT JOIN users u ON u.id = p.user_id
+      ) sub
+      WHERE sub.video_count > 0 OR ? = 1
+      ORDER BY sub.name ASC`
     )
-    .all(isAdmin ? 1 : 0, userId, userId);
+    .all(isAdmin ? 1 : 0, userId, userId, isAdmin ? 1 : 0);
 
 const getPersonById = (id) =>
   db.prepare('SELECT * FROM people WHERE id = ?').get(id);
@@ -2074,6 +2100,18 @@ const acceptFriendRequest = (userId, fromUserId) => {
   return { ok: true };
 };
 
+const getPersonVhsChannels = (personId) => {
+  const rows = db.prepare(`
+    SELECT DISTINCT v.channel_id
+    FROM videos v
+    WHERE v.is_vhs = 1 AND (
+      EXISTS (SELECT 1 FROM video_people vp WHERE vp.video_id = v.id AND vp.person_id = ?)
+      OR EXISTS (SELECT 1 FROM video_people_auto vpa WHERE vpa.video_id = v.id AND vpa.person_id = ?)
+    )
+  `).all(personId, personId);
+  return rows.map(r => r.channel_id === null ? 'main' : String(r.channel_id));
+};
+
 const denyFriendRequest = (userId, fromUserId) => {
   const req = db.prepare(
     'SELECT id FROM friends WHERE user_id = ? AND friend_id = ? AND status = ?'
@@ -2194,6 +2232,7 @@ module.exports = {
   setPersonImage,
   setPersonUserLink,
   getPersonVhsPhotos,
+  getPersonVhsChannels,
   getPersonVhsPhotoById,
   addPersonVhsPhoto,
   updatePersonVhsPhoto,

@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { execFile, spawn } = require('child_process');
@@ -500,6 +501,20 @@ router.get('/', authenticate, (req, res) => {
     ? sort
     : 'title_asc';
 
+  let unlockedVhsChannels = [];
+  const vhsTokensHeader = req.headers['x-vhs-tokens'] || req.headers['x-vhs-token'];
+  if (vhsTokensHeader) {
+    const tokens = vhsTokensHeader.split(',').map(t => t.trim()).filter(Boolean);
+    for (const token of tokens) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded && decoded.type === 'vhs_access' && decoded.channelId) {
+          unlockedVhsChannels.push(String(decoded.channelId));
+        }
+      } catch (err) {}
+    }
+  }
+
   const result = getAllVideos({
     category: safeCategory,
     search: safeSearch,
@@ -510,7 +525,8 @@ router.get('/', authenticate, (req, res) => {
     isAdmin: req.user.role === 'admin',
     personId: safePersonId,
     channelId: channelId || null,
-    includeVhs: include_vhs === 'true'
+    includeVhs: include_vhs === 'true',
+    unlockedVhsChannels
   });
 
   result.channel = getChannelProfile();

@@ -2296,6 +2296,98 @@
     }
   };
 
+  async function ensureVhsUnlock(personId) {
+    try {
+      const res = await api(`/api/people/${personId}/vhs-channels`);
+      const channels = res.channels || [];
+      if (!channels.length) return [];
+      
+      const missing = [];
+      const validTokens = [];
+      
+      for (const cid of channels) {
+         try {
+           const cached = JSON.parse(sessionStorage.getItem('vhs_token_' + cid));
+           if (cached && cached.token && cached.expires > Date.now()) {
+             validTokens.push(cached.token);
+           } else {
+             missing.push(cid);
+             sessionStorage.removeItem('vhs_token_' + cid);
+           }
+         } catch(e) {
+           missing.push(cid);
+         }
+      }
+      
+      if (!missing.length) return validTokens;
+      
+      return await new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'dialog-overlay vhs-unlock-modal';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        
+        let html = `
+          <div class="dialog-content" style="max-width: 400px; width: 90%; background: var(--bg-card, #1a1a1a); padding: 24px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+            <h2 style="margin-top:0; margin-bottom: 16px; font-size: 1.25rem;">Unlock VHS Content</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">This person appears in VHS videos on channels you haven't unlocked. Enter passwords below to view them, or skip to view only public videos.</p>
+        `;
+        
+        const missingChannels = missing;
+        missingChannels.forEach(cid => {
+           const label = cid === 'main' ? 'Main Channel' : `Channel ID: ${cid}`;
+           html += `
+             <div style="margin-bottom: 16px;">
+               <label style="display:block; margin-bottom: 8px; font-weight: 500;">${label}</label>
+               <input type="password" id="vhs-unlock-input-${cid}" placeholder="Password" class="input-modern" style="width:100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text);">
+             </div>
+           `;
+        });
+        
+        html += `
+            <div style="display:flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+               <button id="vhs-unlock-skip" class="btn btn-secondary">Skip</button>
+               <button id="vhs-unlock-submit" class="btn btn-primary">Unlock</button>
+            </div>
+          </div>
+        `;
+        
+        overlay.innerHTML = html;
+        document.body.appendChild(overlay);
+        
+        const cleanup = () => {
+          if (document.body.contains(overlay)) document.body.removeChild(overlay);
+          resolve(validTokens);
+        };
+        
+        overlay.querySelector('#vhs-unlock-skip').onclick = cleanup;
+        
+        overlay.querySelector('#vhs-unlock-submit').onclick = async () => {
+           const btn = overlay.querySelector('#vhs-unlock-submit');
+           btn.textContent = 'Unlocking...';
+           btn.disabled = true;
+           
+           for (const cid of missingChannels) {
+             const pw = overlay.querySelector('#vhs-unlock-input-' + cid).value;
+             if (!pw) continue;
+             
+             try {
+               const verifyRes = await api('/api/channels/' + cid + '/vhs_verify', { method: 'POST', body: JSON.stringify({ password: pw }) });
+               const expires = Date.now() + 30 * 60 * 1000;
+               sessionStorage.setItem('vhs_token_' + cid, JSON.stringify({ token: verifyRes.token, expires }));
+               validTokens.push(verifyRes.token);
+             } catch(e) {
+               console.error("Failed to unlock", cid, e);
+             }
+           }
+           cleanup();
+        };
+      });
+    } catch (e) {
+      console.warn("Failed to check VHS channels", e);
+      return [];
+    }
+  }
+
   async function loadVideos() {
     saveCurrentState();
     const grid = document.getElementById('video-grid');
@@ -2420,9 +2512,28 @@
       ...(state.channelId ? { channelId: state.channelId } : {}),
     });
 
+    let apiOptions = {};
+    if (state.personId) {
+       let vhsTokens = [];
+       if (!window._vhsUnlockDoneForPerson || window._vhsUnlockDoneForPerson !== state.personId) {
+         window._vhsUnlockDoneForPerson = state.personId;
+         vhsTokens = await ensureVhsUnlock(state.personId);
+         window._vhsCachedTokens = vhsTokens;
+       } else {
+         vhsTokens = window._vhsCachedTokens || [];
+       }
+       if (vhsTokens && vhsTokens.length > 0) {
+         params.set('include_vhs', 'true');
+         apiOptions.headers = { 'X-VHS-Tokens': vhsTokens.join(',') };
+       }
+    } else {
+       window._vhsUnlockDoneForPerson = null;
+       window._vhsCachedTokens = null;
+    }
+
     try {
       const [data, progressList] = await Promise.all([
-        api(`/api/videos?${params}`),
+        api(`/api/videos?${params}`, apiOptions),
         api('/api/user/progress').catch(() => []),
       ]);
 
