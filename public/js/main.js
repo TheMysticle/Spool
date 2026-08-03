@@ -70,6 +70,30 @@
       seriesId: state.seriesId,
       seriesName: state.seriesName,
     }));
+    updateUrlFromState();
+  }
+
+  function updateUrlFromState() {
+    const url = new URL(window.location.origin + '/');
+    if (state.mode === 'channel_profile' && state.channelId) {
+      if (String(state.channelId).startsWith('@')) {
+        url.searchParams.set('channel', state.channelId);
+      } else {
+        url.searchParams.set('channelId', state.channelId);
+      }
+    } else if (state.mode === 'browse' && state.personId) {
+      url.searchParams.set('person', state.personId);
+      if (state.personName) url.searchParams.set('person_name', state.personName);
+    } else if (state.mode === 'series' && state.seriesId) {
+      url.searchParams.set('series', state.seriesId);
+    } else if (state.mode !== 'browse') {
+      url.searchParams.set('mode', state.mode);
+    }
+    
+    // Only push if the URL actually changed to avoid duplicating history states
+    if (window.location.search !== url.search) {
+      window.history.pushState(state, '', url);
+    }
   }
 
   function syncUI() {
@@ -2320,16 +2344,51 @@
     state.seriesName = '';
     state.page = 1;
 
-    // Keep query-driven filtering one-time so refresh returns to normal browse.
-    window.history.replaceState({}, document.title, '/');
+    // Keep query-driven filtering in the URL so refresh works
   } else if (incomingChannelId) {
     state.mode = 'channel_profile';
     state.channelId = incomingChannelId;
-    window.history.replaceState({}, document.title, '/');
   } else if (incomingMode && ['browse', 'history', 'favorites', 'people', 'series', 'channels'].includes(incomingMode)) {
     state.mode = incomingMode;
-    window.history.replaceState({}, document.title, '/');
   }
+
+  // Initialize the browser history state for the initial page load
+  window.history.replaceState(state, '', window.location.href);
+
+  // Handle browser Back/Forward navigation
+  window.addEventListener('popstate', (e) => {
+    if (e.state) {
+      state = { ...state, ...e.state };
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      const channelId = params.get('channelId') || params.get('channel');
+      if (channelId) {
+        state.mode = 'channel_profile';
+        state.channelId = channelId;
+      } else if (params.get('mode')) {
+        state.mode = params.get('mode');
+      } else {
+        state.mode = 'browse';
+        state.personId = params.get('person') || null;
+      }
+    }
+    
+    // Update the UI to reflect the new state
+    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    if (state.mode === 'history') document.getElementById('history-btn')?.classList.add('active');
+    else if (state.mode === 'favorites') document.getElementById('favorites-btn')?.classList.add('active');
+    else if (state.mode === 'people') document.getElementById('people-btn')?.classList.add('active');
+    else if (state.mode === 'series') document.getElementById('series-btn')?.classList.add('active');
+    else if (state.mode === 'channels') document.getElementById('channels-btn')?.classList.add('active');
+    else if (state.mode === 'browse') document.querySelector(`.tab-btn[data-category="${state.category}"]`)?.classList.add('active');
+
+    syncUI();
+    if (state.mode === 'people') loadPeopleDirectory();
+    else if (state.mode === 'series' && !state.seriesId) loadSeriesDirectory();
+    else if (state.mode === 'channels') loadChannelsDirectory();
+    else if (state.mode === 'channel_profile') renderChannelPage(state.channelId);
+    else loadVideos();
+  });
 
   setupHoverPreview();
   syncUI();
