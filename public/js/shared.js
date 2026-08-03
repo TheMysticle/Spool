@@ -546,11 +546,14 @@ function closeModal(id) {
       const viewers = allUsers.filter((u) => u.role !== 'admin');
       if (viewers.length) {
         document.getElementById('vap-users-list').innerHTML = viewers.map((u) =>
-          `<label class="vap-user-row">
-            <input type="checkbox" class="vap-user-cb" value="${u.id}" ${access.user_ids.includes(u.id) ? 'checked' : ''} />
+          `<label class="vap-user-row" style="justify-content: space-between;">
             <div class="vap-user-row-info">
               <span class="vap-user-row-name">${escHtml(u.display_name || u.username)}</span>
               <span class="vap-user-row-handle">@${escHtml(u.username)}</span>
+            </div>
+            <div class="switch" style="pointer-events: none;">
+              <input type="checkbox" class="vap-user-cb" value="${u.id}" ${access.user_ids.includes(u.id) ? 'checked' : ''} />
+              <span class="slider"></span>
             </div>
           </label>`
         ).join('');
