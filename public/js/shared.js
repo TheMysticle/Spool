@@ -591,7 +591,7 @@ function closeModal(id) {
       _vapVideoData = videoData;
       document.getElementById('vap-edit-title').value = videoData.title || '';
       if (videoData.content_date) {
-        document.getElementById('vap-edit-date').value = videoData.content_date.split('T')[0];
+        document.getElementById('vap-edit-date').value = String(videoData.content_date).split('T')[0];
       }
       document.getElementById('vap-edit-category').value = videoData.category || 'video';
       document.getElementById('vap-edit-desc').value = videoData.description || '';
@@ -599,10 +599,10 @@ function closeModal(id) {
       document.getElementById('vap-edit-is-vhs').checked = isVhs;
       document.getElementById('vap-vhs-dates-group').style.display = isVhs ? 'block' : 'none';
       if (videoData.vhs_start_date) {
-        document.getElementById('vap-edit-vhs-start').value = videoData.vhs_start_date.split('T')[0];
+        document.getElementById('vap-edit-vhs-start').value = String(videoData.vhs_start_date).split('T')[0];
       }
       if (videoData.vhs_end_date) {
-        document.getElementById('vap-edit-vhs-end').value = videoData.vhs_end_date.split('T')[0];
+        document.getElementById('vap-edit-vhs-end').value = String(videoData.vhs_end_date).split('T')[0];
       }
 
       // Fill in Chapters
