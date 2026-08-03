@@ -2165,7 +2165,7 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
       }
       grid.innerHTML = loadedPeople.map(p => {
         const initial = escHtml((p.name || '?').charAt(0).toUpperCase());
-        const avatarHtml = p.image_path ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(getToken() || '')}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:2rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--bg);">${initial}</span>`;
+        const avatarHtml = p.image_path ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(getToken() || '')}&t=${encodeURIComponent(p.image_path)}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:2rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--bg);">${initial}</span>`;
         const ownedByChannel = p.channel_id != null && Number(p.channel_id) === chanId;
         const isLinkedSelf = myUserId != null && p.user_id != null && Number(p.user_id) === myUserId;
         const canDelete = ownedByChannel;

@@ -37,7 +37,13 @@ router.get('/:id/image', authOrShareToken, (req, res) => {
     return res.status(404).json({ error: 'Image not found.' });
   }
 
-  res.setHeader('Cache-Control', 'public, max-age=86400');
+  // Filename changes on replace; short cache + filename ETag avoids sticky old PFPs
+  try {
+    const stat = fs.statSync(resolved);
+    res.setHeader('ETag', `"${path.basename(person.image_path)}-${stat.mtimeMs}"`);
+    res.setHeader('Last-Modified', stat.mtime.toUTCString());
+  } catch {}
+  res.setHeader('Cache-Control', 'private, max-age=60, must-revalidate');
   res.sendFile(resolved);
 });
 
@@ -172,7 +178,7 @@ router.post('/:id/image', authenticate, checkPeoplePermission, (req, res) => {
     return res.status(400).json({ error: 'imageBase64 is required.' });
   }
 
-  const matches = imageBase64.match(/^data:image\/(jpeg|png|webp);base64,(.+)$/);
+  const matches = imageBase64.match(/^data:image\/(jpeg|png|webp);base64,(.+)$/i);
   if (!matches) return res.status(400).json({ error: 'Invalid image format.' });
 
   const imgData = Buffer.from(matches[2], 'base64');
@@ -196,6 +202,24 @@ router.post('/:id/image', authenticate, checkPeoplePermission, (req, res) => {
   setPersonImage(id, filename);
   res.json({ message: 'Image saved.', path: `/api/people/${id}/image` });
 });
+
+// ── DELETE /api/people/:id/image ────────────────────────────────────────────
+router.delete('/:id/image', authenticate, checkPeoplePermission, (req, res) => {
+  const { getPersonById, setPersonImage } = require('../database');
+  const id = parseInt(req.params.id, 10);
+  const person = getPersonById(id);
+  if (!person) return res.status(404).json({ error: 'Person not found.' });
+
+  if (person.image_path) {
+    try {
+      const imgFile = path.join(PEOPLE_DIR, path.basename(person.image_path));
+      if (fs.existsSync(imgFile)) fs.unlinkSync(imgFile);
+    } catch {}
+  }
+  setPersonImage(id, null);
+  res.json({ message: 'Image removed.' });
+});
+
 
 
 // ── GET /api/people/:id/vhs-photos ──────────────────────────────────────────

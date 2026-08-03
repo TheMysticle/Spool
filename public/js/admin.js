@@ -1364,7 +1364,7 @@
       grid.innerHTML = people.map((p) => {
         const initial = escHtml((p.name || '?').charAt(0).toUpperCase());
         const avatarHtml = p.image_path
-          ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(token || '')}" alt="${escHtml(p.name)}" />`
+          ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(token || '')}&t=${encodeURIComponent(p.image_path)}" alt="${escHtml(p.name)}" />`
           : `<span class="person-card-avatar-fallback">${initial}</span>`;
         const linkedUser = p.username ? `@${escHtml(p.username)}` : 'Unlinked Profile';
         const bio = p.bio && String(p.bio).trim().length
@@ -1449,7 +1449,7 @@
       const preview = document.getElementById('person-img-preview');
       const token = getToken();
       if (p.image_path) {
-        preview.innerHTML = `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(token || '')}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+        preview.innerHTML = `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(token || '')}&t=${encodeURIComponent(p.image_path || Date.now())}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
         document.getElementById('person-img-remove').style.display = '';
       } else {
         preview.innerHTML = escHtml(p.name[0] || '?');
@@ -1483,36 +1483,47 @@
 
   document.getElementById('person-img-input')?.addEventListener('change', async (e) => {
     const file = e.target.files && e.target.files[0];
+    e.target.value = '';
     if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       toast('Only jpg, png, or webp allowed.', 'error'); return;
     }
     if (file.size > 2 * 1024 * 1024) { toast('Max 2MB.', 'error'); return; }
 
-    try {
-      const bitmap = await createImageBitmap(file);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const size = 400;
-      canvas.width = size; canvas.height = size;
-      const ratio = Math.max(size / bitmap.width, size / bitmap.height);
-      const x = (size - bitmap.width * ratio) / 2;
-      const y = (size - bitmap.height * ratio) / 2;
-      ctx.drawImage(bitmap, x, y, bitmap.width * ratio, bitmap.height * ratio);
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-      const base64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result);
-        r.onerror = () => rej(new Error('Read failed'));
-        r.readAsDataURL(blob);
-      });
+    const applyPreview = (base64) => {
       _personImgBase64 = base64;
       _personImgRemoved = false;
       const preview = document.getElementById('person-img-preview');
-      preview.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
-      document.getElementById('person-img-remove').style.display = '';
+      if (preview) {
+        preview.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+      }
+      const removeBtn = document.getElementById('person-img-remove');
+      if (removeBtn) removeBtn.style.display = '';
+    };
+
+    try {
+      if (typeof window.openAvatarCropper === 'function') {
+        window.openAvatarCropper(file, applyPreview);
+      } else {
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const size = 400;
+        canvas.width = size; canvas.height = size;
+        const ratio = Math.max(size / bitmap.width, size / bitmap.height);
+        const x = (size - bitmap.width * ratio) / 2;
+        const y = (size - bitmap.height * ratio) / 2;
+        ctx.drawImage(bitmap, x, y, bitmap.width * ratio, bitmap.height * ratio);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+        const base64 = await new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result);
+          r.onerror = () => rej(new Error('Read failed'));
+          r.readAsDataURL(blob);
+        });
+        applyPreview(base64);
+      }
     } catch (err) { toast(err.message, 'error'); }
-    e.target.value = '';
   });
 
   document.getElementById('person-img-remove')?.addEventListener('click', () => {
@@ -1567,12 +1578,16 @@
         }
       }
 
-      // Upload image if selected
-      if (_personImgBase64 && personId) {
-        await api(`/api/people/${personId}/image`, {
-          method: 'POST',
-          body: JSON.stringify({ imageBase64: _personImgBase64 }),
-        });
+      // Update main profile photo
+      if (personId) {
+        if (_personImgRemoved && !_personImgBase64) {
+          await api(`/api/people/${personId}/image`, { method: 'DELETE' });
+        } else if (_personImgBase64) {
+          await api(`/api/people/${personId}/image`, {
+            method: 'POST',
+            body: JSON.stringify({ imageBase64: _personImgBase64 }),
+          });
+        }
       }
 
       // Upload any era photos queued during create

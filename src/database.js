@@ -1440,7 +1440,7 @@ const getPersonById = (id) =>
   db.prepare('SELECT * FROM people WHERE id = ?').get(id);
 
 const setPersonImage = (id, filename) =>
-  db.prepare('UPDATE people SET image_path = ? WHERE id = ?').run(filename, id);
+  db.prepare('UPDATE people SET image_path = ? WHERE id = ?').run(filename || null, id);
 
 const setPersonUserLink = (personId, userId) =>
   db.prepare('UPDATE people SET user_id = ? WHERE id = ?').run(userId, personId);
