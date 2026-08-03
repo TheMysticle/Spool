@@ -177,29 +177,28 @@
         <h4 class="upload-config-title">Upload Settings (${files.length} video${files.length > 1 ? 's' : ''})</h4>
         
         <div class="upload-radio-group">
-          <label class="upload-radio-label">
-            <input type="radio" name="date-pref" value="modified" checked>
-            Use Date Modified (Original file date)
-          </label>
-          <label class="upload-radio-label">
-            <input type="radio" name="date-pref" value="filename">
-            Parse from Filename (e.g. 20240101_video.mp4)
-          </label>
-          <label class="upload-radio-label">
-            <input type="radio" name="date-pref" value="custom">
-            Custom Date
-          </label>
+          <label style="display:block; font-weight: 500; margin-bottom: 8px; color: var(--text-muted);">Date Parsing Preference</label>
+          <select id="upload-date-pref" class="form-input" style="margin-bottom: 12px;">
+            <option value="modified" selected>Use Date Modified (Original file date)</option>
+            <option value="filename">Parse from Filename (e.g. 20240101_video.mp4)</option>
+            <option value="custom">Custom Date</option>
+          </select>
           
-          <div class="upload-custom-date" id="upload-custom-date-container">
-            <input type="date" id="upload-custom-date-input">
+          <div class="upload-custom-date" id="upload-custom-date-container" style="display: none; margin-bottom: 16px;">
+            <input type="date" id="upload-custom-date-input" class="form-input">
           </div>
           
-          <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px;">
-            <label class="upload-radio-label" style="display:flex; align-items:center; gap:8px;">
-              <input type="checkbox" id="upload-is-vhs">
-              <span style="font-weight: 500;">Tag as VHS</span>
-              <span style="font-size: 0.8rem; color: var(--text-secondary); margin-left: auto;">(Hide from main feed)</span>
-            </label>
+          <div style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <label class="switch" style="margin: 0;">
+                <input type="checkbox" id="upload-is-vhs">
+                <span class="slider round"></span>
+              </label>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-weight: 500; font-size: 0.95rem;">Tag as VHS</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Hide from main feed & apply retro aesthetics</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -211,21 +210,19 @@
     `;
     modalBody.innerHTML = html;
 
-    const radios = document.querySelectorAll('input[name="date-pref"]');
+    const prefSelect = document.getElementById('upload-date-pref');
     const customContainer = document.getElementById('upload-custom-date-container');
     
-    radios.forEach(r => {
-      r.addEventListener('change', (e) => {
-        if (e.target.value === 'custom') {
-          customContainer.classList.add('active');
-        } else {
-          customContainer.classList.remove('active');
-        }
-      });
+    prefSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'custom') {
+        customContainer.style.display = 'block';
+      } else {
+        customContainer.style.display = 'none';
+      }
     });
 
     document.getElementById('start-upload-btn').addEventListener('click', () => {
-      const selectedPref = document.querySelector('input[name="date-pref"]:checked').value;
+      const selectedPref = document.getElementById('upload-date-pref').value;
       const customDate = document.getElementById('upload-custom-date-input').value;
       
       if (selectedPref === 'custom' && !customDate) {
