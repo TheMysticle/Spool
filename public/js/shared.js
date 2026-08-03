@@ -387,7 +387,29 @@ function closeModal(id) {
           <div class="vap-body">
             <!-- Details Tab -->
             <div class="vap-tab-panel active" id="vap-panel-details">
-              <div class="vap-section">
+              <div class="vap-section" style="padding-bottom: 0;">
+                <h4 class="vap-section-title" style="margin-bottom: 12px; font-size: 0.95rem;">Custom Thumbnail</h4>
+                <div class="vap-custom-thumb-container">
+                  <div class="vap-custom-thumb-preview" id="vap-custom-thumb-preview">
+                    <img id="vap-custom-thumb-img" src="" alt="Thumbnail Preview" />
+                    <div class="vap-custom-thumb-actions">
+                      <button class="btn btn-outline btn-sm" id="vap-custom-thumb-upload-btn" type="button">Upload Image</button>
+                      <button class="btn btn-outline btn-sm" id="vap-custom-thumb-select-btn" type="button">Select Frame</button>
+                    </div>
+                  </div>
+                  <input type="file" id="vap-custom-thumb-file" accept="image/*" style="display: none;" />
+                  
+                  <div class="vap-custom-thumb-scrubber-wrap" id="vap-custom-thumb-scrubber-wrap" style="display: none;">
+                    <video id="vap-custom-thumb-video" preload="auto" muted playsinline></video>
+                    <input type="range" id="vap-custom-thumb-range" class="vap-range" min="0" max="100" step="0.1" value="0" />
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                      <button class="btn btn-ghost btn-sm" id="vap-custom-thumb-cancel-btn" type="button">Cancel</button>
+                      <button class="btn btn-primary btn-sm" id="vap-custom-thumb-save-btn" type="button">Set Thumbnail</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="vap-section" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
                 <div class="form-group">
                   <label class="form-label" for="vap-edit-title">Title</label>
                   <input class="form-input" id="vap-edit-title" type="text" />
@@ -738,6 +760,80 @@ function closeModal(id) {
 
       // Fill in details tab
       _vapVideoData = videoData;
+      
+      // Initialize Custom Thumbnail UI
+      const thumbPreview = document.getElementById('vap-custom-thumb-img');
+      thumbPreview.src = videoData.thumbnail_path 
+        ? `${videoData.thumbnail_path}?token=${encodeURIComponent(getToken() || '')}`
+        : '';
+      const thumbScrubberWrap = document.getElementById('vap-custom-thumb-scrubber-wrap');
+      const thumbVideo = document.getElementById('vap-custom-thumb-video');
+      const thumbRange = document.getElementById('vap-custom-thumb-range');
+      thumbScrubberWrap.style.display = 'none';
+      if (thumbVideo.src) {
+        thumbVideo.pause();
+        thumbVideo.src = '';
+      }
+
+      const saveCustomThumbnail = async (body) => {
+        const thumbSaveBtn = document.getElementById('vap-custom-thumb-save-btn');
+        if (thumbSaveBtn) thumbSaveBtn.disabled = true;
+        try {
+          const res = await api(`/api/videos/${_vapVideoId}/thumbnail`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+          });
+          toast('Custom thumbnail updated.');
+          thumbPreview.src = `${res.path}?token=${encodeURIComponent(getToken() || '')}&t=${Date.now()}`;
+          thumbScrubberWrap.style.display = 'none';
+          if (thumbVideo.src) {
+            thumbVideo.pause();
+            thumbVideo.src = '';
+          }
+          if (typeof window.reloadVideoInfo === 'function') window.reloadVideoInfo();
+          if (typeof loadVideos === 'function') loadVideos();
+        } catch (err) {
+          toast(err.message, true);
+        } finally {
+          if (thumbSaveBtn) thumbSaveBtn.disabled = false;
+        }
+      };
+
+      document.getElementById('vap-custom-thumb-file').onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => saveCustomThumbnail({ imageBase64: ev.target.result });
+        reader.readAsDataURL(file);
+      };
+
+      document.getElementById('vap-custom-thumb-upload-btn').onclick = () => {
+        document.getElementById('vap-custom-thumb-file').click();
+      };
+
+      document.getElementById('vap-custom-thumb-select-btn').onclick = () => {
+        thumbScrubberWrap.style.display = 'block';
+        thumbVideo.src = `/api/videos/stream/${_vapVideoId}?token=${encodeURIComponent(getToken() || '')}`;
+        thumbVideo.onloadedmetadata = () => {
+          thumbRange.max = thumbVideo.duration;
+          thumbRange.value = 0;
+        };
+      };
+
+      thumbRange.oninput = () => {
+        thumbVideo.currentTime = thumbRange.value;
+      };
+
+      document.getElementById('vap-custom-thumb-cancel-btn').onclick = () => {
+        thumbScrubberWrap.style.display = 'none';
+        thumbVideo.pause();
+        thumbVideo.src = '';
+      };
+
+      document.getElementById('vap-custom-thumb-save-btn').onclick = () => {
+        saveCustomThumbnail({ timestamp: thumbVideo.currentTime });
+      };
+
       document.getElementById('vap-edit-title').value = videoData.title || '';
       document.getElementById('vap-edit-location').value = videoData.location || '';
       const toDateInput = (raw) => {

@@ -5,11 +5,13 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { execFile, spawn } = require('child_process');
+const sharp = require('sharp');
 const {
   getAllVideos,
   getVideoById,
   updateVideoMeta,
   setVideoThumbnail,
+  setCustomThumbnail,
   incrementViewCount,
   getCommentsByVideoId,
   addComment,
@@ -620,6 +622,88 @@ router.put('/:id', authenticate, (req, res) => {
   }
 
   res.json({ message: 'Video updated.', video: getVideoById(id) });
+});
+
+// ── POST /api/videos/:id/thumbnail — custom thumbnail ───────────────────────
+router.post('/:id/thumbnail', authenticate, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid video id.' });
+
+  const video = getVideoById(id);
+  if (!video) return res.status(404).json({ error: 'Video not found.' });
+
+  let canEdit = req.user.role === 'admin';
+  if (!canEdit && video.channel_id) {
+    const channel = getChannelById(video.channel_id);
+    if (channel && channel.user_id === req.user.id) canEdit = true;
+  }
+  if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
+
+  const { imageBase64, timestamp } = req.body;
+  
+  if (imageBase64) {
+    const matches = imageBase64.match(/^data:image\/(jpeg|png|webp);base64,(.+)$/i);
+    if (!matches) return res.status(400).json({ error: 'Invalid image format.' });
+    const imgData = Buffer.from(matches[2], 'base64');
+    if (imgData.length > 5 * 1024 * 1024) return res.status(400).json({ error: 'Image too large (max 5MB).' });
+
+    const filename = `custom_${id}_${Date.now()}.jpg`;
+    const filePath = path.join(THUMB_DIR, filename);
+
+    sharp(imgData)
+      .resize({ width: 1920, height: 1080, fit: 'cover', withoutEnlargement: true })
+      .jpeg({ quality: 85, mozjpeg: true })
+      .toFile(filePath)
+      .then(() => {
+        const thumbRelative = `/thumbnails/${filename}`;
+        setCustomThumbnail(id, thumbRelative);
+        res.json({ message: 'Thumbnail updated.', path: thumbRelative });
+      })
+      .catch(err => {
+        console.error('Thumbnail sharp error:', err);
+        res.status(500).json({ error: 'Failed to process image.' });
+      });
+  } else if (timestamp !== undefined) {
+    const time = parseFloat(timestamp);
+    if (isNaN(time) || time < 0) return res.status(400).json({ error: 'Invalid timestamp.' });
+    
+    const filename = `custom_${id}_${Date.now()}.jpg`;
+    const filePath = path.join(THUMB_DIR, filename);
+    const tempPath = path.join(THUMB_DIR, `temp_${id}_${Date.now()}.jpg`);
+
+    const ffmpegArgs = [
+      '-ss', String(time),
+      '-i', video.filepath,
+      '-vframes', '1',
+      '-q:v', '2',
+      '-y',
+      tempPath
+    ];
+
+    execFile('ffmpeg', ffmpegArgs, (error) => {
+      if (error) {
+        console.error('FFmpeg error:', error);
+        return res.status(500).json({ error: 'Failed to extract frame.' });
+      }
+      sharp(tempPath)
+        .resize({ width: 1920, height: 1080, fit: 'cover', withoutEnlargement: true })
+        .jpeg({ quality: 85, mozjpeg: true })
+        .toFile(filePath)
+        .then(() => {
+          if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+          const thumbRelative = `/thumbnails/${filename}`;
+          setCustomThumbnail(id, thumbRelative);
+          res.json({ message: 'Thumbnail updated.', path: thumbRelative });
+        })
+        .catch(err => {
+          console.error('Thumbnail sharp error:', err);
+          if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+          res.status(500).json({ error: 'Failed to process extracted frame.' });
+        });
+    });
+  } else {
+    res.status(400).json({ error: 'Must provide imageBase64 or timestamp.' });
+  }
 });
 
 // ── GET /api/videos/:id/access ────────────────────────────────────────────────

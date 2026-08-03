@@ -113,7 +113,8 @@ function initDatabase() {
       vhs_end_date   DATETIME,
       has_chapters   INTEGER DEFAULT 0,
       chapters_json  TEXT    DEFAULT '[]',
-      location       TEXT
+      location       TEXT,
+      has_custom_thumbnail INTEGER DEFAULT 0
     );
 
     CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category);
@@ -367,6 +368,10 @@ function initDatabase() {
   const hasLocation = videoColumns.some((col) => col.name === 'location');
   if (!hasLocation) {
     db.exec('ALTER TABLE videos ADD COLUMN location TEXT');
+  }
+  const hasCustomThumb = videoColumns.some((col) => col.name === 'has_custom_thumbnail');
+  if (!hasCustomThumb) {
+    db.exec('ALTER TABLE videos ADD COLUMN has_custom_thumbnail INTEGER DEFAULT 0');
   }
 
   // One-time normalization/backfill for legacy rows during schema migration.
@@ -1036,7 +1041,7 @@ const upsertVideo = (data) => {
         `UPDATE videos
          SET filename = ?, file_size = ?, duration = ?, file_created_at = COALESCE(file_created_at, ?),
              content_date = COALESCE(content_date, ?),
-             thumbnail_path = COALESCE(?, thumbnail_path),
+             thumbnail_path = CASE WHEN has_custom_thumbnail = 1 THEN thumbnail_path ELSE COALESCE(?, thumbnail_path) END,
              video_width = COALESCE(?, video_width), video_height = COALESCE(?, video_height),
              channel_id = COALESCE(?, channel_id),
              is_vhs = COALESCE(?, is_vhs),
@@ -1096,6 +1101,20 @@ const upsertVideo = (data) => {
   const inserted = getVideoByPath(data.filepath);
   if (inserted) syncAutoTaggedPeopleForVideo(inserted.id, inserted.title);
   return result;
+};
+
+const setCustomThumbnail = (id, thumbnailPath) => {
+  return db
+    .prepare(
+      `UPDATE videos
+       SET thumbnail_path = ?, has_custom_thumbnail = 1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .run(thumbnailPath, id);
+};
+
+const updateVideoChapters = (id, hasChapters, chaptersJson) => {
+  return db.prepare('UPDATE videos SET has_chapters = ?, chapters_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hasChapters ? 1 : 0, chaptersJson, id);
 };
 
 const updateVideoMeta = (id, { title, description, category, location, is_vhs, vhs_start_date, vhs_end_date, has_chapters, chapters_json, content_date }) => {
@@ -2190,6 +2209,8 @@ module.exports = {
   getAllVideos,
   upsertVideo,
   updateVideoMeta,
+  setCustomThumbnail,
+  updateVideoChapters,
   updateVideoFilepath,
   setVideoThumbnail,
   incrementViewCount,
