@@ -1183,10 +1183,10 @@ function linkifyTimestamps(text) {
           currentChapterTitleEl = document.createElement('div');
           currentChapterTitleEl.className = 'vjs-current-chapter-title';
           
-          // Insert before progress control so it sits on the left, right after the time
-          const progControl = controlBar.querySelector('.vjs-progress-control');
-          if (progControl) {
-            controlBar.insertBefore(currentChapterTitleEl, progControl);
+          // Insert before time remaining so it sits to its left
+          const timeRemaining = controlBar.querySelector('.vjs-remaining-time');
+          if (timeRemaining) {
+            controlBar.insertBefore(currentChapterTitleEl, timeRemaining);
           } else {
             controlBar.appendChild(currentChapterTitleEl);
           }

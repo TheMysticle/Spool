@@ -3484,7 +3484,6 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   height: 90px;
   background-color: #000;
   border-radius: 8px;
-  overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   opacity: 0;
   visibility: hidden;
@@ -3504,6 +3503,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 8px;
 }
 
 .vjs-thumbnail-time {
