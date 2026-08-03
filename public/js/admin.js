@@ -197,7 +197,7 @@
     if (!select) return;
 
     if (!adminPeopleCache.length) {
-      adminPeopleCache = await api('/api/admin/people');
+      adminPeopleCache = await api('/api/people');
     }
 
     if (!adminPeopleCache.length) {
@@ -1104,7 +1104,7 @@
   async function loadPeople() {
     const grid = document.getElementById('people-admin-grid');
     try {
-      const people = await api('/api/admin/people');
+      const people = await api('/api/people');
       if (!people.length) {
         grid.innerHTML = '<p style="color:var(--text-muted);padding:1rem 0">No people yet. Add someone above.</p>';
         return;
@@ -1174,7 +1174,7 @@
 
   window.editPerson = async function (id) {
     try {
-      const people = await api('/api/admin/people');
+      const people = await api('/api/people');
       const p = people.find((x) => x.id === id);
       if (!p) { toast('Person not found.', 'error'); return; }
 
@@ -1207,7 +1207,7 @@
   window.deletePerson = async function (id, name) {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
     try {
-      await api(`/api/admin/people/${id}`, { method: 'DELETE' });
+      await api(`/api/people/${id}`, { method: 'DELETE' });
       toast('Person deleted.');
       loadPeople();
     } catch (err) {
@@ -1284,19 +1284,19 @@
       let personId = id ? parseInt(id, 10) : null;
 
       if (id) {
-        await api(`/api/admin/people/${id}`, {
+        await api(`/api/people/${id}`, {
           method: 'PUT',
           body: JSON.stringify({ name, bio, title_tags: titleTags, user_id: userIdVal ? parseInt(userIdVal, 10) : null }),
         });
       } else {
-        const result = await api('/api/admin/people', {
+        const result = await api('/api/people', {
           method: 'POST',
           body: JSON.stringify({ name, bio, title_tags: titleTags }),
         });
         personId = result.id;
         // Set user link
         if (userIdVal) {
-          await api(`/api/admin/people/${personId}`, {
+          await api(`/api/people/${personId}`, {
             method: 'PUT',
             body: JSON.stringify({ user_id: parseInt(userIdVal, 10) }),
           });
@@ -1305,7 +1305,7 @@
 
       // Upload image if selected
       if (_personImgBase64 && personId) {
-        await api(`/api/admin/people/${personId}/image`, {
+        await api(`/api/people/${personId}/image`, {
           method: 'POST',
           body: JSON.stringify({ imageBase64: _personImgBase64 }),
         });

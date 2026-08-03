@@ -200,8 +200,10 @@ function initDatabase() {
       title_tags TEXT    NOT NULL DEFAULT '',
       image_path TEXT,
       user_id    INTEGER UNIQUE,
+      channel_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY(channel_id) REFERENCES channels(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS video_people (
@@ -525,6 +527,11 @@ function initDatabase() {
   if (!vidsCols.some(c => c.name === 'vhs_start_date')) {
     db.exec('ALTER TABLE videos ADD COLUMN vhs_start_date DATETIME');
     db.exec('ALTER TABLE videos ADD COLUMN vhs_end_date DATETIME');
+  }
+
+  const peopleCols = db.prepare('PRAGMA table_info(people)').all();
+  if (!peopleCols.some(c => c.name === 'channel_id')) {
+    db.exec('ALTER TABLE people ADD COLUMN channel_id INTEGER REFERENCES channels(id) ON DELETE SET NULL');
   }
 
   db.exec(`
@@ -1329,11 +1336,11 @@ const getFavoriteVideoIds = (userId) =>
     .map((row) => row.video_id);
 
 // ── People queries ───────────────────────────────────────────────────────────
-const createPerson = (name, bio = '', titleTags = '') =>
-  db.prepare('INSERT INTO people (name, bio, title_tags) VALUES (?, ?, ?)').run(name, bio, titleTags);
+const createPerson = (name, bio = '', titleTags = '', channel_id = null) =>
+  db.prepare('INSERT INTO people (name, bio, title_tags, channel_id) VALUES (?, ?, ?, ?)').run(name, bio, titleTags, channel_id);
 
 const updatePerson = (id, fields) => {
-  const allowed = ['name', 'bio', 'title_tags'];
+  const allowed = ['name', 'bio', 'title_tags', 'channel_id'];
   const sets = Object.keys(fields).filter((k) => allowed.includes(k)).map((k) => `${k} = ?`);
   if (!sets.length) return;
   const vals = Object.keys(fields).filter((k) => allowed.includes(k)).map((k) => fields[k]);
@@ -1345,7 +1352,7 @@ const deletePerson = (id) => db.prepare('DELETE FROM people WHERE id = ?').run(i
 const getAllPeople = ({ userId = null, isAdmin = true } = {}) =>
   db
     .prepare(
-      `SELECT p.id, p.name, p.bio, p.title_tags, p.image_path, p.user_id, p.created_at,
+      `SELECT p.id, p.name, p.bio, p.title_tags, p.image_path, p.user_id, p.channel_id, p.created_at,
               u.username, u.display_name AS linked_display_name,
               COALESCE((
                 SELECT COUNT(*)

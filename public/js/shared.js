@@ -1475,9 +1475,15 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         </button>
       </div>
       
-      <div style="padding: 24px; overflow-y: auto;">
+      <div style="display: flex; gap: 16px; border-bottom: 1px solid var(--border); padding: 0 24px; margin-top: 16px;">
+        <button class="chan-tab-btn active" data-tab="chan-general" style="padding: 12px 0; border: none; background: transparent; border-bottom: 2px solid var(--primary); color: var(--text); cursor: pointer; font-weight: 500;">General</button>
+        <button class="chan-tab-btn" data-tab="chan-people" style="padding: 12px 0; border: none; background: transparent; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer; font-weight: 500;">Your People</button>
+      </div>
+
+      <div style="padding: 24px; overflow-y: auto; max-height: 60vh;">
         
-        <div style="margin-bottom: 32px;">
+        <div id="panel-chan-general" class="chan-tab-panel" style="display: block;">
+          <div style="margin-bottom: 32px;">
           <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Banner</label>
           <div style="position: relative; width: 100%; height: 120px; background: ${currentBanner ? `url('${currentBanner}') center/cover` : 'var(--bg-hover)'}; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: flex; align-items: center; justify-content: center;"
                onmouseover="this.querySelector('.edit-overlay').style.opacity='1'"
@@ -1505,13 +1511,46 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
             <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Name</label>
             <input type="text" id="editor-name-input" value="${escHtml(currentName)}" class="form-input" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem;" placeholder="Enter channel name...">
           </div>
+          </div>
+        </div>
+
+        <div id="panel-chan-people" class="chan-tab-panel" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h4 style="margin: 0; font-weight: 500;">Manage People</h4>
+            <button class="btn btn-primary btn-sm" id="chan-add-person-btn">Add Person</button>
+          </div>
+          <div id="chan-person-form" style="display: none; background: var(--bg-hover); padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <input type="hidden" id="chan-person-id">
+            <div style="margin-bottom: 12px;">
+              <label class="vap-label">Name</label>
+              <input type="text" id="chan-person-name" class="vap-input" placeholder="Actor Name">
+            </div>
+            <div style="margin-bottom: 12px;">
+              <label class="vap-label">Biography</label>
+              <textarea id="chan-person-bio" class="vap-input" rows="3" placeholder="Brief biography"></textarea>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <label class="vap-label">Title Tags (comma separated)</label>
+              <input type="text" id="chan-person-tags" class="vap-input" placeholder="e.g. Actor, Director">
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button class="btn btn-ghost btn-sm" id="chan-person-cancel">Cancel</button>
+              <button class="btn btn-primary btn-sm" id="chan-person-save">Save</button>
+            </div>
+          </div>
+          <div id="chan-people-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;">
+            <p style="color:var(--text-muted);">Loading...</p>
+          </div>
         </div>
 
       </div>
 
-      <div class="modal-footer" style="padding: 16px 24px 24px 24px; margin-top: 0; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border);">
+      <div class="modal-footer" id="chan-general-footer" style="padding: 16px 24px 24px 24px; margin-top: 0; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border);">
         <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
         <button class="btn btn-primary" id="editor-save-btn">Save Changes</button>
+      </div>
+      <div class="modal-footer" id="chan-people-footer" style="display: none; padding: 16px 24px 24px 24px; margin-top: 0; justify-content: flex-end; border-top: 1px solid var(--border);">
+        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Close</button>
       </div>
     </div>
   `;
@@ -1572,6 +1611,121 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     overlay.remove();
     if (onSaveComplete) onSaveComplete(true);
   });
+
+  // Tabs logic
+  const tabBtns = overlay.querySelectorAll('.chan-tab-btn');
+  const panels = overlay.querySelectorAll('.chan-tab-panel');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => { b.classList.remove('active'); b.style.borderColor = 'transparent'; b.style.color = 'var(--text-muted)'; });
+      panels.forEach(p => p.style.display = 'none');
+      btn.classList.add('active');
+      btn.style.borderColor = 'var(--primary)';
+      btn.style.color = 'var(--text)';
+      overlay.querySelector('#panel-' + btn.dataset.tab).style.display = 'block';
+
+      if (btn.dataset.tab === 'chan-people') {
+        overlay.querySelector('#chan-general-footer').style.display = 'none';
+        overlay.querySelector('#chan-people-footer').style.display = 'flex';
+        loadChanPeople();
+      } else {
+        overlay.querySelector('#chan-general-footer').style.display = 'flex';
+        overlay.querySelector('#chan-people-footer').style.display = 'none';
+      }
+    });
+  });
+
+  // People Logic
+  let loadedPeople = [];
+  
+  async function loadChanPeople() {
+    const grid = overlay.querySelector('#chan-people-grid');
+    try {
+      const allPeople = await api('/api/people');
+      loadedPeople = allPeople.filter(p => p.channel_id === parseInt(channelId, 10));
+      if (!loadedPeople.length) {
+        grid.innerHTML = '<p style="color:var(--text-muted);">You have not added any people yet.</p>';
+        return;
+      }
+      grid.innerHTML = loadedPeople.map(p => {
+        const initial = escHtml((p.name || '?').charAt(0).toUpperCase());
+        const avatarHtml = p.image_path ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(getToken() || '')}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:2rem;color:var(--text-muted);display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--bg);">${initial}</span>`;
+        return `
+          <div style="background:var(--bg-hover); border-radius:8px; overflow:hidden; border:1px solid var(--border); display:flex; flex-direction:column;">
+            <div style="height:120px; position:relative; background:var(--bg);">
+              ${avatarHtml}
+            </div>
+            <div style="padding:12px;">
+              <div style="font-weight:500; font-size:0.9rem; margin-bottom:4px;" class="truncate">${escHtml(p.name)}</div>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;" class="truncate">${escHtml(p.title_tags || 'No tags')}</div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-ghost btn-sm" onclick="editChanPerson(${p.id})" style="flex:1;">Edit</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteChanPerson(${p.id}, '${escHtml(p.name)}')" style="flex:1; color:var(--danger);">Del</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      grid.innerHTML = `<p style="color:var(--danger);">Error loading people.</p>`;
+    }
+  }
+
+  overlay.querySelector('#chan-add-person-btn').addEventListener('click', () => {
+    overlay.querySelector('#chan-person-id').value = '';
+    overlay.querySelector('#chan-person-name').value = '';
+    overlay.querySelector('#chan-person-bio').value = '';
+    overlay.querySelector('#chan-person-tags').value = '';
+    overlay.querySelector('#chan-person-form').style.display = 'block';
+  });
+
+  overlay.querySelector('#chan-person-cancel').addEventListener('click', () => {
+    overlay.querySelector('#chan-person-form').style.display = 'none';
+  });
+
+  overlay.querySelector('#chan-person-save').addEventListener('click', async () => {
+    const id = overlay.querySelector('#chan-person-id').value;
+    const name = overlay.querySelector('#chan-person-name').value.trim();
+    const bio = overlay.querySelector('#chan-person-bio').value.trim();
+    const tags = overlay.querySelector('#chan-person-tags').value.trim();
+    
+    if (!name) return toast('Name is required', 'error');
+
+    try {
+      if (id) {
+        await api('/api/people/' + id, { method: 'PUT', body: JSON.stringify({ name, bio, title_tags: tags }) });
+      } else {
+        await api('/api/people', { method: 'POST', body: JSON.stringify({ name, bio, title_tags: tags }) });
+      }
+      toast('Person saved.');
+      overlay.querySelector('#chan-person-form').style.display = 'none';
+      loadChanPeople();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
+
+  window.editChanPerson = function(id) {
+    const p = loadedPeople.find(x => x.id === id);
+    if (!p) return;
+    overlay.querySelector('#chan-person-id').value = p.id;
+    overlay.querySelector('#chan-person-name').value = p.name || '';
+    overlay.querySelector('#chan-person-bio').value = p.bio || '';
+    overlay.querySelector('#chan-person-tags').value = p.title_tags || '';
+    overlay.querySelector('#chan-person-form').style.display = 'block';
+    overlay.querySelector('#chan-person-form').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  window.deleteChanPerson = async function(id, name) {
+    if (!confirm('Delete "' + name + '"?')) return;
+    try {
+      await api('/api/people/' + id, { method: 'DELETE' });
+      toast('Deleted.');
+      loadChanPeople();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  };
 };
 
   window.uploadChannelBanner = function(id) {
