@@ -282,11 +282,17 @@ function closeModal(id) {
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="vap-edit-desc">Description</label>
-                  <textarea class="form-input" id="vap-edit-desc" rows="4"></textarea>
+                  <textarea class="form-input" id="vap-edit-desc" rows="4" style="resize: none;"></textarea>
                 </div>
-                <div class="form-group" style="display:flex; align-items:center; gap:8px;">
-                  <input type="checkbox" id="vap-edit-is-vhs" style="accent-color: var(--accent);">
-                  <label class="form-label" for="vap-edit-is-vhs" style="margin:0;">Tag as VHS</label>
+                <div class="vap-section-header-row" style="margin-top: 8px;">
+                  <div>
+                    <h4 class="vap-section-title" style="font-size: 0.95rem;">Tag as VHS</h4>
+                    <p class="vap-hint">Apply retro VHS effects to this video.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="vap-edit-is-vhs" />
+                    <span class="slider"></span>
+                  </label>
                 </div>
               </div>
             </div>
