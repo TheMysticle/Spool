@@ -3288,12 +3288,21 @@ window.navigateToVideo = navigateToVideo;
   }
 
   // ── Keyboard shortcut: Player controls & modals ──────────────────────────────
-  function showCenterIcon(type) {
+  function showCenterIcon(type, value) {
     const icon = document.getElementById('center-action-icon');
     if (!icon) return;
-    icon.innerHTML = type === 'play' 
-      ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+    
+    if (type === 'play') {
+      icon.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+    } else if (type === 'pause') {
+      icon.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+    } else if (type === 'volume-up' || type === 'volume-down') {
+      let iconPath = '';
+      if (value === 0) iconPath = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+      else if (value < 0.5) iconPath = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+      else iconPath = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+      icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;">${iconPath}</svg><div style="position: absolute; bottom: 8px; font-size: 13px; font-weight: 700;">${Math.round(value * 100)}%</div>`;
+    }
     
     icon.classList.remove('animate');
     void icon.offsetWidth;
@@ -3361,6 +3370,26 @@ window.navigateToVideo = navigateToVideo;
     } else if (e.code === 'KeyD') {
       e.preventDefault();
       seekAndAnimate('right', 10);
+    } else if (e.code === 'ArrowLeft') {
+      e.preventDefault();
+      seekAndAnimate('left', -5);
+    } else if (e.code === 'ArrowRight') {
+      e.preventDefault();
+      seekAndAnimate('right', 5);
+    } else if (e.code === 'ArrowUp') {
+      e.preventDefault();
+      let vol = player.volume() + 0.05;
+      if (vol > 1) vol = 1;
+      player.volume(vol);
+      player.muted(vol === 0);
+      showCenterIcon('volume-up', vol);
+    } else if (e.code === 'ArrowDown') {
+      e.preventDefault();
+      let vol = player.volume() - 0.05;
+      if (vol < 0) vol = 0;
+      player.volume(vol);
+      player.muted(vol === 0);
+      showCenterIcon('volume-down', vol);
     }
   }, { capture: true });
 
