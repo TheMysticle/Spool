@@ -763,9 +763,8 @@ function closeModal(id) {
       
       // Initialize Custom Thumbnail UI
       const thumbPreview = document.getElementById('vap-custom-thumb-img');
-      thumbPreview.src = videoData.thumbnail_path 
-        ? `${videoData.thumbnail_path}?token=${encodeURIComponent(getToken() || '')}`
-        : '';
+      thumbPreview.src = `/api/videos/${_vapVideoId}/thumbnail?token=${encodeURIComponent(getToken() || '')}&t=${Date.now()}`;
+      
       const thumbScrubberWrap = document.getElementById('vap-custom-thumb-scrubber-wrap');
       const thumbVideo = document.getElementById('vap-custom-thumb-video');
       const thumbRange = document.getElementById('vap-custom-thumb-range');
@@ -813,7 +812,7 @@ function closeModal(id) {
 
       document.getElementById('vap-custom-thumb-select-btn').onclick = () => {
         thumbScrubberWrap.style.display = 'block';
-        thumbVideo.src = `/api/videos/stream/${_vapVideoId}?token=${encodeURIComponent(getToken() || '')}`;
+        thumbVideo.src = `/api/videos/${_vapVideoId}/stream?token=${encodeURIComponent(getToken() || '')}`;
         thumbVideo.onloadedmetadata = () => {
           thumbRange.max = thumbVideo.duration;
           thumbRange.value = 0;
