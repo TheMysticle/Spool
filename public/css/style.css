@@ -244,7 +244,7 @@ h3 { font-size: 1rem; }
 .notif-dropdown.show { display: block; }
 
 .notif-header {
-  padding: 16px 0;
+  padding: 16px;
   font-weight: 700;
   border-bottom: 1px solid var(--border-subtle);
 }
