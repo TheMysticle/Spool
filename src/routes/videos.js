@@ -863,7 +863,7 @@ router.get('/channel/avatar', authOrShareToken, (req, res) => {
 });
 
 // ── GET /api/videos/:id/download ─────────────────────────────────────────────
-router.get('/:id/download', requireAuth, (req, res) => {
+router.get('/:id/download', authenticate, (req, res) => {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized.' });
   if (req.user.role !== 'admin' && !req.user.can_download) {
     return res.status(403).json({ error: 'You do not have permission to download videos.' });
