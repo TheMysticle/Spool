@@ -1613,7 +1613,9 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
             <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Name</label>
             <input type="text" id="editor-name-input" value="${escHtml(currentName)}" class="form-input" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem;" placeholder="Enter channel name...">
           </div>
-        <div id="panel-chan-people" class="chan-tab-panel" style="display: none;">
+        </div>
+      </div>
+      <div id="panel-chan-people" class="chan-tab-panel" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h4 style="margin: 0; font-weight: 500;">Manage People</h4>
             <button class="btn btn-primary btn-sm" id="chan-add-person-btn">Add Person</button>
