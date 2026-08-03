@@ -186,9 +186,10 @@ function parseVideoData(rawTitle, fallbackDate) {
 }
 
 function formatDate(dt) {
-  if (!dt) return '—';
+  if (!dt) return '-';
+  if (typeof dt === 'string' && /^\d{4}$/.test(dt)) return dt;
   const date = dt instanceof Date ? dt : new Date(dt);
-  if (Number.isNaN(date.getTime())) return '—';
+  if (Number.isNaN(date.getTime())) return '-';
   return date.toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
 }
 
@@ -282,8 +283,8 @@ function closeModal(id) {
                   <input class="form-input" id="vap-edit-title" type="text" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="vap-edit-date">Date</label>
-                  <input class="form-input" id="vap-edit-date" type="date" />
+                  <label class="form-label" for="vap-edit-date">Date (Optional day/month)</label>
+                  <input class="form-input" id="vap-edit-date" type="text" placeholder="YYYY-MM-DD or YYYY" />
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="vap-edit-category">Category</label>
@@ -311,11 +312,11 @@ function closeModal(id) {
                 <div style="display: flex; gap: 12px;">
                   <div style="flex:1;">
                     <label class="vap-label" for="vap-edit-vhs-start">VHS Start Date</label>
-                    <input type="date" id="vap-edit-vhs-start" class="vap-input" />
+                    <input type="text" id="vap-edit-vhs-start" class="vap-input" placeholder="YYYY-MM-DD or YYYY" />
                   </div>
                   <div style="flex:1;">
                     <label class="vap-label" for="vap-edit-vhs-end">VHS End Date</label>
-                    <input type="date" id="vap-edit-vhs-end" class="vap-input" />
+                    <input type="text" id="vap-edit-vhs-end" class="vap-input" placeholder="YYYY-MM-DD or YYYY" />
                   </div>
                 </div>
               </div>
@@ -434,17 +435,22 @@ function closeModal(id) {
 
       try {
         // Save details
-        const dateValue = document.getElementById('vap-edit-date').value;
+        const parseDate = (val) => {
+          if (!val) return null;
+          if (/^\d{4}$/.test(val)) return val;
+          return new Date(val).toISOString();
+        };
+        const dateValue = document.getElementById('vap-edit-date').value.trim();
         await api(`/api/videos/${_vapVideoId}`, {
           method: 'PUT',
           body: JSON.stringify({
             title: document.getElementById('vap-edit-title').value.trim(),
-            content_date: dateValue ? new Date(dateValue).toISOString() : null,
+            content_date: parseDate(dateValue),
             category: document.getElementById('vap-edit-category').value,
             description: document.getElementById('vap-edit-desc').value.trim(),
             is_vhs: document.getElementById('vap-edit-is-vhs').checked ? 1 : 0,
-            vhs_start_date: document.getElementById('vap-edit-vhs-start').value ? new Date(document.getElementById('vap-edit-vhs-start').value).toISOString() : null,
-            vhs_end_date: document.getElementById('vap-edit-vhs-end').value ? new Date(document.getElementById('vap-edit-vhs-end').value).toISOString() : null,
+            vhs_start_date: parseDate(document.getElementById('vap-edit-vhs-start').value.trim()),
+            vhs_end_date: parseDate(document.getElementById('vap-edit-vhs-end').value.trim()),
             has_chapters: document.getElementById('vap-edit-has-chapters').checked ? 1 : 0,
             chapters_json: JSON.stringify(getChaptersPayload()),
           }),
