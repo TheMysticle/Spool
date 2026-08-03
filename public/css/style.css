@@ -1725,10 +1725,10 @@ select.bulk-select-mini[multiple] {
   margin-top: 16px;
   background: var(--bg-surface);
   border-radius: 16px;
-  padding: 0;
+  padding: 16px;
   display: none;
   gap: 16px;
-  align-items: stretch;
+  align-items: center;
   border: 1px solid var(--border-subtle);
   animation: slideInUp 0.2s ease-out;
   overflow: hidden;
@@ -1740,14 +1740,16 @@ select.bulk-select-mini[multiple] {
 }
 
 .spotlight-avatar {
-  width: 130px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
   flex-shrink: 0;
   overflow: hidden;
   background: var(--bg-base);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -1757,7 +1759,6 @@ select.bulk-select-mini[multiple] {
 .spotlight-info { 
   flex: 1; 
   min-width: 0; 
-  padding: 16px 16px 16px 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1805,9 +1806,9 @@ select.bulk-select-mini[multiple] {
 }
 
 @media (max-width: 600px) {
-  .person-spotlight-card.show { flex-direction: column; gap: 0; }
-  .spotlight-avatar { width: 100%; height: 180px; }
-  .spotlight-info { padding: 16px; align-items: center; text-align: center; }
+  .person-spotlight-card.show { flex-direction: column; gap: 12px; }
+  .spotlight-avatar { width: 90px; height: 90px; }
+  .spotlight-info { align-items: center; text-align: center; }
 }
 
 /* ==========================================================================
