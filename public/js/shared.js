@@ -409,6 +409,10 @@ function closeModal(id) {
                   </div>
                 </div>
                 <div class="form-group">
+                  <label class="form-label" for="vap-edit-location">Location</label>
+                  <input class="form-input" id="vap-edit-location" type="text" placeholder="e.g., San Francisco, CA" />
+                </div>
+                <div class="form-group">
                   <label class="form-label" for="vap-edit-category">Category</label>
                   <select class="form-input" id="vap-edit-category">
                     <option value="video">Video</option>
@@ -587,6 +591,7 @@ function closeModal(id) {
           method: 'PUT',
           body: JSON.stringify({
             title: document.getElementById('vap-edit-title').value.trim(),
+            location: document.getElementById('vap-edit-location').value.trim(),
             content_date: contentDate,
             category: document.getElementById('vap-edit-category').value,
             description: document.getElementById('vap-edit-desc').value.trim(),
@@ -705,6 +710,7 @@ function closeModal(id) {
     document.getElementById('vap-people-list').innerHTML = 'Loading\u2026';
     // Reset details fields
     document.getElementById('vap-edit-title').value = '';
+    document.getElementById('vap-edit-location').value = '';
     document.getElementById('vap-edit-date').value = '';
     document.getElementById('vap-edit-category').value = 'video';
     document.getElementById('vap-edit-desc').value = '';
@@ -733,6 +739,7 @@ function closeModal(id) {
       // Fill in details tab
       _vapVideoData = videoData;
       document.getElementById('vap-edit-title').value = videoData.title || '';
+      document.getElementById('vap-edit-location').value = videoData.location || '';
       const toDateInput = (raw) => {
         if (raw == null || raw === '') return '';
         if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1900 && raw <= 2100) {

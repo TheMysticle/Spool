@@ -565,13 +565,16 @@ router.put('/:id', authenticate, (req, res) => {
   }
   if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
 
-  const { title, description, category, is_vhs, vhs_start_date, vhs_end_date, content_date, has_chapters, chapters_json } = req.body;
+  const { title, description, category, location, is_vhs, vhs_start_date, vhs_end_date, content_date, has_chapters, chapters_json } = req.body;
 
   if (title !== undefined && (typeof title !== 'string' || title.trim().length === 0)) {
     return res.status(400).json({ error: 'Title must be a non-empty string.' });
   }
   if (description !== undefined && typeof description !== 'string') {
     return res.status(400).json({ error: 'Description must be a string.' });
+  }
+  if (location !== undefined && typeof location !== 'string') {
+    return res.status(400).json({ error: 'Location must be a string.' });
   }
   if (category !== undefined && !['video', 'livestream'].includes(category)) {
     return res.status(400).json({ error: 'Category must be video or livestream.' });
@@ -583,6 +586,7 @@ router.put('/:id', authenticate, (req, res) => {
   updateVideoMeta(id, {
     title: title !== undefined ? title.trim().slice(0, 255) : undefined,
     description: description !== undefined ? description.slice(0, 5000) : undefined,
+    location: location !== undefined ? location.slice(0, 255) : undefined,
     category,
     is_vhs: is_vhs !== undefined ? is_vhs : undefined,
     vhs_start_date: vhs_start_date !== undefined ? vhs_start_date : undefined,

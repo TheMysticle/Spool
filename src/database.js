@@ -112,7 +112,8 @@ function initDatabase() {
       vhs_start_date DATETIME,
       vhs_end_date   DATETIME,
       has_chapters   INTEGER DEFAULT 0,
-      chapters_json  TEXT    DEFAULT '[]'
+      chapters_json  TEXT    DEFAULT '[]',
+      location       TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category);
@@ -361,6 +362,11 @@ function initDatabase() {
   const hasContentDate = videoColumns.some((col) => col.name === 'content_date');
   if (!hasContentDate) {
     db.exec('ALTER TABLE videos ADD COLUMN content_date DATETIME');
+  }
+
+  const hasLocation = videoColumns.some((col) => col.name === 'location');
+  if (!hasLocation) {
+    db.exec('ALTER TABLE videos ADD COLUMN location TEXT');
   }
 
   // One-time normalization/backfill for legacy rows during schema migration.
@@ -1069,7 +1075,7 @@ const upsertVideo = (data) => {
   return result;
 };
 
-const updateVideoMeta = (id, { title, description, category, is_vhs, vhs_start_date, vhs_end_date, has_chapters, chapters_json, content_date }) => {
+const updateVideoMeta = (id, { title, description, category, location, is_vhs, vhs_start_date, vhs_end_date, has_chapters, chapters_json, content_date }) => {
   const current = getVideoById(id);
   if (!current) return null;
 
@@ -1097,6 +1103,11 @@ const updateVideoMeta = (id, { title, description, category, is_vhs, vhs_start_d
   if (content_date !== undefined) {
     sets.push('content_date = ?');
     vals.push(content_date ? String(content_date).trim() : null);
+  }
+
+  if (location !== undefined) {
+    sets.push('location = ?');
+    vals.push(location !== null ? String(location).trim() : null);
   }
 
   if (description !== undefined && description !== null) {
