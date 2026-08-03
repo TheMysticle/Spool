@@ -227,7 +227,7 @@ router.get('/:id/vhs-channels', authenticate, (req, res) => {
   if (isNaN(id)) return res.status(400).json({ error: 'Invalid person id.' });
   const person = getPersonById(id);
   if (!person) return res.status(404).json({ error: 'Person not found.' });
-  res.json({ channels: getPersonVhsChannels(id) });
+  res.json({ channels: getPersonVhsChannels({ personId: id, userId: req.user.id, isAdmin: req.user.role === 'admin' }) });
 });
 
 // ── GET /api/people/:id/vhs-photos ──────────────────────────────────────────

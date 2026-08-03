@@ -982,7 +982,7 @@ router.get('/:id/download', authenticate, (req, res) => {
   const canAccess = checkVideoAccess(req.user, video);
   if (!canAccess) return res.status(403).json({ error: 'Forbidden.' });
 
-  const absPath = path.resolve(video.file_path);
+  const absPath = path.resolve(video.filepath);
   if (!fs.existsSync(absPath)) return res.status(404).json({ error: 'File not found on disk.' });
 
   // Use Express' res.download which natively handles Streams and Range requests,

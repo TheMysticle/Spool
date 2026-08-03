@@ -2123,15 +2123,27 @@ const acceptFriendRequest = (userId, fromUserId) => {
   return { ok: true };
 };
 
-const getPersonVhsChannels = (personId) => {
+const getPersonVhsChannels = ({ personId, userId, isAdmin }) => {
   const rows = db.prepare(`
     SELECT DISTINCT v.channel_id
     FROM videos v
     WHERE v.is_vhs = 1 AND (
       EXISTS (SELECT 1 FROM video_people vp WHERE vp.video_id = v.id AND vp.person_id = ?)
       OR EXISTS (SELECT 1 FROM video_people_auto vpa WHERE vpa.video_id = v.id AND vpa.person_id = ?)
+    ) AND (
+      ? = 1
+      OR v.channel_id IN (SELECT id FROM channels c WHERE c.user_id = ?)
+      OR EXISTS (
+        SELECT 1 FROM video_access_users vau 
+        JOIN video_access va ON va.id = vau.access_id 
+        WHERE va.video_id = v.id AND vau.user_id = ?
+      )
+      OR EXISTS (
+        SELECT 1 FROM video_access va 
+        WHERE va.video_id = v.id AND va.all_users = 1
+      )
     )
-  `).all(personId, personId);
+  `).all(personId, personId, isAdmin ? 1 : 0, userId, userId);
   return rows.map(r => r.channel_id === null ? 'main' : String(r.channel_id));
 };
 
