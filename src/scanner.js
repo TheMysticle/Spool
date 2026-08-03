@@ -206,8 +206,20 @@ async function scanVideos(options = {}) {
         const thumbPath = path.join(THUMB_DIR, thumbName);
         const thumbExists = fs.existsSync(thumbPath);
 
-        const meta = await getVideoMeta(filePath);
-        if (regenerateThumbnails || !thumbExists) {
+        const existing = getVideoByPath(filePath);
+        const hasCustom = existing && existing.has_custom_thumbnail === 1;
+
+        let meta = { duration: 0, width: 0, height: 0 };
+        if (!existing || !existing.duration || !existing.video_width || !existing.video_height) {
+          meta = await getVideoMeta(filePath);
+        } else {
+          meta = { duration: existing.duration, width: existing.video_width, height: existing.video_height };
+        }
+
+        if (!hasCustom && (regenerateThumbnails || !thumbExists)) {
+          if (!meta.duration) {
+            meta = await getVideoMeta(filePath);
+          }
           await generateThumbnail(filePath, thumbPath, meta.duration);
         }
 

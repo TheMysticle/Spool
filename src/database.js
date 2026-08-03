@@ -1039,7 +1039,7 @@ const upsertVideo = (data) => {
     const result = db
       .prepare(
         `UPDATE videos
-         SET filename = ?, file_size = ?, duration = ?, file_created_at = COALESCE(file_created_at, ?),
+         SET filename = ?, file_size = COALESCE(?, file_size), duration = COALESCE(?, duration), file_created_at = COALESCE(file_created_at, ?),
              content_date = COALESCE(content_date, ?),
              thumbnail_path = CASE WHEN has_custom_thumbnail = 1 THEN thumbnail_path ELSE COALESCE(?, thumbnail_path) END,
              video_width = COALESCE(?, video_width), video_height = COALESCE(?, video_height),
@@ -1054,8 +1054,8 @@ const upsertVideo = (data) => {
       )
       .run(
         data.filename,
-        data.file_size,
-        data.duration,
+        data.file_size || null,
+        data.duration || null,
         normalizedContentDate || data.file_created_at || null,
         normalizedContentDate || null,
         data.thumbnail_path || null,
