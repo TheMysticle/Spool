@@ -18,6 +18,9 @@ fs.mkdirSync(VIDEOS_DIR, { recursive: true });
 fs.mkdirSync(CHANNELS_DIR, { recursive: true });
 fs.mkdirSync(THUMB_DIR, { recursive: true });
 
+const TMP_DIR = path.join(DATA_DIR, 'tmp_uploads');
+fs.mkdirSync(TMP_DIR, { recursive: true });
+
 // Check upload permissions middleware
 const requireUploadPrivileges = (req, res, next) => {
   if (req.user.role === 'admin' || req.user.can_upload === 1) {
@@ -214,6 +217,124 @@ router.post('/', authenticate, requireUploadPrivileges, (req, res) => {
     console.log(`[Upload] Complete. ${uploadedVideos.length} videos processed.`);
     res.json({ message: 'Upload successful', videos: uploadedVideos });
   });
+});
+
+const chunkStorage = multer.diskStorage({
+  destination: TMP_DIR,
+  filename: (req, file, cb) => cb(null, 'chunk_' + Date.now() + '_' + Math.floor(Math.random() * 1000))
+});
+const chunkUpload = multer({ storage: chunkStorage });
+
+router.post('/chunk', authenticate, requireUploadPrivileges, chunkUpload.single('chunk'), (req, res) => {
+  const { uploadId, chunkIndex } = req.body;
+  if (!req.file || !uploadId) return res.status(400).json({ error: 'Missing chunk data' });
+  const partPath = path.join(TMP_DIR, uploadId + '.part');
+  try {
+    const chunkData = fs.readFileSync(req.file.path);
+    fs.appendFileSync(partPath, chunkData);
+    fs.unlinkSync(req.file.path);
+    res.json({ success: true, chunkIndex });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to write chunk' });
+  }
+});
+
+router.post('/complete', authenticate, requireUploadPrivileges, async (req, res) => {
+  const { uploadId, originalName, datePref, customDate, isVhs, lastModifiedData } = req.body;
+  const partPath = path.join(TMP_DIR, uploadId + '.part');
+  if (!fs.existsSync(partPath)) return res.status(400).json({ error: 'Incomplete upload' });
+  
+  let destDir = req.uploadChannel ? path.join(CHANNELS_DIR, String(req.uploadChannel.id)) : MEDIA_PATH;
+  fs.mkdirSync(destDir, { recursive: true });
+  
+  let safeName = originalName.replace(/[^a-zA-Z0-9.\-_\s()\[\],]/g, '_');
+  if (!safeName) safeName = 'video.mp4';
+  const ext = path.extname(safeName);
+  const base = path.basename(safeName, ext);
+  let finalName = safeName;
+  let attempt = 1;
+  while (fs.existsSync(path.join(destDir, finalName))) {
+    finalName = `${base}-${attempt}${ext}`;
+    attempt++;
+  }
+  const finalPath = path.join(destDir, finalName);
+  fs.renameSync(partPath, finalPath);
+
+  try {
+    const meta = await getVideoMeta(finalPath);
+    if (meta.duration === 0 && meta.width === 0 && meta.height === 0) {
+      try { fs.unlinkSync(finalPath); } catch (e) {}
+      return res.status(400).json({ error: 'Invalid video file' });
+    }
+    const category = detectCategory(finalPath);
+    const title = filenameToTitle(originalName);
+    const stat = fs.statSync(finalPath);
+    let fileCreatedAt = stat.mtime.toISOString();
+    let forceContentDate = null;
+
+    if (datePref === 'custom' && customDate) {
+      forceContentDate = new Date(`${customDate}T12:00:00Z`).toISOString();
+      fileCreatedAt = forceContentDate;
+    } else if (datePref === 'filename') {
+      fileCreatedAt = stat.mtime.toISOString();
+    } else {
+      try {
+        if (lastModifiedData) {
+          const map = JSON.parse(lastModifiedData);
+          const origModifiedMs = map[originalName];
+          if (origModifiedMs) {
+            forceContentDate = new Date(origModifiedMs).toISOString();
+            fileCreatedAt = forceContentDate;
+          }
+        }
+      } catch (e) {}
+    }
+
+    const videoData = {
+      filename: finalName,
+      filepath: finalPath,
+      title: title,
+      category: category,
+      file_created_at: fileCreatedAt,
+      force_content_date: forceContentDate,
+      duration: meta.duration,
+      file_size: stat.size,
+      video_width: meta.width,
+      video_height: meta.height,
+      thumbnail_path: null,
+      channel_id: req.uploadChannel ? req.uploadChannel.id : null,
+      is_vhs: isVhs === 'true' || isVhs === true ? 1 : 0
+    };
+
+    db.upsertVideo(videoData);
+    const inserted = db.getVideoByPath(finalPath);
+    const videoId = inserted ? inserted.id : 0;
+
+    if (videoId && videoData.channel_id) {
+      db.addChannelNotification(videoData.channel_id, videoId);
+    } else if (videoId && req.user.role === 'admin') {
+      db.addChannelNotification(0, videoId);
+    }
+
+    if (['.avi', '.mov', '.flv', '.ts'].includes(ext.toLowerCase())) {
+      if (videoId) transcodeQueue.addJob(videoId, finalPath);
+    }
+
+    setTimeout(async () => {
+      try {
+        const thumbName = `thumb_${videoId}.jpg`;
+        const thumbPath = path.join(THUMB_DIR, thumbName);
+        await generateThumbnail(finalPath, thumbPath, meta.duration);
+        if (fs.existsSync(thumbPath)) {
+          db.setVideoThumbnail(videoId, `/thumbnails/${thumbName}`);
+        }
+      } catch (err) {}
+    }, 0);
+
+    res.json({ message: 'Upload successful', videos: [{ id: videoId, title }] });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error processing video' });
+  }
 });
 
 module.exports = router;

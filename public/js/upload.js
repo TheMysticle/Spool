@@ -249,70 +249,135 @@
     }
   });
 
+  const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB
+
   function startUpload(files, datePref, customDate, isVhs = false) {
     const token = localStorage.getItem('ma_token');
 
     files.forEach((file, index) => {
-      const formData = new FormData();
-      formData.append('datePref', datePref);
-      if (datePref === 'custom') {
-        formData.append('customDate', customDate);
-      }
-      formData.append('is_vhs', isVhs);
-
-      const lastModifiedArray = [{ name: file.name, lastModified: file.lastModified }];
-      formData.append('lastModifiedData', JSON.stringify(lastModifiedArray));
-
-      formData.append('videos', file);
-
       const uploadId = 'upload_' + Date.now() + '_' + index;
       addProgressDialog(uploadId, `Uploading ${file.name}...`);
       activeUploads++;
-      
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/upload');
-      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          updateProgressDialog(uploadId, percent, e.loaded, e.total, file.name);
+
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      let currentChunk = 0;
+      let loadedBytes = 0;
+
+      let isAborted = false;
+      let currentXhr = null;
+
+      window[`${uploadId}_abort`] = () => {
+        isAborted = true;
+        if (currentXhr) currentXhr.abort();
+      };
+
+      const uploadNextChunk = () => {
+        if (isAborted) return;
+        
+        if (currentChunk >= totalChunks) {
+          finalizeUpload();
+          return;
         }
-      });
 
-      xhr.onload = () => {
+        const start = currentChunk * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunkBlob = file.slice(start, end);
+
+        const formData = new FormData();
+        formData.append('uploadId', uploadId);
+        formData.append('chunkIndex', currentChunk);
+        formData.append('chunk', chunkBlob, file.name);
+
+        const xhr = new XMLHttpRequest();
+        currentXhr = xhr;
+        xhr.open('POST', '/api/upload/chunk');
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const currentTotalLoaded = loadedBytes + e.loaded;
+            const percent = Math.round((currentTotalLoaded / file.size) * 100);
+            updateProgressDialog(uploadId, percent, currentTotalLoaded, file.size, file.name);
+          }
+        });
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            loadedBytes += chunkBlob.size;
+            currentChunk++;
+            uploadNextChunk();
+          } else {
+            handleError('Upload failed');
+          }
+        };
+
+        xhr.onerror = () => handleError('Network error during upload');
+        xhr.onabort = () => {
+          activeUploads--;
+          finishProgressDialog(uploadId, 'Upload cancelled', 'error');
+        };
+
+        xhr.send(formData);
+      };
+
+      const finalizeUpload = () => {
+        const formData = new FormData();
+        formData.append('uploadId', uploadId);
+        formData.append('originalName', file.name);
+        formData.append('datePref', datePref);
+        if (datePref === 'custom') formData.append('customDate', customDate);
+        formData.append('isVhs', isVhs);
+        
+        const lastModifiedMap = { [file.name]: file.lastModified };
+        formData.append('lastModifiedData', JSON.stringify(lastModifiedMap));
+
+        const xhr = new XMLHttpRequest();
+        currentXhr = xhr;
+        xhr.open('POST', '/api/upload/complete');
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        
+        updateProgressDialog(uploadId, 100, file.size, file.size, file.name);
+
+        xhr.onload = () => {
+          activeUploads--;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            let responseTitle = file.name;
+            let videoId = null;
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (data.videos && data.videos.length > 0) {
+                responseTitle = data.videos[0].title;
+                videoId = data.videos[0].id;
+              }
+            } catch(e) {}
+            finishProgressDialog(uploadId, responseTitle, 'success', videoId, responseTitle);
+          } else {
+            let msg = 'Finalization failed';
+            try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e){}
+            finishProgressDialog(uploadId, msg, 'error');
+          }
+        };
+
+        xhr.onerror = () => handleError('Network error during finalization');
+        xhr.onabort = () => {
+          activeUploads--;
+          finishProgressDialog(uploadId, 'Upload cancelled', 'error');
+        };
+
+        xhr.send(formData);
+      };
+
+      const handleError = (defaultMsg) => {
+        if (isAborted) return;
         activeUploads--;
-        if (xhr.status >= 200 && xhr.status < 300) {
-          let responseTitle = file.name;
-          let videoId = null;
-          try {
-            const data = JSON.parse(xhr.responseText);
-            if (data.videos && data.videos.length > 0) {
-              responseTitle = data.videos[0].title;
-              videoId = data.videos[0].id;
-            }
-          } catch(e) {}
-          finishProgressDialog(uploadId, responseTitle, 'success', videoId, responseTitle);
-        } else {
-          let msg = 'Upload failed';
-          try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e){}
-          finishProgressDialog(uploadId, msg, 'error');
+        let msg = defaultMsg;
+        if (currentXhr && currentXhr.responseText) {
+          try { msg = JSON.parse(currentXhr.responseText).error || msg; } catch(e){}
         }
-      };
-      
-      xhr.onerror = () => {
-        activeUploads--;
-        finishProgressDialog(uploadId, 'Network error during upload', 'error');
-      };
-      
-      xhr.onabort = () => {
-        activeUploads--;
+        finishProgressDialog(uploadId, msg, 'error');
       };
 
-      // Store xhr so we can abort it if needed
-      window[`${uploadId}_xhr`] = xhr;
-
-      xhr.send(formData);
+      uploadNextChunk();
     });
   }
 
@@ -450,9 +515,9 @@
     const card = document.getElementById(id);
     const videoId = card ? card.dataset.videoId : null;
 
-    if (window[`${id}_xhr`]) {
-      window[`${id}_xhr`].abort();
-      delete window[`${id}_xhr`];
+    if (window[`${id}_abort`]) {
+      window[`${id}_abort`]();
+      delete window[`${id}_abort`];
       if (card) card.remove();
       toast('Upload cancelled', 'error');
     } else if (videoId) {
