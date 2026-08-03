@@ -28,6 +28,31 @@ function linkifyTimestamps(text) {
   });
 }
 
+// Utility to parse chapters from description text
+function parseChapters(text) {
+  if (!text) return null;
+  const lines = text.split('\n');
+  const chapters = [];
+  const regex = /^\s*((?:[0-9]+:)?[0-5]?[0-9]:[0-5][0-9])\s+(.+)$/;
+  
+  for (const line of lines) {
+    const match = line.match(regex);
+    if (match) {
+      chapters.push({
+        timeStr: match[1],
+        time: parseTimestamp(match[1]),
+        title: match[2].trim()
+      });
+    }
+  }
+  
+  // A valid chapter list must have at least 2 chapters and start with 0:00
+  if (chapters.length >= 2 && chapters[0].time === 0) {
+    return chapters.sort((a, b) => a.time - b.time);
+  }
+  return null;
+}
+
 /* watch.js — video player page */
 'use strict';
 
@@ -205,6 +230,7 @@ function linkifyTimestamps(text) {
   // ── Video.js player ────────────────────────────────────────────────────────
   let player;
   let currentVideo = null;
+  let currentChapters = null;
   let favoriteIds = new Set();
   let currentQuality = '1080p';
   let availableQualities = [];
@@ -1109,10 +1135,11 @@ function linkifyTimestamps(text) {
       // Create Live Thumbnail Preview Elements
       const previewContainer = document.createElement('div');
       previewContainer.className = 'vjs-thumbnail-preview';
-      previewContainer.innerHTML = '<canvas class="vjs-thumbnail-canvas" width="160" height="90"></canvas><div class="vjs-thumbnail-time">0:00</div>';
+      previewContainer.innerHTML = '<div class="vjs-thumbnail-chapter-title"></div><canvas class="vjs-thumbnail-canvas" width="160" height="90"></canvas><div class="vjs-thumbnail-time">0:00</div>';
       progressControl.appendChild(previewContainer);
 
       const timeDisplay = previewContainer.querySelector('.vjs-thumbnail-time');
+      const chapterTitleDisplay = previewContainer.querySelector('.vjs-thumbnail-chapter-title');
       const formatTime = (seconds) => {
         if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
         const h = Math.floor(seconds / 3600);
@@ -1142,6 +1169,54 @@ function linkifyTimestamps(text) {
       player.on('loadstart', syncSource);
       syncSource();
 
+      // Render chapter markers on seekbar
+      let currentChapterTitleEl = null;
+
+      player.on('loadedmetadata', () => {
+        if (!currentChapters) return;
+        const duration = player.duration();
+        const holder = progressControl.querySelector('.vjs-progress-holder');
+        if (duration && holder) {
+          // Clear old markers if any
+          holder.querySelectorAll('.vjs-chapter-marker').forEach(m => m.remove());
+          
+          currentChapters.forEach(ch => {
+            if (ch.time === 0) return; // Skip 0:00 marker
+            const pct = (ch.time / duration) * 100;
+            if (pct < 100) {
+              const marker = document.createElement('div');
+              marker.className = 'vjs-chapter-marker';
+              marker.style.left = pct + '%';
+              holder.appendChild(marker);
+            }
+          });
+        }
+
+        // Add current chapter title to control bar
+        if (!currentChapterTitleEl) {
+          const controlBar = player.controlBar.el();
+          currentChapterTitleEl = document.createElement('div');
+          currentChapterTitleEl.className = 'vjs-current-chapter-title';
+          controlBar.appendChild(currentChapterTitleEl);
+        }
+      });
+
+      player.on('timeupdate', () => {
+        if (!currentChapters || !currentChapterTitleEl) return;
+        const currentTime = player.currentTime();
+        let activeChapter = currentChapters[0];
+        for (const ch of currentChapters) {
+          if (ch.time <= currentTime) activeChapter = ch;
+          else break;
+        }
+        if (activeChapter) {
+          currentChapterTitleEl.textContent = `• ${activeChapter.title}`;
+          currentChapterTitleEl.style.display = 'block';
+        } else {
+          currentChapterTitleEl.style.display = 'none';
+        }
+      });
+
       let seekTimeout = null;
       let isSeeking = false;
       let lastDrawTime = -1;
@@ -1161,6 +1236,18 @@ function linkifyTimestamps(text) {
         const hoverTime = percent * duration;
         
         timeDisplay.textContent = formatTime(hoverTime);
+
+        if (currentChapters && currentChapters.length > 0) {
+          let activeChapter = currentChapters[0];
+          for (const ch of currentChapters) {
+            if (ch.time <= hoverTime) activeChapter = ch;
+            else break;
+          }
+          chapterTitleDisplay.textContent = activeChapter.title;
+          chapterTitleDisplay.style.display = 'block';
+        } else {
+          chapterTitleDisplay.style.display = 'none';
+        }
 
         // Position the container
         const containerWidth = 160;
@@ -2189,6 +2276,21 @@ window.navigateToVideo = navigateToVideo;
       ? `<div class="description-text">${linkifyTimestamps(escHtml(video.description))}</div>`
       : '';
 
+    const chaptersBtn = currentChapters && currentChapters.length > 0 ? `
+      <button class="btn-action icon-only" id="watch-chapters-btn" type="button" title="Chapters" aria-label="Chapters">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      </button>` : '';
+
+    const chaptersChipBar = currentChapters && currentChapters.length > 0 ? `
+      <div class="chapters-chip-bar" id="chapters-chip-bar">
+        ${currentChapters.map(ch => `
+          <button class="chapter-chip" data-time="${ch.time}" type="button">
+            <span class="chapter-chip-time">${ch.timeStr}</span>
+            <span class="chapter-chip-title">${escHtml(ch.title)}</span>
+          </button>
+        `).join('')}
+      </div>` : '';
+
     infoEl.innerHTML = `
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
         <h1 class="video-info-title">${escHtml(video.title)}</h1>
@@ -2213,10 +2315,12 @@ window.navigateToVideo = navigateToVideo;
             ${isFav ? favIconFilled : favIconOutline}
           </button>
           ${shareBtn}
+          ${chaptersBtn}
           ${adminMenu}
         </div>
       </div>
 
+      ${chaptersChipBar}
       <div class="description-box">
         <div class="description-meta">
           <span>${viewsStr}</span>
@@ -2237,6 +2341,19 @@ window.navigateToVideo = navigateToVideo;
       } catch (err) {
         toast(err.message || 'Failed to update favorite.', 'error');
       }
+    });
+
+    document.getElementById('watch-chapters-btn')?.addEventListener('click', () => {
+      document.getElementById('chapters-chip-bar')?.classList.toggle('show');
+    });
+
+    document.querySelectorAll('.chapter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const time = parseInt(btn.dataset.time, 10);
+        if (!isNaN(time) && player) {
+          player.currentTime(time);
+        }
+      });
     });
 
     if (canEditVideo(currentVideo)) {
@@ -3389,6 +3506,7 @@ window.navigateToVideo = navigateToVideo;
       const progressData = currentUser ? await api(`/api/videos/${videoId}/progress`).catch(() => ({ position: 0 })) : { position: 0 };
 
       currentVideo = video;
+      currentChapters = parseChapters(video.description);
 
       // Set quality list; auto-pick the highest available resolution.
       availableQualities = qualityData.qualities || [];

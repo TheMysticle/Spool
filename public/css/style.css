@@ -5162,3 +5162,91 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .timestamp-link:hover {
   text-decoration: underline;
 }
+
+/* ==========================================================================
+   CHAPTERS
+   ========================================================================== */
+.vjs-chapter-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--bg-base);
+  z-index: 10;
+  transform: translateX(-50%);
+}
+.vjs-thumbnail-chapter-title {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: var(--font);
+  z-index: 101;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vjs-current-chapter-title {
+  display: flex;
+  align-items: center;
+  font-family: var(--font);
+  font-size: 1.1em;
+  font-weight: 500;
+  color: #fff;
+  padding: 0 10px;
+  order: 9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+.chapters-chip-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0;
+  margin-bottom: 0;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s, opacity 0.3s, padding 0.3s, margin-bottom 0.3s;
+}
+.chapters-chip-bar.show {
+  max-height: 100px;
+  opacity: 1;
+  padding: 12px 0 0 0;
+  margin-bottom: 16px;
+}
+.chapters-chip-bar::-webkit-scrollbar {
+  display: none;
+}
+.chapter-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 8px 16px;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.chapter-chip:hover {
+  background: var(--border);
+}
+.chapter-chip-time {
+  color: var(--accent);
+  font-weight: 600;
+}
