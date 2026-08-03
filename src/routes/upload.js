@@ -258,7 +258,17 @@ router.post('/complete', authenticate, requireUploadPrivileges, upload.none(), a
     attempt++;
   }
   const finalPath = path.join(destDir, finalName);
-  fs.renameSync(partPath, finalPath);
+  
+  try {
+    await fs.promises.rename(partPath, finalPath);
+  } catch (err) {
+    if (err.code === 'EXDEV') {
+      await fs.promises.copyFile(partPath, finalPath);
+      await fs.promises.unlink(partPath);
+    } else {
+      return res.status(500).json({ error: 'Failed to save final video file' });
+    }
+  }
 
   try {
     const meta = await getVideoMeta(finalPath);
