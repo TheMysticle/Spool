@@ -565,7 +565,7 @@ router.put('/:id', authenticate, (req, res) => {
   }
   if (!canEdit) return res.status(403).json({ error: 'Forbidden' });
 
-  const { title, description, category, is_vhs, content_date } = req.body;
+  const { title, description, category, is_vhs, vhs_start_date, vhs_end_date, content_date } = req.body;
 
   if (title !== undefined && (typeof title !== 'string' || title.trim().length === 0)) {
     return res.status(400).json({ error: 'Title must be a non-empty string.' });

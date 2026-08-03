@@ -2277,7 +2277,7 @@ window.navigateToVideo = navigateToVideo;
     const viewsStr = `${video.view_count.toLocaleString()} view${video.view_count !== 1 ? 's' : ''}`;
     
     let dateStr = formatDate(video.content_date || video.file_created_at || video.scanned_at);
-    if (video.is_vhs && (video.vhs_start_date || video.vhs_end_date)) {
+    if (video.vhs_start_date || video.vhs_end_date) {
       const s = video.vhs_start_date ? formatDate(video.vhs_start_date) : '';
       const e = video.vhs_end_date ? formatDate(video.vhs_end_date) : '';
       dateStr = (s && e) ? `${s} — ${e}` : (s || e);
@@ -2621,7 +2621,7 @@ window.navigateToVideo = navigateToVideo;
     el.innerHTML = others.map((v) => {
         const targetUrl = nextVideoUrl(v.id);
         let dateLabel = formatDate(v.content_date || v.file_created_at || v.scanned_at);
-        if (v.is_vhs && (v.vhs_start_date || v.vhs_end_date)) {
+        if (v.vhs_start_date || v.vhs_end_date) {
           const s = v.vhs_start_date ? formatDate(v.vhs_start_date) : '';
           const e = v.vhs_end_date ? formatDate(v.vhs_end_date) : '';
           dateLabel = (s && e) ? `${s} — ${e}` : (s || e);

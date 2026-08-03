@@ -429,8 +429,8 @@ function closeModal(id) {
             category: document.getElementById('vap-edit-category').value,
             description: document.getElementById('vap-edit-desc').value.trim(),
             is_vhs: document.getElementById('vap-edit-is-vhs').checked ? 1 : 0,
-            vhs_start_date: document.getElementById('vap-edit-is-vhs').checked && document.getElementById('vap-edit-vhs-start').value ? new Date(document.getElementById('vap-edit-vhs-start').value).toISOString() : null,
-            vhs_end_date: document.getElementById('vap-edit-is-vhs').checked && document.getElementById('vap-edit-vhs-end').value ? new Date(document.getElementById('vap-edit-vhs-end').value).toISOString() : null,
+            vhs_start_date: document.getElementById('vap-edit-vhs-start').value ? new Date(document.getElementById('vap-edit-vhs-start').value).toISOString() : null,
+            vhs_end_date: document.getElementById('vap-edit-vhs-end').value ? new Date(document.getElementById('vap-edit-vhs-end').value).toISOString() : null,
           }),
         });
 
@@ -1475,9 +1475,17 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         </button>
       </div>
       
-      <div style="display: flex; gap: 16px; border-bottom: 1px solid var(--border); padding: 0 24px; margin-top: 16px;">
-        <button class="chan-tab-btn active" data-tab="chan-general" style="padding: 12px 0; border: none; background: transparent; border-bottom: 2px solid var(--primary); color: var(--text); cursor: pointer; font-weight: 500;">General</button>
-        <button class="chan-tab-btn" data-tab="chan-people" style="padding: 12px 0; border: none; background: transparent; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer; font-weight: 500;">Your People</button>
+      <div style="padding: 0 24px; margin-top: 16px;">
+        <div class="vap-tabs">
+          <button class="vap-tab-btn chan-tab-btn active" data-tab="chan-general" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            General
+          </button>
+          <button class="vap-tab-btn chan-tab-btn" data-tab="chan-people" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Your People
+          </button>
+        </div>
       </div>
 
       <div style="padding: 24px; overflow-y: auto; max-height: 60vh;">
@@ -1617,11 +1625,9 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
   const panels = overlay.querySelectorAll('.chan-tab-panel');
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      tabBtns.forEach(b => { b.classList.remove('active'); b.style.borderColor = 'transparent'; b.style.color = 'var(--text-muted)'; });
+      tabBtns.forEach(b => b.classList.remove('active'));
       panels.forEach(p => p.style.display = 'none');
       btn.classList.add('active');
-      btn.style.borderColor = 'var(--primary)';
-      btn.style.color = 'var(--text)';
       overlay.querySelector('#panel-' + btn.dataset.tab).style.display = 'block';
 
       if (btn.dataset.tab === 'chan-people') {
