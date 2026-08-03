@@ -2669,7 +2669,7 @@ window.navigateToVideo = navigateToVideo;
         <div class="mini-card" onclick="navigateToVideo(${v.id})" role="button" tabindex="0" data-video-id="${v.id}">
           <div class="mini-thumb">
             ${v.thumbnail_path
-              ? `<img src="/api/videos/${v.id}/thumbnail?${getAuthQueryString()}" alt="${escHtml(v.title)}" />`
+              ? `<img src="/api/videos/${v.id}/thumbnail?${getAuthQueryString()}${v.updated_at ? `&t=${encodeURIComponent(v.updated_at)}` : ''}" alt="${escHtml(v.title)}" />`
               : `<div class="thumb-placeholder">▶</div>`
             }
             ${durationLabel ? `<span class="mini-duration-badge">${escHtml(durationLabel)}</span>` : ''}

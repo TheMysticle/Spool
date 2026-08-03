@@ -1011,7 +1011,7 @@ const getAllVideos = ({ category, search, page = 1, limit = 40, sort = 'title_as
   const rows = db
     .prepare(
       `SELECT v.id, v.filename, v.filepath, v.title, v.original_title, v.description, v.category, v.content_date, v.file_created_at,
-              v.duration, v.file_size, v.thumbnail_path, v.video_width, v.video_height, v.view_count, v.scanned_at, v.channel_id, v.is_vhs, v.vhs_start_date, v.vhs_end_date, v.has_chapters, v.chapters_json,
+              v.duration, v.file_size, v.thumbnail_path, v.updated_at, v.video_width, v.video_height, v.view_count, v.scanned_at, v.channel_id, v.is_vhs, v.vhs_start_date, v.vhs_end_date, v.has_chapters, v.chapters_json,
               CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_name') ELSE c.name END AS channel_name, 
               CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_avatar') ELSE c.avatar_path END AS channel_avatar_path
        FROM videos v 

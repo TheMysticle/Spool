@@ -99,7 +99,7 @@ function buildThumbnailSeekPlan(durationSec = 0) {
   const boundedMin = Math.min(minRandom, safeEnd);
   const boundedMax = Math.min(maxRandom, safeEnd);
   const randomSeek = boundedMax > boundedMin
-    ? Math.floor(boundedMin + Math.random() * (boundedMax - boundedMin + 1))
+    ? Math.floor(boundedMin + 0.5 * (boundedMax - boundedMin + 1))
     : boundedMin;
 
   const midpoint = Math.min(Math.max(1, Math.floor(duration * 0.5)), safeEnd);
