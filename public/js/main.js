@@ -1657,7 +1657,7 @@
       container.innerHTML = `
         <div class="channel-page-header">
           <div class="channel-page-banner" style="background-image: url('${bannerUrl}'); position: relative;">
-            ${canEdit ? `<button class="channel-page-banner-upload" onclick="window.openChannelEditor('${id}', '${escHtml(ch.name)}', '${avatarUrl}', '${bannerUrl || ''}', () => location.reload())" title="Channel Settings" style="position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : ''}
+            ${canEdit ? `<button class="channel-page-banner-upload" onclick="window.openChannelEditor('${id}', '${escHtml(ch.name)}', '${avatarUrl}', '${bannerUrl || ''}', () => location.reload())" title="Channel Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : ''}
           </div>
           <div class="channel-page-info-bar">
             <div style="position: relative; flex-shrink: 0; display: inline-flex; border-radius: 50%; overflow: hidden;">

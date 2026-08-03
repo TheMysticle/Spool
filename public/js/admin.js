@@ -61,7 +61,7 @@
         
         card.innerHTML = `
           <div style="height: 100px; background: ${bannerUrl ? `url('${bannerUrl}') center/cover` : 'var(--bg-hover)'}; position: relative;">
-            <button onclick="window.openChannelEditor('${ch.id}', '${escHtml(ch.name)}', '${avatarUrl}', '${bannerUrl}', () => loadChannels())" title="Channel Settings" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); border: none; cursor: pointer;">
+            <button class="channel-page-banner-upload" onclick="window.openChannelEditor('${ch.id}', '${escHtml(ch.name)}', '${avatarUrl}', '${bannerUrl}', () => loadChannels())" title="Channel Settings">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
             </button>
           </div>
