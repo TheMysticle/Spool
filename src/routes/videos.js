@@ -585,6 +585,8 @@ router.put('/:id', authenticate, (req, res) => {
     description: description !== undefined ? description.slice(0, 5000) : undefined,
     category,
     is_vhs: is_vhs !== undefined ? is_vhs : undefined,
+    vhs_start_date: vhs_start_date !== undefined ? vhs_start_date : undefined,
+    vhs_end_date: vhs_end_date !== undefined ? vhs_end_date : undefined,
     content_date: content_date !== undefined ? content_date : undefined,
   });
 

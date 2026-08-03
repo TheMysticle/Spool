@@ -107,7 +107,10 @@ function initDatabase() {
       video_height   INTEGER DEFAULT 0,
       view_count     INTEGER DEFAULT 0,
       scanned_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+      is_vhs         INTEGER NOT NULL DEFAULT 0,
+      vhs_start_date DATETIME,
+      vhs_end_date   DATETIME
     );
 
     CREATE INDEX IF NOT EXISTS idx_videos_category ON videos(category);
@@ -519,6 +522,10 @@ function initDatabase() {
     db.exec('ALTER TABLE videos ADD COLUMN is_vhs INTEGER NOT NULL DEFAULT 0');
     db.exec('CREATE INDEX IF NOT EXISTS idx_videos_is_vhs ON videos(is_vhs)');
   }
+  if (!vidsCols.some(c => c.name === 'vhs_start_date')) {
+    db.exec('ALTER TABLE videos ADD COLUMN vhs_start_date DATETIME');
+    db.exec('ALTER TABLE videos ADD COLUMN vhs_end_date DATETIME');
+  }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS community_posts (
@@ -929,8 +936,8 @@ const getAllVideos = ({ category, search, page = 1, limit = 40, sort = 'title_as
 
   const rows = db
     .prepare(
-      `SELECT v.id, v.filename, v.title, v.original_title, v.description, v.category, v.content_date, v.file_created_at,
-              v.duration, v.file_size, v.thumbnail_path, v.video_width, v.video_height, v.view_count, v.scanned_at, v.channel_id, v.is_vhs,
+      `SELECT v.id, v.filename, v.filepath, v.title, v.original_title, v.description, v.category, v.content_date, v.file_created_at,
+              v.duration, v.file_size, v.thumbnail_path, v.video_width, v.video_height, v.view_count, v.scanned_at, v.channel_id, v.is_vhs, v.vhs_start_date, v.vhs_end_date,
               CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_name') ELSE c.name END AS channel_name, 
               CASE WHEN v.channel_id IS NULL THEN (SELECT value FROM settings WHERE key = 'channel_avatar') ELSE c.avatar_path END AS channel_avatar_path
        FROM videos v 
@@ -961,10 +968,11 @@ const upsertVideo = (data) => {
          SET filename = ?, file_size = ?, duration = ?, file_created_at = COALESCE(file_created_at, ?),
              content_date = COALESCE(content_date, ?),
              thumbnail_path = COALESCE(?, thumbnail_path),
-             video_width = CASE WHEN ? > 0 THEN ? ELSE video_width END,
-             video_height = CASE WHEN ? > 0 THEN ? ELSE video_height END,
+             video_width = COALESCE(?, video_width), video_height = COALESCE(?, video_height),
              channel_id = COALESCE(?, channel_id),
              is_vhs = COALESCE(?, is_vhs),
+             vhs_start_date = COALESCE(?, vhs_start_date),
+             vhs_end_date = COALESCE(?, vhs_end_date),
              scanned_at = CURRENT_TIMESTAMP
          WHERE filepath = ?`
       )
@@ -975,10 +983,12 @@ const upsertVideo = (data) => {
         normalizedContentDate || data.file_created_at || null,
         normalizedContentDate || null,
         data.thumbnail_path || null,
-        data.video_width || 0, data.video_width || 0,
-        data.video_height || 0, data.video_height || 0,
+        data.video_width || 0,
+        data.video_height || 0,
         data.channel_id || null,
         data.is_vhs !== undefined ? data.is_vhs : null,
+        data.vhs_start_date !== undefined ? data.vhs_start_date : null,
+        data.vhs_end_date !== undefined ? data.vhs_end_date : null,
         data.filepath
       );
     syncAutoTaggedPeopleForVideo(existing.id, existing.title);
@@ -986,8 +996,8 @@ const upsertVideo = (data) => {
   }
   const result = db
     .prepare(
-      `INSERT INTO videos (filename, filepath, title, original_title, description, category, content_date, file_created_at, duration, file_size, thumbnail_path, video_width, video_height, channel_id, is_vhs)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO videos (filename, filepath, title, original_title, description, category, content_date, file_created_at, duration, file_size, thumbnail_path, video_width, video_height, channel_id, is_vhs, vhs_start_date, vhs_end_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       data.filename,
@@ -1004,14 +1014,16 @@ const upsertVideo = (data) => {
       data.video_width || 0,
       data.video_height || 0,
       data.channel_id || null,
-      data.is_vhs || 0
+      data.is_vhs || 0,
+      data.vhs_start_date || null,
+      data.vhs_end_date || null
     );
   const inserted = getVideoByPath(data.filepath);
   if (inserted) syncAutoTaggedPeopleForVideo(inserted.id, inserted.title);
   return result;
 };
 
-const updateVideoMeta = (id, { title, description, category, is_vhs, content_date }) => {
+const updateVideoMeta = (id, { title, description, category, is_vhs, vhs_start_date, vhs_end_date, content_date }) => {
   const current = getVideoById(id);
   if (!current) return null;
 
@@ -1054,6 +1066,16 @@ const updateVideoMeta = (id, { title, description, category, is_vhs, content_dat
   if (is_vhs !== undefined && is_vhs !== null) {
     sets.push('is_vhs = ?');
     vals.push(is_vhs ? 1 : 0);
+  }
+
+  if (vhs_start_date !== undefined) {
+    sets.push('vhs_start_date = ?');
+    vals.push(vhs_start_date);
+  }
+
+  if (vhs_end_date !== undefined) {
+    sets.push('vhs_end_date = ?');
+    vals.push(vhs_end_date);
   }
 
   if (sets.length > 0) {

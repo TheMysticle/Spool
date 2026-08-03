@@ -307,6 +307,18 @@ function closeModal(id) {
                   </label>
                 </div>
               </div>
+              <div class="vap-form-group" id="vap-vhs-dates-group" style="display: none; margin-top: 12px;">
+                <div style="display: flex; gap: 12px;">
+                  <div style="flex:1;">
+                    <label class="vap-label" for="vap-edit-vhs-start">VHS Start Date</label>
+                    <input type="date" id="vap-edit-vhs-start" class="vap-input" />
+                  </div>
+                  <div style="flex:1;">
+                    <label class="vap-label" for="vap-edit-vhs-end">VHS End Date</label>
+                    <input type="date" id="vap-edit-vhs-end" class="vap-input" />
+                  </div>
+                </div>
+              </div>
             </div>
             <!-- Access Tab -->
             <div class="vap-tab-panel" id="vap-panel-access">
@@ -391,6 +403,15 @@ function closeModal(id) {
       }
     });
 
+    document.getElementById('vap-edit-is-vhs').addEventListener('change', (e) => {
+      const isChecked = e.target.checked;
+      document.getElementById('vap-vhs-dates-group').style.display = isChecked ? 'block' : 'none';
+      if (!isChecked) {
+        document.getElementById('vap-edit-vhs-start').value = '';
+        document.getElementById('vap-edit-vhs-end').value = '';
+      }
+    });
+
     document.getElementById('vap-save').addEventListener('click', async () => {
       const errEl = document.getElementById('vap-error');
       const saveBtn = document.getElementById('vap-save');
@@ -408,6 +429,8 @@ function closeModal(id) {
             category: document.getElementById('vap-edit-category').value,
             description: document.getElementById('vap-edit-desc').value.trim(),
             is_vhs: document.getElementById('vap-edit-is-vhs').checked ? 1 : 0,
+            vhs_start_date: document.getElementById('vap-edit-is-vhs').checked && document.getElementById('vap-edit-vhs-start').value ? new Date(document.getElementById('vap-edit-vhs-start').value).toISOString() : null,
+            vhs_end_date: document.getElementById('vap-edit-is-vhs').checked && document.getElementById('vap-edit-vhs-end').value ? new Date(document.getElementById('vap-edit-vhs-end').value).toISOString() : null,
           }),
         });
 
@@ -509,6 +532,9 @@ function closeModal(id) {
     document.getElementById('vap-edit-category').value = 'video';
     document.getElementById('vap-edit-desc').value = '';
     document.getElementById('vap-edit-is-vhs').checked = false;
+    document.getElementById('vap-edit-vhs-start').value = '';
+    document.getElementById('vap-edit-vhs-end').value = '';
+    document.getElementById('vap-vhs-dates-group').style.display = 'none';
     // Reset to first tab
     document.querySelectorAll('.vap-tab-btn').forEach((b) => b.classList.remove('active'));
     document.querySelectorAll('.vap-tab-panel').forEach((p) => p.classList.remove('active'));
@@ -534,7 +560,15 @@ function closeModal(id) {
       }
       document.getElementById('vap-edit-category').value = videoData.category || 'video';
       document.getElementById('vap-edit-desc').value = videoData.description || '';
-      document.getElementById('vap-edit-is-vhs').checked = !!videoData.is_vhs;
+      const isVhs = !!videoData.is_vhs;
+      document.getElementById('vap-edit-is-vhs').checked = isVhs;
+      document.getElementById('vap-vhs-dates-group').style.display = isVhs ? 'block' : 'none';
+      if (videoData.vhs_start_date) {
+        document.getElementById('vap-edit-vhs-start').value = videoData.vhs_start_date.split('T')[0];
+      }
+      if (videoData.vhs_end_date) {
+        document.getElementById('vap-edit-vhs-end').value = videoData.vhs_end_date.split('T')[0];
+      }
 
       // Render access tab
       const allCb = document.getElementById('vap-all-users');
