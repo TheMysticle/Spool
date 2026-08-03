@@ -4967,22 +4967,68 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 
 /* Floating Livechat */
 .floating-livechat {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 20;
+  pointer-events: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+}
+
+/* Fullscreen Mode (Twitch-style overlay) */
+.floating-livechat.fullscreen-mode {
   position: absolute;
   bottom: 80px;
   right: 20px;
   width: 320px;
   height: 400px;
   max-height: 50vh;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Windowed Mode (Fixed popup) */
+.floating-livechat.windowed-mode {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 320px;
+  height: 400px;
+  max-height: 50vh;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 1000;
+}
+
+/* Floating Action Button (FAB) */
+.fl-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  z-index: 20;
-  pointer-events: auto;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 1000;
+  transition: transform 0.2s ease, opacity 0.3s ease;
+}
+
+.fl-fab:hover {
+  transform: scale(1.1);
+}
+
+.fl-fab.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.5);
 }
 
 .floating-livechat.hidden {

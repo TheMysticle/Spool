@@ -127,12 +127,7 @@
             <div class="player-container" id="player-container" style="position: relative;">
               <video id="video-player" class="video-js vjs-big-play-centered" controls preload="metadata" playsinline></video>
 
-              <div id="floating-livechat" class="floating-livechat hidden">
-                <div class="fl-messages" id="fl-messages"></div>
-                <div class="fl-input-container">
-                  <input type="text" id="fl-input" class="fl-input" placeholder="Say something..." autocomplete="off">
-                </div>
-              </div>
+
 
               <div id="video-ui-overlay" class="video-ui-overlay">
                 <div class="video-overlay-header">
@@ -246,6 +241,19 @@
             </div>
           </aside>
 
+          <!-- Floating Livechat UI (Global) -->
+          <button id="fl-fab" class="fl-fab hidden" aria-label="Open Party Chat">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path>
+            </svg>
+          </button>
+
+          <div id="floating-livechat" class="floating-livechat hidden windowed-mode">
+            <div class="fl-messages" id="fl-messages"></div>
+            <div class="fl-input-container">
+              <input type="text" id="fl-input" class="fl-input" placeholder="Say something..." autocomplete="off">
+            </div>
+          </div>
         </div>
       </main>
     </div>

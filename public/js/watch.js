@@ -1250,13 +1250,10 @@ function initPlayer(videoData, { autoStart = true } = {}) {
           this.hide(); // Hidden by default, shown if in a party
         }
         handleClick() {
-          const fl = document.getElementById('floating-livechat');
-          if (fl) {
-            fl.classList.toggle('hidden');
-            if (!fl.classList.contains('hidden')) {
+          if (window.toggleLivechatFeature) {
+            window.toggleLivechatFeature();
+            if (window.isLivechatOn) {
               this.addClass('active');
-              const input = document.getElementById('fl-input');
-              if (input) input.focus();
             } else {
               this.removeClass('active');
             }
@@ -1667,18 +1664,91 @@ function setupWatchPartyHooks() {
       toggle.hide();
       toggle.removeClass('active');
     }
-    const fl = document.getElementById('floating-livechat');
-    if (fl) fl.classList.add('hidden');
+    window.isLivechatOn = false;
+    window.updateLivechatUI();
   });
 
   window.addEventListener('party:chat', (e) => {
     appendFloatingChat(e.detail);
   });
 
+  window.isLivechatOn = false;
+  window.isLivechatExpanded = false;
+
+  window.toggleLivechatFeature = function() {
+    window.isLivechatOn = !window.isLivechatOn;
+    // When turning on in windowed mode, auto-expand the chat
+    if (window.isLivechatOn && !player.isFullscreen()) {
+      window.isLivechatExpanded = true;
+    }
+    window.updateLivechatUI();
+  };
+
+  window.updateLivechatUI = function() {
+    const fl = document.getElementById('floating-livechat');
+    const fab = document.getElementById('fl-fab');
+    if (!fl || !fab || !player) return;
+
+    if (!window.isLivechatOn) {
+      fl.classList.add('hidden');
+      fab.classList.add('hidden');
+      return;
+    }
+
+    // It is ON. Check fullscreen state.
+    if (player.isFullscreen()) {
+      // Fullscreen mode: Move fl inside player, show it, hide fab.
+      fl.classList.remove('windowed-mode');
+      fl.classList.add('fullscreen-mode');
+      fl.classList.remove('hidden');
+      fab.classList.add('hidden');
+      
+      if (fl.parentNode !== player.el()) {
+        player.el().appendChild(fl);
+      }
+    } else {
+      // Windowed mode: Move fl to body, show fab, toggle fl based on expanded state.
+      fl.classList.remove('fullscreen-mode');
+      fl.classList.add('windowed-mode');
+      fab.classList.remove('hidden');
+      
+      if (fl.parentNode !== document.body) {
+        document.body.appendChild(fl);
+      }
+      
+      if (window.isLivechatExpanded) {
+        fl.classList.remove('hidden');
+        const input = document.getElementById('fl-input');
+        if (input) input.focus();
+      } else {
+        fl.classList.add('hidden');
+      }
+    }
+  };
+
+  // FAB Click handler
+  const fab = document.getElementById('fl-fab');
+  if (fab) {
+    fab.addEventListener('click', () => {
+      window.isLivechatExpanded = !window.isLivechatExpanded;
+      window.updateLivechatUI();
+    });
+  }
+
+  // Listen for fullscreen changes
+  player.on('fullscreenchange', () => {
+    window.updateLivechatUI();
+  });
+
   const flInput = document.getElementById('fl-input');
   if (flInput) {
     flInput.addEventListener('keydown', (e) => {
       e.stopPropagation();
+      if (e.key === 'Escape' && !player.isFullscreen()) {
+        // Escape in windowed mode closes the popup
+        window.isLivechatExpanded = false;
+        window.updateLivechatUI();
+      }
       if (e.key === 'Enter') {
         const text = flInput.value.trim();
         if (text && window.WatchParty) {
