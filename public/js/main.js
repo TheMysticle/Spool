@@ -1865,16 +1865,20 @@
             </div>
             <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display: ${['videos', 'livestreams', 'vhs'].includes(initialTab) ? 'flex' : 'none'}; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: -16px;">
               <div style="position:relative; flex: 1; min-width: 140px;">
-                <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;" onkeypress="if(event.key==='Enter') switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), this.value, document.getElementById('channel-sort-select').value)">
+                <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;" onkeypress="if(event.key==='Enter') switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), this.value, document.querySelector('#channel-sort-menu .sort-option.active')?.dataset.sort || 'newest')">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
-              <div class="sort-menu-container">
-                <select id="channel-sort-select" class="input-modern" style="border: 1px solid var(--border); border-radius: 20px; padding: 8px 12px; background: var(--bg-main); color: var(--text-primary);" onchange="switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), document.getElementById('channel-search-input').value, this.value)">
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="title_asc">Name: A-Z</option>
-                  <option value="title_desc">Name: Z-A</option>
-                </select>
+              <div class="sort-menu-container" style="position: relative;">
+                <button class="sort-btn" id="channel-sort-trigger">
+                  <span id="channel-sort-current">Sort by: Newest</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="sort-menu" id="channel-sort-menu" style="right: 0; min-width: 180px;">
+                  <button class="sort-option active" data-sort="newest">Newest First</button>
+                  <button class="sort-option" data-sort="oldest">Oldest First</button>
+                  <button class="sort-option" data-sort="title_asc">Name: A-Z</button>
+                  <button class="sort-option" data-sort="title_desc">Name: Z-A</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1883,6 +1887,46 @@
         <div id="channel-page-content" class="channel-tab-content" style="padding-bottom: 40px;"></div>
       `;
       
+      const channelSortTrigger = document.getElementById('channel-sort-trigger');
+      const channelSortMenu = document.getElementById('channel-sort-menu');
+      const channelSortCurrent = document.getElementById('channel-sort-current');
+
+      if (channelSortTrigger && channelSortMenu) {
+        channelSortTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = channelSortMenu.classList.toggle('show');
+          channelSortTrigger.setAttribute('aria-expanded', String(Boolean(open)));
+        });
+
+        document.querySelectorAll('#channel-sort-menu .sort-option').forEach((opt) => {
+          opt.addEventListener('click', () => {
+            document.querySelectorAll('#channel-sort-menu .sort-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            const sortVal = opt.dataset.sort || 'newest';
+            const label = opt.textContent;
+            channelSortCurrent.textContent = 'Sort by: ' + (label.replace(' First', '').replace('Name: ', ''));
+            channelSortMenu.classList.remove('show');
+            channelSortTrigger.setAttribute('aria-expanded', 'false');
+            
+            const searchVal = document.getElementById('channel-search-input')?.value || '';
+            const activeTab = document.querySelector('.channel-page-tab.active')?.textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams') || 'videos';
+            switchChannelTab(id, activeTab, searchVal, sortVal);
+          });
+        });
+        
+        const outsideClickListener = (e) => {
+          if (!document.body.contains(channelSortMenu)) {
+             document.removeEventListener('click', outsideClickListener);
+             return;
+          }
+          if (!channelSortMenu.contains(e.target) && !channelSortTrigger.contains(e.target)) {
+            channelSortMenu.classList.remove('show');
+            channelSortTrigger.setAttribute('aria-expanded', 'false');
+          }
+        };
+        document.addEventListener('click', outsideClickListener);
+      }
+
       switchChannelTab(id, initialTab);
 
     } catch (e) {
