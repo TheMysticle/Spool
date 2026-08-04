@@ -22,6 +22,7 @@ const uploadRoutes = require('./src/routes/upload');
 const channelRoutes = require('./src/routes/channels');
 const friendsRoutes = require('./src/routes/friends');
 const { initWebSocket } = require('./src/websocket');
+const { autoOptimizeVhsVideos } = require('./src/vhs_optimizer');
 
 const app = express();
 
@@ -190,6 +191,7 @@ app.use((err, req, res, _next) => {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 initDatabase();
+setTimeout(autoOptimizeVhsVideos, 5000); // Run 5 seconds after startup to ensure DB is fully initialized
 
 const certPath = process.env.SSL_CERT_PATH || path.join(__dirname, 'cert.pem');
 const keyPath = process.env.SSL_KEY_PATH || path.join(__dirname, 'key.pem');
