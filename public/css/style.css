@@ -4497,9 +4497,8 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 }
 
 .channel-page-wrapper {
-  max-width: 1280px;
+  max-width: 2560px;
   margin: 0 auto;
-  padding: 0 16px;
 }
 
 .channel-page-banner-upload {
