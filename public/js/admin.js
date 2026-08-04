@@ -1367,9 +1367,11 @@
           ? `<img src="/api/people/${p.id}/image?token=${encodeURIComponent(token || '')}&t=${encodeURIComponent(p.image_path)}" alt="${escHtml(p.name)}" />`
           : `<span class="person-card-avatar-fallback">${initial}</span>`;
         const linkedUser = p.username ? `@${escHtml(p.username)}` : 'Unlinked Profile';
-        const bio = p.bio && String(p.bio).trim().length
-          ? escHtml(p.bio)
-          : 'No biography provided for this person.';
+        const bioText = p.bio && String(p.bio).trim().length ? p.bio : 'No biography provided for this person.';
+        const bioHtml = bioText.split('\n')
+          .filter(para => para.trim())
+          .map(para => `<p>${escHtml(para)}</p>`)
+          .join('');
         return `
           <div class="person-admin-card">
             <div class="person-card-cover">
@@ -1380,7 +1382,7 @@
             <div class="person-card-body">
               <h4 class="person-card-name">${escHtml(p.name)} ${escHtml(p.second_name || '')} ${escHtml(p.surname || '')}</h4>
               <div class="person-card-link">${linkedUser}</div>
-              <p class="person-card-bio">${bio}</p>
+              <div class="person-card-bio">${bioHtml}</div>
             </div>
             <div class="person-card-footer">
               <button class="btn btn-ghost btn-sm" onclick="editPerson(${p.id})">Edit Profile</button>

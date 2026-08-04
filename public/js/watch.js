@@ -2534,11 +2534,17 @@ window.navigateToVideo = navigateToVideo;
             ? `<img src="${imgSrc}" alt="${escHtml(fullName)}" />`
             : escHtml((person.name || '?')[0].toUpperCase());
 
+          const bioHtml = (person.bio || 'No biography available.')
+            .split('\n')
+            .filter(p => p.trim())
+            .map(p => `<p>${escHtml(p)}</p>`)
+            .join('');
+
           spotlightEl.innerHTML = `
             <div class="spotlight-avatar">${avatarInner}</div>
             <div class="spotlight-info">
               <div class="spotlight-name">${escHtml(fullName)}</div>
-              <div class="spotlight-bio">${escHtml(person.bio || 'No biography available.')}</div>
+              <div class="spotlight-bio">${bioHtml}</div>
               <div class="spotlight-actions">
                 <button class="btn btn-primary btn-sm" id="spotlight-view-btn" type="button">
                   More with ${escHtml((person.name || '').trim() || fullName)}
@@ -2582,7 +2588,7 @@ window.navigateToVideo = navigateToVideo;
           <div class="person-details-content">
             <div class="person-details-avatar" id="person-details-avatar">?</div>
             <div class="person-details-name" id="person-details-name">Unknown</div>
-            <p class="person-details-bio" id="person-details-bio">No bio available.</p>
+            <div class="person-details-bio" id="person-details-bio">No bio available.</div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-primary" id="person-details-more" type="button">More videos with this person</button>
@@ -2631,7 +2637,14 @@ window.navigateToVideo = navigateToVideo;
 
     const fullName = `${person?.name || 'Unknown'} ${person?.second_name || ''} ${person?.surname || ''}`.trim();
     nameEl.textContent = fullName;
-    bioEl.textContent = bio || 'No bio available.';
+    if (bio) {
+      bioEl.innerHTML = bio.split('\n')
+        .filter(p => p.trim())
+        .map(p => `<p>${escHtml(p)}</p>`)
+        .join('');
+    } else {
+      bioEl.innerHTML = '<p>No bio available.</p>';
+    }
 
     if (person?.image_path) {
       avatarEl.innerHTML = `<img src="/api/people/${person.id}/image?${getAuthQueryString()}" class="person-details-img" alt="${escHtml(name)}" />`;
