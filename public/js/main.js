@@ -1857,19 +1857,19 @@
           
           <div class="channel-page-nav">
             <div class="channel-page-tabs">
-              <button class="channel-page-tab ${initialTab === 'videos' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'videos', 'newest')">Videos</button>
-              <button class="channel-page-tab ${initialTab === 'livestreams' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'livestreams', 'newest')">Live Streams</button>
-              ${isMain ? '' : `<button class="channel-page-tab ${initialTab === 'vhs' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'vhs', 'newest')">VHS</button>`}
+              <button class="channel-page-tab ${initialTab === 'videos' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'videos')">Videos</button>
+              <button class="channel-page-tab ${initialTab === 'livestreams' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'livestreams')">Live Streams</button>
+              ${isMain ? '' : `<button class="channel-page-tab ${initialTab === 'vhs' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>`}
               <button class="channel-page-tab ${initialTab === 'community' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'community')">Community</button>
               <button class="channel-page-tab ${initialTab === 'about' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'about')">About</button>
             </div>
             <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display: ${['videos', 'livestreams', 'vhs'].includes(initialTab) ? 'flex' : 'none'}; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: -16px;">
               <div style="position:relative; flex: 1; min-width: 140px;">
-                <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;" onkeypress="if(event.key==='Enter') switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), document.getElementById('channel-sort-select').value, this.value)">
+                <input type="text" id="channel-search-input" placeholder="Search..." style="width:100%; padding: 8px 16px 8px 36px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary); font-size: 0.95rem; transition: border-color 0.2s;" onkeypress="if(event.key==='Enter') switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), this.value, document.getElementById('channel-sort-select').value)">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               </div>
               <div class="sort-menu-container">
-                <select id="channel-sort-select" class="input-modern" style="border: 1px solid var(--border); border-radius: 20px; padding: 8px 12px; background: var(--bg-main); color: var(--text-primary);" onchange="switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), this.value, document.getElementById('channel-search-input').value)">
+                <select id="channel-sort-select" class="input-modern" style="border: 1px solid var(--border); border-radius: 20px; padding: 8px 12px; background: var(--bg-main); color: var(--text-primary);" onchange="switchChannelTab('${id}', document.querySelector('.channel-page-tab.active').textContent.toLowerCase().replace(' ', '').replace('livestreams', 'livestreams'), document.getElementById('channel-search-input').value, this.value)">
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
                   <option value="title_asc">Name: A-Z</option>
