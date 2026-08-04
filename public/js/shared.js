@@ -2480,10 +2480,19 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
-            <div class="cropper-canvas-wrapper" style="position:relative; width: 100%; max-width: 800px; height: 300px; background: #000; overflow: hidden; touch-action: none; cursor: grab;">
+            <div class="cropper-canvas-wrapper" style="position:relative; width: 100%; max-width: 800px; height: 350px; background: #000; overflow: hidden; touch-action: none; cursor: grab;">
               <canvas id="cropper-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
-              <div class="cropper-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; border-top: 50px solid rgba(0,0,0,0.5); border-bottom: 50px solid rgba(0,0,0,0.5);"></div>
-              <div style="position:absolute; top:50px; left:0; right:0; bottom:50px; pointer-events:none; border: 2px solid var(--accent); box-sizing: border-box;"></div>
+              
+              <!-- Darkened overlays for cropped out areas -->
+              <div id="cropper-overlay-top" style="position:absolute; top:0; left:0; right:0; background: rgba(0,0,0,0.6); pointer-events:none;"></div>
+              <div id="cropper-overlay-bottom" style="position:absolute; bottom:0; left:0; right:0; background: rgba(0,0,0,0.6); pointer-events:none;"></div>
+              
+              <!-- Safe Zones -->
+              <div id="cropper-safe-desktop" style="position:absolute; left:0; right:0; pointer-events:none; border: 2px solid rgba(255,255,255,0.8); box-sizing: border-box; display:flex; justify-content:center; align-items:flex-end; padding-bottom:4px; font-size:10px; color:rgba(255,255,255,0.7); font-weight:bold; text-shadow: 1px 1px 2px black;">Desktop Max (2560x423)</div>
+              
+              <div id="cropper-safe-tablet" style="position:absolute; left: 13.77%; right: 13.77%; pointer-events:none; border-left: 2px dashed rgba(255,255,255,0.5); border-right: 2px dashed rgba(255,255,255,0.5); box-sizing: border-box; display:flex; justify-content:center; align-items:flex-end; padding-bottom:20px; font-size:10px; color:rgba(255,255,255,0.7); font-weight:bold; text-shadow: 1px 1px 2px black;">Tablet Safe (1855x423)</div>
+              
+              <div id="cropper-safe-mobile" style="position:absolute; left: 19.8%; right: 19.8%; pointer-events:none; border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); box-sizing: border-box; display:flex; justify-content:center; align-items:center; font-size:12px; color:var(--accent); font-weight:bold; text-shadow: 1px 1px 2px black; background: rgba(139, 92, 246, 0.1);">Phone Safe (1546x423)</div>
             </div>
             <div class="cropper-controls" style="padding: 16px; display:flex; align-items:center; gap: 16px;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -2504,14 +2513,34 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         
         let cw = wrapper.clientWidth;
         let ch = wrapper.clientHeight;
+        
+        // Calculate cutout height for 2560x423 ratio
+        const cutoutHeight = cw * (423 / 2560);
+        const borderY = (ch - cutoutHeight) / 2;
+        
+        // Set overlay heights
+        document.getElementById('cropper-overlay-top').style.height = borderY + 'px';
+        document.getElementById('cropper-overlay-bottom').style.height = borderY + 'px';
+        
+        // Set safe zone vertical positions
+        const safeDesktop = document.getElementById('cropper-safe-desktop');
+        const safeTablet = document.getElementById('cropper-safe-tablet');
+        const safeMobile = document.getElementById('cropper-safe-mobile');
+        
+        safeDesktop.style.top = borderY + 'px';
+        safeDesktop.style.height = cutoutHeight + 'px';
+        safeTablet.style.top = borderY + 'px';
+        safeTablet.style.height = cutoutHeight + 'px';
+        safeMobile.style.top = borderY + 'px';
+        safeMobile.style.height = cutoutHeight + 'px';
+
         const pixelRatio = 3;
         canvas.width = cw * pixelRatio;
         canvas.height = ch * pixelRatio;
         ctx.scale(pixelRatio, pixelRatio);
 
-        // Overlay cutout is top 50px, bottom 50px. Height is ch - 100. Width is cw.
         const targetW = cw;
-        const targetH = ch - 100;
+        const targetH = cutoutHeight;
         
         // Initial scale to fit width
         let scale = cw / img.width;
@@ -2521,7 +2550,7 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         
         document.getElementById('cropper-zoom').value = scale;
         document.getElementById('cropper-zoom').min = scale * 0.5;
-        document.getElementById('cropper-zoom').max = scale * 3;
+        document.getElementById('cropper-zoom').max = scale * 5;
 
         let panX = (cw - img.width * scale) / 2;
         let panY = (ch - img.height * scale) / 2;
@@ -2571,16 +2600,17 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         wrapper.addEventListener('pointercancel', () => { isDragging = false; wrapper.style.cursor = 'grab'; });
 
         document.getElementById('cropper-save').addEventListener('click', async () => {
-          // Crop the image!
+          // Crop the image to 2560x423
           const outCanvas = document.createElement('canvas');
-          outCanvas.width = targetW * pixelRatio;
-          outCanvas.height = targetH * pixelRatio;
+          outCanvas.width = 2560;
+          outCanvas.height = 423;
           const outCtx = outCanvas.getContext('2d');
           
+          // Draw the exact region from the visible canvas scaled up to 2560x423
           outCtx.drawImage(
             canvas,
-            0, 50 * pixelRatio, targetW * pixelRatio, targetH * pixelRatio, // Source (x,y,w,h) from the visible canvas
-            0, 0, targetW * pixelRatio, targetH * pixelRatio   // Dest
+            0, borderY * pixelRatio, targetW * pixelRatio, targetH * pixelRatio, // Source from visible canvas
+            0, 0, 2560, 423   // Dest on output canvas
           );
           
           const imageBase64 = outCanvas.toDataURL('image/jpeg', 0.9);

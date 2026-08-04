@@ -4245,6 +4245,8 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     gap: 10px;
   }
 
+
+
   #panel-videos td::before,
   #panel-users td::before {
     content: attr(data-label);
@@ -4473,13 +4475,31 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 
 .channel-page-banner {
   width: 100%;
-  aspect-ratio: 6.2 / 1;
-  max-height: 250px;
+  max-width: 2560px;
+  margin: 0 auto;
+  aspect-ratio: 2560 / 423;
   background-size: cover;
   background-position: center;
   background-color: var(--bg-hover);
   position: relative;
   border-radius: 16px;
+}
+
+@media (max-width: 768px) {
+  .channel-page-banner {
+    aspect-ratio: 1546 / 423;
+  }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .channel-page-banner {
+    aspect-ratio: 1855 / 423;
+  }
+}
+
+.channel-page-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
 .channel-page-banner-upload {
@@ -4798,10 +4818,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     top: 12px;
     right: 12px;
   }
-  .channel-page-banner {
-    border-radius: 16px;
-    aspect-ratio: 4 / 1;
-  }
+
   
   .channel-page-info-bar {
     display: grid;

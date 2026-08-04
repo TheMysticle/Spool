@@ -1834,7 +1834,8 @@
           <div class="channel-page-banner" style="background-image: url('${bannerUrl}'); position: relative;">
             ${canEdit ? `<button class="channel-page-banner-upload" onclick="window.openChannelEditor('${id}', '${escHtml(ch.name)}', '${avatarUrl}', '${bannerUrl || ''}', () => location.reload())" title="Channel Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : ''}
           </div>
-          <div class="channel-page-info-bar">
+          <div class="channel-page-wrapper">
+            <div class="channel-page-info-bar">
             <div style="position: relative; flex-shrink: 0; display: inline-flex; border-radius: 50%; overflow: hidden;">
               <img class="channel-page-avatar" src="${avatarUrl}" alt="${escHtml(ch.name)}" onclick="window.openAvatarLightbox('${avatarUrl}')" style="cursor: zoom-in; display: block;">
             </div>
@@ -1885,6 +1886,7 @@
           
         </div>
         <div id="channel-page-content" class="channel-tab-content" style="padding-bottom: 40px;"></div>
+        </div>
       `;
       
       const channelSortTrigger = document.getElementById('channel-sort-trigger');
