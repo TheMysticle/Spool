@@ -1880,7 +1880,7 @@
           </div>
           
         </div>
-        <div id="channel-page-content" class="channel-tab-content" style="padding: 0 40px 40px;"></div>
+        <div id="channel-page-content" class="channel-tab-content" style="padding-bottom: 40px;"></div>
       `;
       
       switchChannelTab(id, initialTab);
