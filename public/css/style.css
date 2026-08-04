@@ -1819,10 +1819,23 @@ select.bulk-select-mini[multiple] {
   font-size: 0.9rem;
   line-height: 1.4;
   color: var(--text-secondary);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.spotlight-bio p,
+.person-details-bio p {
+  margin-bottom: 0.5em;
+}
+
+.spotlight-bio p:last-child,
+.person-details-bio p:last-child {
+  margin-bottom: 0;
+}
+
+.person-details-bio {
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .spotlight-actions { margin-top: 12px; }
@@ -2324,12 +2337,17 @@ select.bulk-select-mini[multiple] {
   font-size: 0.85rem;
   color: var(--text-secondary);
   line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  max-height: 100px;
+  overflow-y: auto;
   margin-bottom: 20px;
+}
+
+.person-card-bio p {
+  margin-bottom: 0.5em;
+}
+
+.person-card-bio p:last-child {
+  margin-bottom: 0;
 }
 
 .person-card-footer {
