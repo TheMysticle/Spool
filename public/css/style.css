@@ -4881,6 +4881,10 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
   .channel-page-title {
     font-size: 1.1rem !important;
     word-break: break-word;
+    margin-bottom: 2px;
+  }
+  .channel-page-meta {
+    gap: 2px;
   }
   .channel-page-handle {
     font-size: 0.75rem !important;
