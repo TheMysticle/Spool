@@ -4526,7 +4526,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .channel-page-info-bar {
   display: flex;
   align-items: center;
-  padding: 24px 0;
+  padding: 24px 0 8px 0;
   gap: 24px;
   position: relative;
   z-index: 2;
@@ -4825,7 +4825,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     grid-template-rows: auto auto;
     align-items: center;
     text-align: left;
-    padding: 16px 0;
+    padding: 16px 0 0 0;
     gap: 16px;
   }
   
