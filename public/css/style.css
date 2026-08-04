@@ -4530,7 +4530,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .channel-page-title {
   font-size: 2.2rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   line-height: 1.2;
 }
 
