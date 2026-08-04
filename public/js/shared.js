@@ -2542,20 +2542,29 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
         const targetW = cw;
         const targetH = cutoutHeight;
         
-        // Initial scale to fit width
-        let scale = cw / img.width;
-        if (img.height * scale < targetH) {
-          scale = targetH / img.height; // scale to fit height if needed
+        // Initial scale to fit cutout
+        let minScale = cw / img.width;
+        if (img.height * minScale < targetH) {
+          minScale = targetH / img.height;
         }
+        let scale = minScale;
         
         document.getElementById('cropper-zoom').value = scale;
-        document.getElementById('cropper-zoom').min = scale * 0.5;
-        document.getElementById('cropper-zoom').max = scale * 5;
+        document.getElementById('cropper-zoom').min = minScale;
+        document.getElementById('cropper-zoom').max = minScale * 5;
 
         let panX = (cw - img.width * scale) / 2;
         let panY = (ch - img.height * scale) / 2;
+        
+        // Initial clamp
+        panX = Math.min(0, Math.max(targetW - img.width * scale, panX));
+        panY = Math.min(borderY, Math.max(borderY + targetH - img.height * scale, panY));
 
         function draw() {
+          // Clamp panning so the image always covers the cutout
+          panX = Math.min(0, Math.max(targetW - img.width * scale, panX));
+          panY = Math.min(borderY, Math.max(borderY + targetH - img.height * scale, panY));
+          
           ctx.clearRect(0, 0, cw, ch);
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
