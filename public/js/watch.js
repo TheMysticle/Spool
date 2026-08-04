@@ -1635,6 +1635,12 @@ function setupWatchPartyHooks() {
   window.addEventListener('party:joined', checkAndSendReady);
   window.addEventListener('party:created', checkAndSendReady);
 
+  player.on('loadedmetadata', () => {
+    if (window.WatchParty && WatchParty.isInParty()) {
+      WatchParty.requestSync();
+    }
+  });
+
   // ── Receive sync events ──
   window.addEventListener('party:sync', (e) => {
     const msg = e.detail;

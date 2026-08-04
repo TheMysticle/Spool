@@ -504,6 +504,7 @@
     },
     sendBuffering: () => { if (isInParty) send({ type: 'party:buffering' }); },
     sendReady: () => { if (isInParty) send({ type: 'party:ready' }); },
+    requestSync: () => { if (isInParty) send({ type: 'party:request_sync' }); },
 
     // State getters
     isInParty: () => isInParty,
