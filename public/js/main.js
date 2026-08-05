@@ -1852,13 +1852,11 @@
                   const fullDesc = escHtml(ch.description);
                   const safeDescForClick = fullDesc.replace(/'/g, '&#39;').replace(/(\r\n|\n|\r)/gm, '&#10;');
                   const pcLimit = 90;
-                  const mobileLimit = 45;
                   const pcTrunc = fullDesc.length > pcLimit ? fullDesc.substring(0, pcLimit) + '... ' : fullDesc;
-                  const mobileTrunc = fullDesc.length > mobileLimit ? fullDesc.substring(0, mobileLimit) + '... ' : fullDesc;
                   return `
-                    <div class="channel-page-desc" ${fullDesc.length > Math.min(pcLimit, mobileLimit) ? `onclick="window.openChannelDescriptionModal('${safeDescForClick}')"` : ''}>
+                    <div class="channel-page-desc" onclick="window.openChannelDescriptionModal('${safeDescForClick}')" style="cursor: pointer;">
                       <span class="desc-desktop">${pcTrunc}${fullDesc.length > pcLimit ? '<span class="desc-more">more</span>' : ''}</span>
-                      <span class="desc-mobile">${mobileTrunc}${fullDesc.length > mobileLimit ? '<span class="desc-more">more</span>' : ''}</span>
+                      <span class="desc-mobile">About <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 2px;"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
                     </div>
                   `;
                 })() : ''}

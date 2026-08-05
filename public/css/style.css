@@ -4599,7 +4599,10 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     display: none;
   }
   .desc-mobile {
-    display: inline;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-primary);
   }
   .channel-page-desc {
     font-size: 0.75rem;
