@@ -2254,6 +2254,7 @@ window.navigateToVideo = navigateToVideo;
   // ── Render video info ──────────────────────────────────────────────────────
   function renderVideoInfo(video) {
     const channelData = video.channel || {};
+    const subCount = channelData.subscriber_count || 0;
     const authorName = channelData.name || channelData.channel_name || 'Mysticle Archive';
     const authorAvatarPath = channelData.avatar_path || channelData.channel_avatar || '';
     const authorAvatar = authorAvatarPath ? `${authorAvatarPath}?t=${Date.now()}&${getAuthQueryString()}` : '';
@@ -2339,6 +2340,9 @@ window.navigateToVideo = navigateToVideo;
           </div>
           <div class="owner-meta">
             <span class="owner-name">${escHtml(authorName)}</span>
+            <span class="owner-subscribers" style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+              ${subCount} subscriber${subCount === 1 ? '' : 's'}
+            </span>
           </div>
         </a>
         <div class="video-actions">
@@ -2708,7 +2712,7 @@ window.navigateToVideo = navigateToVideo;
             <a href="/?channelId=${v.channel_id || 'main'}" class="mini-channel-name" style="text-decoration: none; color: var(--text-secondary); font-size: 0.85rem; display: block; margin-bottom: 2px; transition: color 0.2s;" onclick="event.stopPropagation();">
               ${escHtml(v.channel_name || (v.channel_id ? 'Channel' : 'Mysticle Archive'))}
             </a>
-            <p class="mini-meta">${escHtml(dateLabel)}</p>
+            <p class="mini-meta">${v.view_count || 0} view${Number(v.view_count || 0) === 1 ? '' : 's'} &bull; ${escHtml(dateLabel)}</p>
           </div>
         </div>`;
       }).join('');
