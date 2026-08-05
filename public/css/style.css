@@ -4576,7 +4576,6 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .channel-page-desc {
   font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-top: 4px;
   line-height: 1.4;
 }
 .channel-page-desc:hover .desc-more {
@@ -4591,12 +4590,19 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
 .desc-mobile {
   display: none;
 }
+.about-modal {
+  width: 90%;
+  max-width: 600px;
+}
 @media (max-width: 768px) {
   .desc-desktop {
     display: none;
   }
   .desc-mobile {
     display: inline;
+  }
+  .channel-page-desc {
+    font-size: 0.75rem;
   }
 }
 

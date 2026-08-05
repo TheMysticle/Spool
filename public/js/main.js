@@ -2972,7 +2972,14 @@ window.openChannelDescriptionModal = function(description) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.style.zIndex = '10000';
-  overlay.innerHTML = `<div class="modal" style="max-width: 600px;"><div class="modal-header"><h3>About</h3><button class="icon-btn" onclick="this.closest('.modal-overlay').remove()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div style="white-space: pre-wrap; line-height: 1.6; color: var(--text); padding: 12px 0;">${description}</div></div>`;
+  overlay.innerHTML = `<div class="modal about-modal"><div class="modal-header"><h3>About</h3><button class="icon-btn" onclick="this.closest('.modal-overlay').remove()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div style="white-space: pre-wrap; line-height: 1.6; color: var(--text); padding: 12px 0; max-height: 70vh; overflow-y: auto;">${description}</div></div>`;
+  
+  overlay.addEventListener('mousedown', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+    }
+  });
+
   document.body.appendChild(overlay);
 };
 
