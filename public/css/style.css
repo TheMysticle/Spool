@@ -4602,7 +4602,7 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     display: block;
     grid-column: 1 / -1;
     grid-row: 2;
-    margin: -4px 0 4px 0;
+    margin: -7px 0 1px 0;
     font-size: 0.85rem;
     color: var(--text-secondary);
     line-height: 1.4;
