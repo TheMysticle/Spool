@@ -1562,7 +1562,10 @@ function initPlayer(videoData, { autoStart = true } = {}) {
       setupAutoFullscreen();
       if (isTranscoding) refreshQualityMenu();
       const titleEl = document.getElementById('overlay-video-title');
-      if (titleEl) titleEl.textContent = videoData.title || '';
+      if (titleEl) {
+        titleEl.innerHTML = (videoData.title ? escHtml(videoData.title) : '') + 
+          (videoData.is_vhs ? ` <svg class="vhs-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 8px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : '');
+      }
       setupProgressTracking();
       setupWatchPartyHooks();
 
@@ -2456,7 +2459,8 @@ window.navigateToVideo = navigateToVideo;
     document.title = `${video.title} — ${window.APP_NAME || 'Spool'}`;
     const overlayTitleEl = document.getElementById('overlay-video-title');
     if (overlayTitleEl) {
-      overlayTitleEl.innerText = video.title || 'Untitled';
+      overlayTitleEl.innerHTML = (video.title ? escHtml(video.title) : 'Untitled') + 
+        (video.is_vhs ? ` <svg class="vhs-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 8px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : '');
     }
 
     // Load people tags async

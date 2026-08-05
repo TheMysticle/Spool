@@ -1161,7 +1161,10 @@
             }
           </div>
           <div class="card-copy">
-            <h3 class="card-title" title="${escHtml(video.title)}">${escHtml(video.title)}</h3>
+            <h3 class="card-title" title="${escHtml(video.title)}">
+              ${escHtml(video.title)}
+              ${video.is_vhs ? `<svg class="vhs-title-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 6px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : ''}
+            </h3>
             <div class="card-meta">
               <span>${escHtml(authorName)}</span>
               <span class="meta-dot">•</span>
