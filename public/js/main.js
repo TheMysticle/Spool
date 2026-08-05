@@ -1844,9 +1844,9 @@
               <div class="channel-page-meta">
                 <div class="channel-page-handle">@${escHtml(ch.username || ch.name.replace(/\s+/g, '').toLowerCase())}</div>
                 <div class="channel-page-stats">
-                  <span>${ch.subscriber_count || 0} subscribers</span>
+                  <span>${ch.subscriber_count || 0} subscriber${(ch.subscriber_count || 0) === 1 ? '' : 's'}</span>
                   <span>&bull;</span>
-                  <span>${ch.video_count || 0} videos</span>
+                  <span>${ch.video_count || 0} video${(ch.video_count || 0) === 1 ? '' : 's'}</span>
                 </div>
                 ${ch.description ? (() => {
                   const fullDesc = escHtml(ch.description);
