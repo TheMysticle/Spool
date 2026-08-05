@@ -1564,7 +1564,7 @@ function initPlayer(videoData, { autoStart = true } = {}) {
       const titleEl = document.getElementById('overlay-video-title');
       if (titleEl) {
         titleEl.innerHTML = (videoData.title ? escHtml(videoData.title) : '') + 
-          (videoData.is_vhs ? ` <svg class="vhs-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 8px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : '');
+          (videoData.is_vhs ? ` <svg class="vhs-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 4px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : '');
       }
       setupProgressTracking();
       setupWatchPartyHooks();
@@ -2321,7 +2321,10 @@ window.navigateToVideo = navigateToVideo;
 
     infoEl.innerHTML = `
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
-        <h1 class="video-info-title">${escHtml(video.title)}</h1>
+        <h1 class="video-info-title">
+          ${escHtml(video.title)}
+          ${video.is_vhs ? `<svg class="vhs-title-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-left: 4px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : ''}
+        </h1>
         ${video.category === 'livestream'
           ? (video.is_currently_live
               ? `<span class="badge-live">LIVE</span>`
@@ -2460,7 +2463,7 @@ window.navigateToVideo = navigateToVideo;
     const overlayTitleEl = document.getElementById('overlay-video-title');
     if (overlayTitleEl) {
       overlayTitleEl.innerHTML = (video.title ? escHtml(video.title) : 'Untitled') + 
-        (video.is_vhs ? ` <svg class="vhs-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 8px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : '');
+        (video.is_vhs ? ` <svg class="vhs-title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 4px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : '');
     }
 
     // Load people tags async
@@ -2698,7 +2701,10 @@ window.navigateToVideo = navigateToVideo;
             ${durationLabel ? `<span class="mini-duration-badge">${escHtml(durationLabel)}</span>` : ''}
           </div>
           <div class="mini-info">
-            <p class="mini-title">${escHtml(v.title)}</p>
+            <p class="mini-title">
+              ${escHtml(v.title)}
+              ${v.is_vhs ? `<svg class="vhs-title-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom; margin-left: 4px; color: var(--text-muted);" title="VHS Video"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/><line x1="10" y1="12" x2="14" y2="12"/></svg>` : ''}
+            </p>
             <a href="/?channelId=${v.channel_id || 'main'}" class="mini-channel-name" style="text-decoration: none; color: var(--text-secondary); font-size: 0.85rem; display: block; margin-bottom: 2px; transition: color 0.2s;" onclick="event.stopPropagation();">
               ${escHtml(v.channel_name || (v.channel_id ? 'Channel' : 'Mysticle Archive'))}
             </a>
