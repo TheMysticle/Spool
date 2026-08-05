@@ -609,7 +609,9 @@
       homeSelectionMode = false;
       selectedHomeItems.clear();
       syncUI();
-      loadVideos();
+      if (state.mode === 'people') loadPeopleDirectory();
+      else if (state.mode === 'channel_profile' && state.channelId) renderChannelPage(state.channelId);
+      else loadVideos();
       return;
     }
 
@@ -641,7 +643,9 @@
       homeSelectionMode = false;
       selectedHomeItems.clear();
       syncUI();
-      loadVideos();
+      if (state.mode === 'people') loadPeopleDirectory();
+      else if (state.mode === 'channel_profile' && state.channelId) renderChannelPage(state.channelId);
+      else loadVideos();
       return;
     }
 
@@ -671,7 +675,9 @@
       homeSelectionMode = false;
       selectedHomeItems.clear();
       syncUI();
-      loadVideos();
+      if (state.mode === 'people') loadPeopleDirectory();
+      else if (state.mode === 'channel_profile' && state.channelId) renderChannelPage(state.channelId);
+      else loadVideos();
       return;
     }
 
@@ -735,6 +741,7 @@
     selectedHomeItems.clear();
     syncUI();
     if (state.mode === 'people') loadPeopleDirectory();
+    else if (state.mode === 'channel_profile' && state.channelId) renderChannelPage(state.channelId);
     else loadVideos();
   }
 
