@@ -2338,9 +2338,9 @@ window.navigateToVideo = navigateToVideo;
           <div class="owner-avatar">
             ${authorAvatar ? `<img src="${authorAvatar}" alt="Channel Avatar" />` : authorInitial}
           </div>
-          <div class="owner-meta">
-            <span class="owner-name">${escHtml(authorName)}</span>
-            <span class="owner-subscribers" style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+          <div class="owner-meta" style="display: flex; flex-direction: column; justify-content: center;">
+            <span class="owner-name" style="line-height: 1.2;">${escHtml(authorName)}</span>
+            <span class="owner-subscribers" style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0px; line-height: 1.2;">
               ${subCount} subscriber${subCount === 1 ? '' : 's'}
             </span>
           </div>

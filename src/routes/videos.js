@@ -547,10 +547,13 @@ router.get('/:id', authOrShareToken, (req, res) => {
     return res.status(403).json({ error: 'Access denied.' });
   }
   if (video.channel_id) {
-    const { getChannelById } = require('../database');
+    const { getChannelById, getSubscriberCount } = require('../database');
     video.channel = getChannelById(video.channel_id);
+    video.channel.subscriber_count = getSubscriberCount(video.channel_id);
   } else {
+    const { getSubscriberCount } = require('../database');
     video.channel = getChannelProfile();
+    video.channel.subscriber_count = getSubscriberCount(null);
   }
   
   res.json(video);
