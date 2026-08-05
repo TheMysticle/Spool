@@ -1951,7 +1951,7 @@
               </div>
             </div>
           </div>
-          <div id="channel-page-content" class="channel-tab-content" style="padding-bottom: 40px;"></div>
+          <div id="channel-page-content" class="channel-tab-content"></div>
         </div>
       `;
       
