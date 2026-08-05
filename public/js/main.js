@@ -1864,7 +1864,7 @@
             ${ch.description ? (() => {
               const fullDesc = escHtml(ch.description);
               const safeDescForClick = fullDesc.replace(/'/g, '&#39;').replace(/(\r\n|\n|\r)/gm, '&#10;');
-              const mobileLimit = 85;
+              const mobileLimit = 65;
               const mobileTrunc = fullDesc.length > mobileLimit ? fullDesc.substring(0, mobileLimit) + '... ' : fullDesc;
               return `
                 <div class="channel-page-mobile-desc-bar" onclick="window.openChannelDescriptionModal('${safeDescForClick}')" style="cursor: pointer;">

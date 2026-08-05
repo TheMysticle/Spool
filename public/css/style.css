@@ -4599,7 +4599,12 @@ input:checked + .slider:before { transform: translateX(16px); background-color: 
     display: none;
   }
   .channel-page-mobile-desc-bar {
-    display: block;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
     grid-column: 1 / -1;
     grid-row: 2;
     margin: -7px 0 -2px 0;
