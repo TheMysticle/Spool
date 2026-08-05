@@ -2877,6 +2877,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .history-date-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; row-gap: 40px; }
 .state-loading, .state-empty { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-secondary); }
 .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 32px; grid-column: 1 / -1; }
+.pagination:empty { display: none; margin: 0; }
 .page-btn { background: var(--bg-surface); border: none; color: var(--text-primary); padding: 8px 12px; border-radius: 8px; cursor: pointer; }
 .page-btn.active { background: var(--text-primary); color: var(--bg-base); font-weight: 600; }
 .page-btn:hover:not(.active) { background: var(--bg-hover); }
