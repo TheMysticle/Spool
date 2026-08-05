@@ -67,7 +67,8 @@ router.get('/:id', authenticate, (req, res) => {
       name: globalProfile.channel_name || 'Mysticle Archive',
       avatar_path: globalProfile.channel_avatar || null,
       banner_path: globalProfile.channel_banner || null,
-      vhs_password: globalProfile.channel_vhs_password || null
+      vhs_password: globalProfile.channel_vhs_password || null,
+      description: globalProfile.channel_description || null
     };
     numericId = 0; // For DB queries
   } else {
@@ -130,6 +131,33 @@ router.post('/:id/name', authenticate, (req, res) => {
   }
 
   res.json({ message: 'Channel name updated' });
+});
+
+// ── POST /api/channels/:id/description ───────────────────────────────────────
+router.post('/:id/description', authenticate, (req, res) => {
+  const channelId = req.params.id;
+  const { description } = req.body;
+  
+  if (typeof description !== 'string') {
+    return res.status(400).json({ error: 'Description must be a string' });
+  }
+
+  let numericId = null;
+  if (channelId === 'main') {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    updateChannelProfile({ channel_description: description.trim() });
+  } else {
+    numericId = parseInt(channelId, 10);
+    if (isNaN(numericId)) return res.status(400).json({ error: 'Invalid channel ID' });
+    const channelData = getChannelById(numericId);
+    if (!channelData) return res.status(404).json({ error: 'Channel not found' });
+    if (channelData.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    updateChannel(numericId, { description: description.trim() });
+  }
+
+  res.json({ message: 'Channel description updated' });
 });
 
 // ── POST /api/channels/:id/avatar ─────────────────────────────────────────────

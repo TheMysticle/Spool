@@ -555,6 +555,9 @@ function initDatabase() {
   if (!chanCols.some(c => c.name === 'vhs_password')) {
     db.exec('ALTER TABLE channels ADD COLUMN vhs_password TEXT');
   }
+  if (!chanCols.some(c => c.name === 'description')) {
+    db.exec('ALTER TABLE channels ADD COLUMN description TEXT');
+  }
 
   if (!vidsCols.some(c => c.name === 'is_vhs')) {
     db.exec('ALTER TABLE videos ADD COLUMN is_vhs INTEGER NOT NULL DEFAULT 0');
@@ -763,7 +766,8 @@ const getChannelProfile = () => {
   const avatar = db.prepare("SELECT value FROM settings WHERE key = 'channel_avatar'").get()?.value || null;
   const banner = db.prepare("SELECT value FROM settings WHERE key = 'channel_banner'").get()?.value || null;
   const vhsPassword = db.prepare("SELECT value FROM settings WHERE key = 'channel_vhs_password'").get()?.value || null;
-  return { channel_name: name, channel_avatar: avatar, channel_banner: banner, channel_vhs_password: vhsPassword };
+  const description = db.prepare("SELECT value FROM settings WHERE key = 'channel_description'").get()?.value || null;
+  return { channel_name: name, channel_avatar: avatar, channel_banner: banner, channel_vhs_password: vhsPassword, channel_description: description };
 };
 
 const getSetting = (key, defaultValue = null) => {
@@ -776,12 +780,13 @@ const setSetting = (key, value) => {
   stmt.run(key, value);
 };
 
-const updateChannelProfile = ({ channel_name, channel_avatar, channel_banner, channel_vhs_password }) => {
+const updateChannelProfile = ({ channel_name, channel_avatar, channel_banner, channel_vhs_password, channel_description }) => {
   const stmt = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
   if (channel_name !== undefined) stmt.run('channel_name', channel_name);
   if (channel_avatar !== undefined) stmt.run('channel_avatar', channel_avatar);
   if (channel_banner !== undefined) stmt.run('channel_banner', channel_banner);
   if (channel_vhs_password !== undefined) stmt.run('channel_vhs_password', channel_vhs_password);
+  if (channel_description !== undefined) stmt.run('channel_description', channel_description);
 };
 
 // ── Audit log queries ────────────────────────────────────────────────────────
@@ -860,7 +865,7 @@ const createChannel = (userId, name, avatarPath = null) => {
 };
 
 const updateChannel = (id, fields) => {
-  const allowed = ['name', 'avatar_path', 'banner_path', 'vhs_password'];
+  const allowed = ['name', 'avatar_path', 'banner_path', 'vhs_password', 'description'];
   const sets = Object.keys(fields)
     .filter((k) => allowed.includes(k))
     .map((k) => `${k} = ?`)

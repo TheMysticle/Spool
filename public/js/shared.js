@@ -1807,7 +1807,7 @@ window.openAvatarCropper = function(file, onCropComplete) {
     }).sort((a, b) => a.time - b.time);
   }
 
-window.openChannelEditor = function(channelId, currentName, currentAvatar, currentBanner, onSaveComplete) {
+window.openChannelEditor = function(channelId, currentName, currentAvatar, currentBanner, currentDesc, onSaveComplete) {
   let _chanPersonImgBase64 = null;
   let _chanVhsPhotos = [];
   let _chanVhsPendingBase64 = null;
@@ -1867,7 +1867,10 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
 
           <div style="flex-grow: 1;">
             <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Name</label>
-            <input type="text" id="editor-name-input" value="${escHtml(currentName)}" class="form-input" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem;" placeholder="Enter channel name...">
+            <input type="text" id="editor-name-input" value="${escHtml(currentName)}" class="form-input" style="width: 100%; margin-bottom: 24px;" placeholder="Enter channel name...">
+            
+            <label style="display: block; font-weight: 500; margin-bottom: 12px; color: var(--text-muted);">Channel Description</label>
+            <textarea id="editor-desc-input" class="form-input" style="width: 100%; resize: none;" rows="4" placeholder="Tell viewers about your channel...">${escHtml(currentDesc || '')}</textarea>
           </div>
         </div>
         </div>
@@ -2198,22 +2201,29 @@ window.openChannelEditor = function(channelId, currentName, currentAvatar, curre
     }
   });
 
-  // Save Name Logic
+  // Save Name and Description Logic
   document.getElementById('editor-save-btn').addEventListener('click', async () => {
     const newName = document.getElementById('editor-name-input').value.trim();
+    const newDesc = document.getElementById('editor-desc-input').value.trim();
     if (!newName) {
       toast('Channel name cannot be empty', 'error');
       return;
     }
     
-    if (newName !== currentName) {
-      try {
+    let changed = false;
+    try {
+      if (newName !== currentName) {
         await api('/api/channels/' + channelId + '/name', { method: 'POST', body: JSON.stringify({ name: newName }) });
-        toast('Channel name updated!');
-      } catch (err) {
-        toast(err.message || 'Failed to update name.', 'error');
-        return;
+        changed = true;
       }
+      if (newDesc !== (currentDesc || '')) {
+        await api('/api/channels/' + channelId + '/description', { method: 'POST', body: JSON.stringify({ description: newDesc }) });
+        changed = true;
+      }
+      if (changed) toast('Channel settings updated!');
+    } catch (err) {
+      toast(err.message || 'Failed to update channel settings.', 'error');
+      return;
     }
     
     overlay.remove();

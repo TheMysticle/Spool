@@ -1831,7 +1831,7 @@
 
       container.innerHTML = `
         <div class="channel-page-banner" style="background-image: url('${bannerUrl}'); position: relative;">
-          ${canEdit ? `<button class="channel-page-banner-upload" onclick="window.openChannelEditor('${id}', '${escHtml(ch.name)}', '${avatarUrl}', '${bannerUrl || ''}', () => location.reload())" title="Channel Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : ''}
+          ${canEdit ? `<button class="channel-page-banner-upload" onclick="window.openChannelEditor('${id}', '${escHtml(ch.name).replace(/'/g, '&#39;')}', '${avatarUrl}', '${bannerUrl || ''}', '${escHtml(ch.description || '').replace(/'/g, '&#39;').replace(/(\r\n|\n|\r)/gm, '&#10;')}', () => location.reload())" title="Channel Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>` : ''}
         </div>
         <div class="channel-page-wrapper">
           <div class="channel-page-header">
@@ -1848,6 +1848,20 @@
                   <span>&bull;</span>
                   <span>${ch.video_count || 0} videos</span>
                 </div>
+                ${ch.description ? (() => {
+                  const fullDesc = escHtml(ch.description);
+                  const safeDescForClick = fullDesc.replace(/'/g, '&#39;').replace(/(\r\n|\n|\r)/gm, '&#10;');
+                  const pcLimit = 90;
+                  const mobileLimit = 45;
+                  const pcTrunc = fullDesc.length > pcLimit ? fullDesc.substring(0, pcLimit) + '... ' : fullDesc;
+                  const mobileTrunc = fullDesc.length > mobileLimit ? fullDesc.substring(0, mobileLimit) + '... ' : fullDesc;
+                  return `
+                    <div class="channel-page-desc" ${fullDesc.length > Math.min(pcLimit, mobileLimit) ? `onclick="window.openChannelDescriptionModal('${safeDescForClick}')"` : ''}>
+                      <span class="desc-desktop">${pcTrunc}${fullDesc.length > pcLimit ? '<span class="desc-more">more</span>' : ''}</span>
+                      <span class="desc-mobile">${mobileTrunc}${fullDesc.length > mobileLimit ? '<span class="desc-more">more</span>' : ''}</span>
+                    </div>
+                  `;
+                })() : ''}
               </div>
             </div>
             <div class="channel-page-actions">
@@ -1862,7 +1876,6 @@
               <button class="channel-page-tab ${initialTab === 'livestreams' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'livestreams')">Live Streams</button>
               ${isMain ? '' : `<button class="channel-page-tab ${initialTab === 'vhs' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'vhs')">VHS</button>`}
               <button class="channel-page-tab ${initialTab === 'community' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'community')">Community</button>
-              <button class="channel-page-tab ${initialTab === 'about' ? 'active' : ''}" onclick="switchChannelTab('${id}', 'about')">About</button>
             </div>
             <div id="channel-page-toolbar" class="channel-tab-toolbar" style="display: ${['videos', 'livestreams', 'vhs'].includes(initialTab) ? 'flex' : 'none'}; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 6px;">
               <div style="position:relative; flex: 1; min-width: 140px;">
@@ -2953,3 +2966,12 @@
     } catch { /* non-fatal — don't block the app */ }
   })();
 })();
+
+window.openChannelDescriptionModal = function(description) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.style.zIndex = '10000';
+  overlay.innerHTML = `<div class="modal" style="max-width: 600px;"><div class="modal-header"><h3>About</h3><button class="icon-btn" onclick="this.closest('.modal-overlay').remove()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div style="white-space: pre-wrap; line-height: 1.6; color: var(--text); padding: 12px 0;">${description}</div></div>`;
+  document.body.appendChild(overlay);
+};
+
