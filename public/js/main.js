@@ -753,10 +753,10 @@
       </div>
     `).join('');
 
-    overlay.classList.add('show');
+    overlay.classList.add('open');
     
-    document.getElementById('bulk-share-close').onclick = () => overlay.classList.remove('show');
-    document.getElementById('bulk-share-done').onclick = () => overlay.classList.remove('show');
+    document.getElementById('bulk-share-close').onclick = () => overlay.classList.remove('open');
+    document.getElementById('bulk-share-done').onclick = () => overlay.classList.remove('open');
   };
 
   function updateHomeSelectionUi() {
