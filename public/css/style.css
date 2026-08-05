@@ -1518,7 +1518,7 @@ select.bulk-select-mini[multiple] {
 
 .player-container .video-js {
   width: 100% !important;
-  height: 100% !important;
+  height: auto !important;
   aspect-ratio: inherit;
 }
 
