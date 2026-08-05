@@ -677,10 +677,14 @@
 
     let changed = 0;
     let failed = 0;
+    let createdLinks = [];
 
     for (const videoId of videoIds) {
       try {
-        const current = await api(`/api/admin/videos/${videoId}/access`);
+        let current = null;
+        if (mode !== 'create_links') {
+          current = await api(`/api/admin/videos/${videoId}/access`);
+        }
 
         if (mode === 'grant_everyone') {
           await api(`/api/admin/videos/${videoId}/access`, {
@@ -693,7 +697,12 @@
             body: JSON.stringify({ all_users: false, user_ids: current.user_ids || [] }),
           });
         } else if (mode === 'create_links') {
-          await api(`/api/videos/${videoId}/share`, { method: 'POST' });
+          const res = await api(`/api/videos/${videoId}/share`, { method: 'POST' });
+          if (res && res.token) {
+            const titleEl = document.querySelector(`.home-selectable[data-select-key="video:${videoId}"] .card-title`);
+            const title = titleEl ? titleEl.textContent.trim() : `Video ${videoId}`;
+            createdLinks.push({ title, url: `${window.location.origin}/share/${res.token}` });
+          }
         } else if (mode === 'grant_user') {
           const merged = Array.from(new Set([...(current.user_ids || []), uid]));
           await api(`/api/admin/videos/${videoId}/access`, {
@@ -714,8 +723,13 @@
       }
     }
 
-    if (failed) toast(`Done: ${changed} updated, ${failed} failed.`, 'error');
-    else toast(`Done: ${changed} updated.`);
+    if (mode === 'create_links') {
+      if (createdLinks.length > 0) showBulkShareModal(createdLinks);
+      if (failed) toast(`Done: created ${createdLinks.length} links, ${failed} failed.`, 'error');
+    } else {
+      if (failed) toast(`Done: ${changed} updated, ${failed} failed.`, 'error');
+      else toast(`Done: ${changed} updated.`);
+    }
 
     homeSelectionMode = false;
     selectedHomeItems.clear();
@@ -723,6 +737,27 @@
     if (state.mode === 'people') loadPeopleDirectory();
     else loadVideos();
   }
+
+  window.showBulkShareModal = function(links) {
+    const overlay = document.getElementById('bulk-share-modal');
+    const list = document.getElementById('bulk-share-list');
+    if (!overlay || !list) return;
+
+    list.innerHTML = links.map(link => `
+      <div style="background:var(--bg-card-hover);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-weight:600;font-size:0.95rem;color:var(--text-primary);">${escHtml(link.title)}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" readonly value="${escHtml(link.url)}" style="flex:1;padding:6px 8px;border-radius:4px;border:1px solid var(--border-color);background:var(--bg-color);color:var(--text-secondary);font-size:0.85rem;" />
+          <button class="btn btn-primary" style="padding:6px 12px;font-size:0.85rem;" onclick="navigator.clipboard.writeText('${escHtml(link.url)}'); window.toast('Copied link!')">Copy</button>
+        </div>
+      </div>
+    `).join('');
+
+    overlay.classList.add('show');
+    
+    document.getElementById('bulk-share-close').onclick = () => overlay.classList.remove('show');
+    document.getElementById('bulk-share-done').onclick = () => overlay.classList.remove('show');
+  };
 
   function updateHomeSelectionUi() {
     const bar = document.getElementById('home-selection-bar');

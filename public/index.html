@@ -270,6 +270,19 @@
       </div>
     </div>
   </div>
+  <div class="modal-overlay" id="bulk-share-modal">
+    <div class="modal bulk-share-modal-inner" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 id="bulk-share-title">Public Share Links</h3>
+        <button class="btn-icon" id="bulk-share-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px;">The following videos have been made public. Copy their links below.</p>
+      <div class="bulk-share-list" id="bulk-share-list" style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="bulk-share-done">Done</button>
+      </div>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="dialog-overlay">
     <div class="modal dialog-modal">
