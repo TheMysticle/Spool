@@ -1997,17 +1997,17 @@
     const content = document.getElementById('channel-page-content');
     const toolbar = document.getElementById('channel-page-toolbar');
     
-    content.style.marginTop = '-20px';
-    
     // Only show search/sort toolbar for video tabs
     if (['videos', 'livestreams', 'vhs'].includes(tab)) {
       toolbar.style.display = 'flex';
+      content.style.marginTop = '-20px';
       const searchInput = document.getElementById('channel-search-input');
       if (tab === 'videos') searchInput.placeholder = 'Search videos...';
       if (tab === 'livestreams') searchInput.placeholder = 'Search livestreams...';
       if (tab === 'vhs') searchInput.placeholder = 'Search VHS...';
     } else {
       toolbar.style.display = 'none';
+      content.style.marginTop = '16px';
     }
     
     content.innerHTML = '<div class="state-loading"><div class="spinner"></div></div>';
@@ -2027,7 +2027,7 @@
           : '<div class="state-empty"><p>No livestreams found.</p></div>';
       } else if (tab === 'community') {
         const data = await api(`/api/channels/${id}/community`);
-        let html = '';
+        let html = '<div class="community-tab-wrapper" style="max-width: 800px; margin: 0 auto; width: 100%;">';
         const user = getUser();
         const canEdit = user && (user.role === 'admin' || String(user.id) === String(id));
         if (canEdit) {
@@ -2086,6 +2086,7 @@
         } else {
           html += '<div class="state-empty"><p>No posts yet.</p></div>';
         }
+        html += '</div>';
         content.innerHTML = html;
       } else if (tab === 'vhs') {
         let vhsToken = null;
