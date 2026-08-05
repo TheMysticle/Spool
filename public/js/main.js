@@ -692,6 +692,8 @@
             method: 'PUT',
             body: JSON.stringify({ all_users: false, user_ids: current.user_ids || [] }),
           });
+        } else if (mode === 'create_links') {
+          await api(`/api/videos/${videoId}/share`, { method: 'POST' });
         } else if (mode === 'grant_user') {
           const merged = Array.from(new Set([...(current.user_ids || []), uid]));
           await api(`/api/admin/videos/${videoId}/access`, {
